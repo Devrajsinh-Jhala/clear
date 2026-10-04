@@ -32,6 +32,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Image and PDF attachments on a question. Files stay on the server. Images and a whole PDF are sent to the selected model. A page range sends extracted text instead of the rest of the document. Follow-ups reuse extracted text and do not send the PDF again.
 - CLEAR Free model choice on the ask box: Gemini 2.5 Flash (`gemini-2.5-flash`) and Gemini 3.5 Flash (`gemini-3.5-flash`). The lesson stores that model and uses it for follow-ups and teach-back.
 - Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
+- Model routing for this browser: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison notes live in `.data` until accounts exist.
 
 ## Partial
 
@@ -43,7 +44,6 @@ The full product specification starts at "Product Specification & Codex Build Br
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Model routing, fallback permissions, and two-model compare
 - Voice tutor
 - Skill ZIP download
 - Share links and Markdown, JSON, and PDF export
@@ -51,7 +51,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-Phase 7: model routing and two-model compare. Do not start payments.
+Phase 8: voice tutor. Do not start payments.
 
 ## Last launch item — support the work
 

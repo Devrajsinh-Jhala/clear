@@ -16,6 +16,8 @@ export async function POST(
       conversationId: id,
       message: input.message,
       activeView: input.activeView,
+      provider: input.provider,
+      model: input.model,
     });
     return Response.json({
       reply: record.messages.at(-1)?.content ?? "",

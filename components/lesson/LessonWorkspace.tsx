@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DeepDiveView } from "@/components/lesson/DeepDiveView";
 import { ExamplesView } from "@/components/lesson/ExamplesView";
@@ -11,8 +11,11 @@ import { TeachBackView } from "@/components/lesson/TeachBackView";
 import { UnderstandView } from "@/components/lesson/UnderstandView";
 import { VerifyView } from "@/components/lesson/VerifyView";
 import { VisualView } from "@/components/lesson/VisualView";
+import { CompareView } from "@/components/lesson/CompareView";
 import { ProviderLabel } from "@/components/provider-label";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
+import type { ApprovedTarget } from "@/src/lib/routing/choose";
+import type { LessonMeta } from "@/src/lib/routing/store";
 import type { ConversationMessage, ConversationRecord } from "@/src/lib/store/types";
 
 const TABS = [
@@ -29,7 +32,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number][0];
 
-export function LessonWorkspace({ conversation }: { conversation: ConversationRecord }) {
+export function LessonWorkspace({ conversation, meta }: { conversation: ConversationRecord; meta: LessonMeta }) {
   const [active, setActive] = useState<TabId>("understand");
   const [document, setDocument] = useState<ExplanationDocument | null>(conversation.document);
   const [messages, setMessages] = useState<ConversationMessage[]>(conversation.messages);
@@ -39,6 +42,16 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [lessonMeta, setLessonMeta] = useState(meta);
+  const [nextProvider, setNextProvider] = useState("same");
+  const [targets, setTargets] = useState<ApprovedTarget[]>([]);
+
+  useEffect(() => {
+    void fetch("/api/routing")
+      .then((response) => response.json())
+      .then((payload: { available?: ApprovedTarget[] }) => setTargets(payload.available ?? []))
+      .catch(() => setTargets([]));
+  }, []);
 
   if (!document) {
     return <p>This lesson has no explanation yet.</p>;
@@ -51,7 +64,11 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
       const response = await fetch(`/api/explanations/${conversation.id}/follow-up`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message, activeView: active }),
+        body: JSON.stringify({
+          message,
+          activeView: active,
+          provider: nextProvider === "same" ? undefined : nextProvider,
+        }),
       });
       const payload = (await response.json()) as {
         document?: ExplanationDocument;
@@ -92,6 +109,23 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
           <ProviderLabel provider={provider} model={model} />
         </p>
         <h1 className="mt-2 font-serif text-4xl leading-tight">{title}</h1>
+        {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted">{lessonMeta.fallbackNote}</p> : null}
+        {lessonMeta.comparison && !lessonMeta.comparison.pickedId ? (
+          <div className="mt-6">
+            <CompareView
+              conversationId={conversation.id}
+              options={lessonMeta.comparison.options}
+              onUpdate={(next, chosen) => {
+                setLessonMeta(next);
+                if (!chosen) return;
+                setDocument(chosen.document);
+                setProvider(chosen.provider);
+                setModel(chosen.model);
+                setTitle(chosen.title);
+              }}
+            />
+          </div>
+        ) : null}
         {conversation.attachments && conversation.attachments.length > 0 ? (
           <ul className="mt-3 text-sm text-muted">
             {conversation.attachments.map((attachment) => (
@@ -189,6 +223,22 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
               placeholder="Ask a follow-up…"
               className="min-w-0 flex-1 border border-line bg-card px-3 py-3"
             />
+            <label className="text-sm text-muted">
+              Next turn
+              <select
+                aria-label="Provider for the next turn"
+                value={nextProvider}
+                onChange={(event) => setNextProvider(event.target.value)}
+                className="ml-2 bg-transparent text-foreground"
+              >
+                <option value="same">Keep this model</option>
+                {targets.map((target) => (
+                  <option key={target.provider} value={target.provider}>
+                    {target.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button type="submit" disabled={pending || !draft.trim()} className="bg-accent px-4 py-3 text-accent-foreground disabled:opacity-50">
               {pending ? "Updating" : "Send"}
             </button>

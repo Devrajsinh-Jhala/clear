@@ -18,6 +18,9 @@ export async function POST(request: Request) {
         customLevel: textField(form, "customLevel"),
         exampleId: textField(form, "exampleId"),
         model: textField(form, "model"),
+        provider: textField(form, "provider"),
+        compareProvider: textField(form, "compareProvider"),
+        compareModel: textField(form, "compareModel"),
       });
       const files = form.getAll("files").filter((item): item is File => item instanceof File && item.size > 0);
       const uploads = files.length

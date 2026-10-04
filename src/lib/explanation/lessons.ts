@@ -3,7 +3,10 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import { loadLessonCredential, loadOwnCredential } from "@/src/lib/ai/credential-service";
-import { isByokProvider, parseStoredProvider } from "@/src/lib/ai/byok";
+import { byokProviderLabel, isByokProvider, parseStoredProvider } from "@/src/lib/ai/byok";
+import { listApprovedTargets } from "@/src/lib/routing/available";
+import { chooseRoute, isRouteProvider, shouldUseClearFreeFallback, type RouteDecision } from "@/src/lib/routing/choose";
+import { readLessonMeta, readRoutingPreferences, writeLessonMeta, type CompareOption, type CompareRating, type LessonMeta } from "@/src/lib/routing/store";
 import { ClearError } from "@/src/lib/api/errors";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
 import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
@@ -28,6 +31,8 @@ export async function createLesson(input: {
   uploads?: PreparedAttachment[];
   model?: string;
   provider?: string;
+  compareProvider?: string;
+  compareModel?: string;
 }): Promise<ConversationRecord> {
   const now = new Date().toISOString();
   const id = randomUUID();
@@ -67,18 +72,53 @@ export async function createLesson(input: {
     throw new ClearError("invalid_request", "Enter a question to explain.", { status: 400 });
   }
 
-  const ownKey = input.provider && input.provider !== "clear-free" ? await loadOwnCredential(input.provider) : undefined;
-  const generated = await generateExplanation({
+  if (input.compareProvider) {
+    return createComparison({ ...input, question, id, now });
+  }
+
+  const preferences = await readRoutingPreferences(await currentLearnerId());
+  const available = await listApprovedTargets();
+  const media = mediaFlags(input.uploads);
+  const explicit = input.provider && input.provider !== "auto" && isRouteProvider(input.provider)
+    ? { provider: input.provider, model: input.model ?? "" }
+    : undefined;
+  let decision = chooseRoute({
     question,
-    level: input.level,
-    depth: input.depth,
-    customLevel: input.customLevel,
-    sourceNote: sourceNote(input.uploads),
-    attachments: inlineAttachments(input.uploads),
-    model: ownKey ? input.model || ownKey.model : input.model,
-    adapterId: ownKey?.provider,
-    credential: ownKey?.credential,
+    sourceLength: media.sourceLength,
+    hasPdf: media.hasPdf,
+    hasImage: media.hasImage,
+    preferences,
+    available,
+    explicit,
+    forceAuto: input.provider === "auto",
   });
+  let fallbackNote = decision.fallback
+    ? "The requested provider was not available. Fallback is on, so this lesson used CLEAR Free."
+    : undefined;
+  let generated;
+  try {
+    generated = await generateFor(decision, { ...input, question });
+  } catch (error) {
+    if (!shouldUseClearFreeFallback({
+      error,
+      provider: decision.provider,
+      alreadyFellBack: decision.fallback,
+      fallbackAllowed: preferences.fallbackAllowed,
+      clearFreeAvailable: available.some((target) => target.provider === "clear-free"),
+    })) {
+      throw error;
+    }
+    const failed = decision.provider === "clear-free" ? "CLEAR Free" : byokProviderLabel(decision.provider);
+    const reason = error instanceof ClearError ? error.message : "The provider failed.";
+    decision = {
+      provider: "clear-free",
+      model: available.find((target) => target.provider === "clear-free")?.model ?? "",
+      reason: "fallback",
+      fallback: true,
+    };
+    generated = await generateFor(decision, { ...input, question });
+    fallbackNote = `${failed} failed (${reason}). Fallback is on, so this lesson used CLEAR Free.`;
+  }
   const record = buildRecord({
     id,
     now,
@@ -93,6 +133,7 @@ export async function createLesson(input: {
     attachments: storedAttachments(input.uploads),
   });
   await getConversationStore().save(record);
+  if (fallbackNote) await writeLessonMeta(id, { fallbackNote });
   return record;
 }
 
@@ -100,6 +141,8 @@ export async function addFollowUp(input: {
   conversationId: string;
   message: string;
   activeView?: string;
+  provider?: string;
+  model?: string;
 }): Promise<ConversationRecord> {
   const store = getConversationStore();
   const existing = await store.get(input.conversationId);
@@ -107,16 +150,16 @@ export async function addFollowUp(input: {
     throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
   }
 
-  const ownKey = await savedKey(existing.activeProvider);
+  const turn = await followUpTurn(existing, input.provider, input.model);
   const continued = await continueExplanation({
     message: input.message,
     document: existing.document,
     activeView: input.activeView,
     sourceNote: sourceNote(existing.attachments),
     attachments: await imageAttachments(existing.attachments),
-    model: existing.activeModel,
-    adapterId: ownKey?.provider,
-    credential: ownKey?.credential,
+    model: turn.model,
+    adapterId: turn.ownKey?.provider,
+    credential: turn.ownKey?.credential,
   });
   const now = new Date().toISOString();
   const record: ConversationRecord = {
@@ -208,6 +251,181 @@ function buildRecord(input: {
       { id: randomUUID(), role: "user", content: input.question, createdAt: input.now },
       { id: randomUUID(), role: "assistant", content: input.assistant, createdAt: input.now },
     ],
+  };
+}
+
+async function createComparison(input: {
+  question: string;
+  id: string;
+  now: string;
+  level: LearnerLevel;
+  depth: Depth;
+  customLevel?: string;
+  uploads?: PreparedAttachment[];
+  model?: string;
+  provider?: string;
+  compareProvider?: string;
+  compareModel?: string;
+}): Promise<ConversationRecord> {
+  const rightProvider = input.compareProvider ?? "";
+  if (!isRouteProvider(rightProvider)) {
+    throw new ClearError("invalid_request", "Choose two providers to compare.", { status: 400 });
+  }
+  const available = await listApprovedTargets();
+  const media = mediaFlags(input.uploads);
+  const preferences = await readRoutingPreferences(await currentLearnerId());
+  const left = input.provider && input.provider !== "auto" && isRouteProvider(input.provider)
+    ? { provider: input.provider, model: input.model ?? "" }
+    : chooseRoute({
+        question: input.question,
+        sourceLength: media.sourceLength,
+        hasPdf: media.hasPdf,
+        hasImage: media.hasImage,
+        preferences,
+        available,
+        forceAuto: true,
+      });
+  if (left.provider === rightProvider && (left.model || "") === (input.compareModel || "")) {
+    throw new ClearError("invalid_request", "Pick two different models to compare.", { status: 400 });
+  }
+  const sides = [
+    { provider: left.provider, model: left.model },
+    { provider: rightProvider, model: input.compareModel ?? "" },
+  ];
+  const options: CompareOption[] = [];
+  for (const side of sides) {
+    try {
+      const decision = chooseRoute({
+        question: input.question,
+        sourceLength: media.sourceLength,
+        hasPdf: media.hasPdf,
+        hasImage: media.hasImage,
+        preferences: { auto: false, fallbackAllowed: false, defaultTarget: { provider: "clear-free", model: "" }, tasks: {} },
+        available,
+        explicit: side,
+      });
+      const generated = await generateFor(decision, input);
+      options.push({
+        id: randomUUID(),
+        provider: generated.providerId,
+        model: generated.model,
+        document: generated.document,
+        ratings: [],
+      });
+    } catch (error) {
+      options.push({
+        id: randomUUID(),
+        provider: side.provider,
+        model: side.model,
+        document: null,
+        error: error instanceof ClearError ? error.message : "That model did not answer.",
+        ratings: [],
+      });
+    }
+  }
+  const winner = options.find((option) => option.document);
+  if (!winner?.document) {
+    throw new ClearError("provider_error", options.map((option) => option.error).filter(Boolean).join(" "), {
+      status: 502,
+      retryable: true,
+    });
+  }
+  const record = buildRecord({
+    id: input.id,
+    now: input.now,
+    title: winner.document.topic,
+    provider: winner.provider,
+    model: winner.model,
+    level: input.level,
+    depth: input.depth,
+    question: input.question,
+    assistant: winner.document.essence,
+    document: winner.document,
+    attachments: storedAttachments(input.uploads),
+  });
+  await getConversationStore().save(record);
+  await writeLessonMeta(input.id, { comparison: { options } });
+  return record;
+}
+
+export async function chooseComparison(input: {
+  conversationId: string;
+  optionId: string;
+  rating?: CompareRating;
+  use?: boolean;
+}): Promise<{ record: ConversationRecord; meta: LessonMeta }> {
+  const store = getConversationStore();
+  const existing = await store.get(input.conversationId);
+  const meta = await readLessonMeta(input.conversationId);
+  const option = meta.comparison?.options.find((item) => item.id === input.optionId);
+  if (!existing?.document || !option) {
+    throw new ClearError("not_found", "That comparison is not on this lesson.", { status: 404 });
+  }
+  if (input.rating && !option.ratings.includes(input.rating)) option.ratings.push(input.rating);
+  if (input.use) {
+    if (!option.document) {
+      throw new ClearError("invalid_request", "That version did not produce an explanation.", { status: 400 });
+    }
+    meta.comparison!.pickedId = option.id;
+    const now = new Date().toISOString();
+    const record: ConversationRecord = {
+      ...existing,
+      title: option.document.topic,
+      updatedAt: now,
+      activeProvider: option.provider,
+      activeModel: option.model,
+      document: option.document,
+    };
+    await store.save(record);
+    await writeLessonMeta(input.conversationId, meta);
+    return { record, meta };
+  }
+  await writeLessonMeta(input.conversationId, meta);
+  return { record: existing, meta };
+}
+
+async function generateFor(
+  decision: RouteDecision,
+  input: {
+    question: string;
+    level: LearnerLevel;
+    depth: Depth;
+    customLevel?: string;
+    uploads?: PreparedAttachment[];
+  },
+) {
+  const ownKey = decision.provider === "clear-free" ? undefined : await loadOwnCredential(decision.provider);
+  return generateExplanation({
+    question: input.question,
+    level: input.level,
+    depth: input.depth,
+    customLevel: input.customLevel,
+    sourceNote: sourceNote(input.uploads),
+    attachments: inlineAttachments(input.uploads),
+    model: decision.model || ownKey?.model,
+    adapterId: ownKey?.provider,
+    credential: ownKey?.credential,
+  });
+}
+
+async function followUpTurn(existing: ConversationRecord, provider: string | undefined, model: string | undefined) {
+  if (provider && provider !== "same") {
+    if (!isRouteProvider(provider)) {
+      throw new ClearError("invalid_request", "Choose a connected provider for the next turn.", { status: 400 });
+    }
+    if (provider === "clear-free") return { model: model || existing.activeModel, ownKey: undefined };
+    const ownKey = await loadOwnCredential(provider);
+    return { model: model || ownKey.model, ownKey };
+  }
+  return { model: existing.activeModel, ownKey: await savedKey(existing.activeProvider) };
+}
+
+function mediaFlags(uploads?: PreparedAttachment[]) {
+  const note = sourceNote(uploads) ?? "";
+  return {
+    sourceLength: note.length,
+    hasPdf: (uploads ?? []).some((item) => item.mimeType === "application/pdf"),
+    hasImage: (uploads ?? []).some((item) => item.mimeType.startsWith("image/")),
   };
 }
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { LessonWorkspace } from "@/components/lesson/LessonWorkspace";
+import { readLessonMeta } from "@/src/lib/routing/store";
 import { getConversationStore } from "@/src/lib/store";
 
 export const runtime = "nodejs";
@@ -14,5 +15,6 @@ export default async function LearnPage({
   const { conversationId } = await params;
   const conversation = await getConversationStore().get(conversationId);
   if (!conversation?.document) notFound();
-  return <LessonWorkspace conversation={conversation} />;
+  const meta = await readLessonMeta(conversationId);
+  return <LessonWorkspace conversation={conversation} meta={meta} />;
 }

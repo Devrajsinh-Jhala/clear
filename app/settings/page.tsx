@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/page-shell";
 import { LearningMemoryControl } from "@/components/settings/LearningMemoryControl";
 import { ProviderKeys } from "@/components/settings/ProviderKeys";
+import { RoutingControl } from "@/components/settings/RoutingControl";
 
 export default function SettingsPage() {
   const freeReady = Boolean(process.env.GEMINI_API_KEY);
@@ -12,6 +13,7 @@ export default function SettingsPage() {
         CLEAR stops. It does not switch to CLEAR Free.
       </p>
       <ProviderKeys />
+      <RoutingControl />
       <LearningMemoryControl />
     </PageShell>
   );

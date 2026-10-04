@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { byokProviderLabel, type ByokProviderId } from "@/src/lib/ai/byok";
+import type { ApprovedTarget } from "@/src/lib/routing/choose";
 import { CLEAR_FREE_MODELS, type ClearFreeModelId } from "@/src/lib/ai/models";
 import { DEPTH_OPTIONS, EXAMPLE_QUESTIONS, LEVEL_OPTIONS } from "@/src/lib/explanation/labels";
 import type { Depth, LearnerLevel } from "@/src/lib/explanation/schema";
@@ -20,8 +21,11 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
   const [level, setLevel] = useState<LearnerLevel>("student");
   const [depth, setDepth] = useState<Depth>("balanced");
   const [model, setModel] = useState<ClearFreeModelId>(defaultModel);
-  const [provider, setProvider] = useState<"clear-free" | ByokProviderId>("clear-free");
-  const [connected, setConnected] = useState<Array<{ id: ByokProviderId; label: string; model: string }>>([]);
+  const [provider, setProvider] = useState<"auto" | "clear-free" | ByokProviderId>("auto");
+  const [available, setAvailable] = useState<ApprovedTarget[]>([]);
+  const [compare, setCompare] = useState(false);
+  const [compareProvider, setCompareProvider] = useState("");
+  const [compareModel, setCompareModel] = useState<ClearFreeModelId>(defaultModel);
   const [customLevel, setCustomLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState(0);
@@ -32,12 +36,16 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
   const [pdfPages, setPdfPages] = useState("");
 
   useEffect(() => {
-    void fetch("/api/providers")
+    void fetch("/api/routing")
       .then((response) => response.json())
-      .then((payload: { connected?: Array<{ id: ByokProviderId; label: string; model: string }> }) => {
-        setConnected(payload.connected ?? []);
+      .then((payload: { available?: ApprovedTarget[]; preferences?: { auto?: boolean; defaultTarget?: { provider: "clear-free" | ByokProviderId } } }) => {
+        const targets = payload.available ?? [];
+        setAvailable(targets);
+        setProvider(payload.preferences?.auto ? "auto" : payload.preferences?.defaultTarget?.provider ?? "clear-free");
+        const other = targets.find((item) => item.provider !== "clear-free");
+        setCompareProvider(other?.provider ?? "clear-free");
       })
-      .catch(() => setConnected([]));
+      .catch(() => setAvailable([]));
   }, []);
 
   useEffect(() => {
@@ -65,8 +73,14 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
       body.set("depth", depth);
       body.set("provider", provider);
       if (provider === "clear-free") body.set("model", model);
-      const saved = connected.find((item) => item.id === provider);
-      if (provider !== "clear-free" && saved) body.set("model", saved.model);
+      const saved = available.find((item) => item.provider === provider);
+      if (provider !== "clear-free" && provider !== "auto" && saved) body.set("model", saved.model);
+      if (compare && compareProvider) {
+        body.set("compareProvider", compareProvider);
+        if (compareProvider === "clear-free") body.set("compareModel", compareModel);
+        const compared = available.find((item) => item.provider === compareProvider);
+        if (compareProvider !== "clear-free" && compared) body.set("compareModel", compared.model);
+      }
       if (level === "custom" && customLevel.trim()) body.set("customLevel", customLevel);
       if (exampleId) body.set("exampleId", exampleId);
       if (!exampleId) {
@@ -214,13 +228,13 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           <select
             aria-label="Explanation provider"
             value={provider}
-            onChange={(event) => setProvider(event.target.value as "clear-free" | ByokProviderId)}
+            onChange={(event) => setProvider(event.target.value as "auto" | "clear-free" | ByokProviderId)}
             className="ml-2 bg-transparent text-foreground"
           >
-            <option value="clear-free">CLEAR Free</option>
-            {connected.map((item) => (
-              <option key={item.id} value={item.id}>
-                Your API · {item.label}
+            <option value="auto">Auto</option>
+            {available.map((item) => (
+              <option key={item.provider} value={item.provider}>
+                {item.provider === "clear-free" ? item.label : `Your API · ${item.label}`}
               </option>
             ))}
           </select>
@@ -241,11 +255,63 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
               ))}
             </select>
           </label>
-        ) : (
+        ) : provider !== "auto" ? (
           <span className="text-sm text-muted">
-            Model {connected.find((item) => item.id === provider)?.model ?? byokProviderLabel(provider)}
+            Model {available.find((item) => item.provider === provider)?.model ?? byokProviderLabel(provider)}
           </span>
-        )}
+        ) : null}
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={compare}
+            onChange={(event) => {
+              const next = event.target.checked;
+              setCompare(next);
+              if (!next) return;
+              const primary = provider === "clear-free" ? model : defaultModel;
+              if ((compareProvider || "clear-free") === "clear-free") {
+                setCompareModel(primary === "gemini-2.5-flash" ? "gemini-3.5-flash" : "gemini-2.5-flash");
+              }
+            }}
+          />
+          Compare with another model
+        </label>
+        {compare ? (
+          <>
+            <label className="text-sm text-muted">
+              Second model
+              <select
+                aria-label="Comparison provider"
+                value={compareProvider}
+                onChange={(event) => setCompareProvider(event.target.value)}
+                className="ml-2 bg-transparent text-foreground"
+              >
+                {available.map((item) => (
+                  <option key={item.provider} value={item.provider}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {compareProvider === "clear-free" ? (
+              <label className="text-sm text-muted">
+                Second CLEAR Free model
+                <select
+                  aria-label="Comparison CLEAR Free model"
+                  value={compareModel}
+                  onChange={(event) => setCompareModel(event.target.value as ClearFreeModelId)}
+                  className="ml-2 bg-transparent text-foreground"
+                >
+                  {CLEAR_FREE_MODELS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+          </>
+        ) : null}
         {level === "custom" ? (
           <label className="text-sm text-muted">
             Describe the learner
