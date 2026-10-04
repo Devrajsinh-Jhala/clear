@@ -6,6 +6,9 @@ import { ClearError } from "@/src/lib/api/errors";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
 import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
 import type { TeachBackResult } from "@/src/lib/explanation/teach-back";
+import { applyTeachBackMemory } from "@/src/lib/learning/memory";
+import { currentLearnerId } from "@/src/lib/learning/session";
+import { readLearningProfile, writeLearningProfile } from "@/src/lib/learning/store";
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
 import { generateExplanation } from "@/src/lib/explanation/generate";
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
@@ -124,6 +127,21 @@ export async function submitTeachBack(input: {
   }
   const result = await reviewTeachBack(input.explanation, existing.document);
   const now = new Date().toISOString();
+  const learnerId = await currentLearnerId();
+  if (learnerId) {
+    const profile = await readLearningProfile(learnerId);
+    await writeLearningProfile(
+      learnerId,
+      applyTeachBackMemory(profile, {
+        concepts: existing.document.concepts.map((concept) => ({ id: concept.id, name: concept.name })),
+        verdict: result.verdict,
+        missingConcepts: result.missingConcepts,
+        misleadingStatements: result.misleadingStatements,
+        repairedExplanation: result.repairedExplanation,
+        seenAt: now,
+      }),
+    );
+  }
   const record: ConversationRecord = {
     ...existing,
     updatedAt: now,

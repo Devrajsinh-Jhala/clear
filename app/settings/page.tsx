@@ -1,3 +1,4 @@
+import { LearningMemoryControl } from "@/components/settings/LearningMemoryControl";
 import { PageShell } from "@/components/page-shell";
 
 const PROVIDERS = [
@@ -26,6 +27,7 @@ export default function SettingsPage() {
         ))}
       </ul>
       <p>Saved keys will be encrypted on the server and will not be sent back to the browser. That connection flow is next.</p>
+      <LearningMemoryControl />
     </PageShell>
   );
 }

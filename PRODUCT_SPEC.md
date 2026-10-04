@@ -28,18 +28,18 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Mermaid diagrams from validated visualization specs, with a text equivalent
 - Trusted interactive widgets: step flow, binary search, state machine, timeline, graph traversal, parameter explorer, code trace. Unknown widgets are rejected. Model JavaScript is never executed.
 - Teach-it-back on a lesson. A configured model reviews the mechanism. Without a model key, CLEAR checks which concept names were used and says a model did not review the wording. Writing style is not graded.
+- Learning memory is off until the learner turns it on in Settings. It remembers concept state and open misconceptions from teach-it-back for this browser, and the learner can delete one concept or every record. The progress page shows those states. Mastery is a study note, not a certification.
 
 ## Partial
 
 - Quiz grading is local to the page. It does not write learning memory.
 - Visual and interactive views render when the explanation document includes those specs. Generation still prefers an empty interactive list unless one fits.
 - Settings lists providers. Only CLEAR Free and the mock provider are connected.
-- Guest lessons persist at their URL on this server. Library and progress screens are empty states.
+- Guest lessons persist at their URL on this server. The library screen is still an empty state. Learning records are not tied to an account yet.
 
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Mastery, misconceptions memory, progress data
 - Image and PDF input
 - BYOK for OpenAI, Anthropic, xAI, Gemini, and custom OpenAI-compatible endpoints
 - Model routing, fallback permissions, and two-model compare
@@ -50,7 +50,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-Phase 4 in the specification: learning memory that can be turned off and deleted, then a real progress page. Do not start provider keys or payments before that unless the user changes this note.
+Phase 5 in the specification: image and PDF input. Do not start provider keys or payments before the learning loop is solid unless the user changes this note.
 
 ## Last launch item — support the work
 

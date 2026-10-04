@@ -1,10 +1,15 @@
 import { PageShell } from "@/components/page-shell";
+import { ProgressBoard } from "@/components/progress/ProgressBoard";
+import { currentLearningProfile } from "@/src/lib/learning/session";
 
-export default function ProgressPage() {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export default async function ProgressPage() {
+  const profile = await currentLearningProfile();
   return (
     <PageShell title="Your learning" lede="Learning memory is off until you choose to keep it.">
-      <p>Understood concepts, ideas you are practicing, and recurring misconceptions will live here.</p>
-      <p>CLEAR will not infer sensitive personal attributes from what you study.</p>
+      <ProgressBoard enabled={profile.enabled} concepts={profile.concepts} misconceptions={profile.misconceptions} />
     </PageShell>
   );
 }
