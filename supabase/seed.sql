@@ -1,0 +1,1 @@
+-- No seed data. CLEAR Free quotas and model defaults live in environment variables.
