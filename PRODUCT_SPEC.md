@@ -1,6 +1,7 @@
 # CLEAR — progress for the next agent
 
-**Last updated:** 2026-10-04  
+**Last updated:** 2026-10-05
+
 **Branch:** `main`  
 **Rule:** Commit directly to `main` and push. Do not open a pull request unless the user asks. Update this progress section in the same commit as the work.
 
@@ -34,6 +35,8 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
 - Model routing for this browser: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison notes live in `.data` until accounts exist.
 - Voice tutor through browser speech: speak a question, dictate an editable follow-up, listen to sections of the canonical lesson, and speak a teach-back and hear its feedback. Follow-ups use the lesson's current provider and update the same document. Transcripts stay readable. Microphone and narration start only on request, stop when their view closes, and have unsupported-browser, permission, network, and retry states. Narration supports pause, resume, and stop. A shared speech transport coordinates capture and playback and remains separate from the explanation provider. CLEAR does not store raw audio; the browser's speech service may process audio or narration text remotely.
+- Phase 10 sharing and export: explicit public snapshots, preview before publication, optional provider/model disclosure, replacement and revocation, and Markdown/JSON/PDF downloads. Public pages render eight read-only learning views with local quiz and interactive controls. Snapshots stay frozen across private follow-ups; old pages and all downloads stop resolving after replacement/revocation. Only canonical teaching content crosses the boundary, with conversation/owner identifiers, raw normalized questions, assumed-knowledge profiles, operational metadata, uploads, messages, and keys excluded. Explanation content can still include material from the learner's question or files; the UI asks the creator to review it.
+- New guest lessons are owned by an HttpOnly browser identity. Lesson reads, mutations, sharing, and private downloads check ownership. Earlier ownerless URLs remain read-only and offer a fresh explanation-only private copy; they are never claimed automatically, and their old messages, uploads, provider connections, and learning records are not copied. Copies start future turns with CLEAR Free. Supabase ownership/share migration is included; database read failures surface as storage failures rather than missing or partial lessons.
 - UI refinement: paper/ink/teal light and dark surfaces, an editorial home with a focused ask card, grouped attachment/voice/model controls, a lesson sidebar and clearer view tabs, and a responsive skill configurator. Provider notices name the selected destination and enabled fallback.
 
 ## Partial
@@ -41,19 +44,21 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Quiz grading is local to the page. It does not write learning memory.
 - Visual and interactive views render when the explanation document includes those specs. Generation still prefers an empty interactive list unless one fits.
 - Settings can connect a provider key for this browser. Signed-in accounts do not have their own credential vault yet.
-- Guest lessons persist at their URL on this server. The library screen is still an empty state. Learning records are not tied to an account yet.
+- New guest lessons persist at their URL on this server and reload only in their owner browser. Clearing that browser's site data loses access. The library screen is still an empty state. Learning records are not tied to an account yet. Earlier ownerless URLs retain read-only access by address.
 - Voice uses speech-to-text, a normal model turn, and browser text-to-speech. Provider-native realtime audio is not implemented. Microphone recognition depends on the browser and still needs manual testing with real microphones across target devices.
-- Launch hardening still needs lesson ownership checks and durable storage for the `.data` records and uploads, alongside the production checks below. Guest lesson addresses currently grant access to anyone who has the URL.
+- Launch hardening still needs durable storage for `.data` records and uploads, broader storage/RLS testing, quotas, rate limits, monitoring, and the production checks below. The local share store scans current state files; production scale remains Phase 11 work. Apply `supabase/migrations/20261004160000_private_guests_and_shares.sql` before deploying this version with Supabase; no live database migration was applied during this task. Proxies must overwrite forwarded origin headers.
+- PDF exports include written diagram/interactive summaries, not rendered diagrams or running widgets. The embedded font supports common Greek/math symbols; unsupported glyphs, including many Hindi/Chinese characters, use Unicode notation with a notice. Markdown and JSON preserve original text. PDFs have a 500-page limit.
 
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Share links and Markdown, JSON, and PDF export
 - Playwright, quotas, rate limits, Sentry, and the prompt eval suite
 
 ## Next product slice
 
-Phase 10: public share links with revocation, plus Markdown, JSON, and PDF export. Keep provider-native realtime audio and device voice testing tracked above. Do not start payments.
+Phase 11: production hardening, starting with browser regression coverage and server quotas/rate limits, then monitoring and prompt evals. Accounts, a saved library, durable storage, provider-native realtime audio, and device voice testing remain tracked above. Do not start payments.
+
+Latest sharing/export checks: 115 unit tests passed, lint and production build passed. Coverage includes browser ownership, legacy copies, strict sharing choices/origin checks (including reverse proxies), frozen snapshots, replacement/revocation, every export format, private-field redaction, safe Markdown/Mermaid, long PDF code, common Unicode math, and Supabase read failures. A running local production build passed 42 HTTP checks using a separate synthetic owner, including unauthorized reads/mutations/exports, all three real downloads, frozen contents, identity choices, stale status, replacement, and revocation. Next.js streamed not-found pages can return HTTP 200 with a not-found shell; they expose no lesson content, while denied APIs return 404. Rendered sample/stress PDFs (5/8 pages) were inspected for clipping and pagination. Browser checks covered preview/keyboard navigation/Escape, copying, three download success states, read-only quizzes/widgets, follow-up stale notices, model disclosure, replacement, revocation, legacy private copies and their first follow-up in both text/voice transcripts, and light/dark desktop layouts. At 390 pixels, the sharing panel and preview fit without page overflow and preview keyboard navigation/Escape work in light/dark layouts. Real microphone/live model and live Supabase checks remain unverified.
 
 Latest portable-skill checks: 78 unit tests passed, lint and production build passed. Tests cover strict preferences, private-field rejection, safe resource paths, exact preview/export content, ZIP round-trips, and export errors. The running production endpoint returned seven files with selected preferences, matching all seven browser previews exactly. Browser checks covered preference changes/reset, all-file preview selection, export/copy success states, composer disclosures and comparison controls, a sample lesson and mock follow-up, keyboard tab navigation, and light/dark phone-width layouts. The in-app preview cannot expose the saved download or clipboard contents; installing the package in other agent hosts remains unverified.
 
@@ -2456,8 +2461,8 @@ Do not call v1 complete unless:
 - [ ] PDF input works.
 - [ ] Learning memory works and can be disabled/deleted.
 - [ ] Voice tutor path works.
-- [ ] Share link works.
-- [ ] Markdown/JSON/PDF export works.
+- [x] Share link works.
+- [x] Markdown/JSON/PDF export works.
 - [x] Agent Skill export works.
 
 ## Providers

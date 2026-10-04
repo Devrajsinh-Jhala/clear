@@ -20,6 +20,8 @@ export type ConversationMessage = {
 
 export type ConversationRecord = {
   id: string;
+  /** Server-only bearer identity. Never send this field to a client component. */
+  ownerLearnerId?: string;
   title: string;
   createdAt: string;
   updatedAt: string;

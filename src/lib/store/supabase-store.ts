@@ -9,6 +9,7 @@ import type { ConversationMessage, ConversationRecord, ConversationStore } from 
 
 type ConversationRow = {
   id: string;
+  guest_owner_id: string | null;
   title: string;
   active_provider: string;
   active_model: string;
@@ -47,35 +48,40 @@ export function createSupabaseStore(): ConversationStore | null {
       if (!isUuid(id)) return null;
       const { data: conversation, error } = await supabase
         .from("conversations")
-        .select("id, title, active_provider, active_model, level, depth, created_at, updated_at")
+        .select("id, guest_owner_id, title, active_provider, active_model, level, depth, created_at, updated_at")
         .eq("id", id)
         .maybeSingle();
-      if (error || !conversation) return null;
+      if (error) throw databaseError(error.message);
+      if (!conversation) return null;
 
-      const { data: messages } = await supabase
+      const { data: messages, error: messageError } = await supabase
         .from("messages")
         .select("id, role, content, created_at")
         .eq("conversation_id", id)
         .order("created_at", { ascending: true });
+      if (messageError) throw databaseError(messageError.message);
 
-      const { data: documents } = await supabase
+      const { data: documents, error: documentError } = await supabase
         .from("explanation_documents")
         .select("document, created_at")
         .eq("conversation_id", id)
         .order("created_at", { ascending: false })
         .limit(1);
+      if (documentError) throw databaseError(documentError.message);
 
-      const { data: attachments } = await supabase
+      const { data: attachments, error: attachmentError } = await supabase
         .from("attachments")
         .select("id, mime_type, storage_path, size_bytes, metadata")
         .eq("conversation_id", id);
+      if (attachmentError) throw databaseError(attachmentError.message);
 
       const row = conversation as ConversationRow;
       return {
         id: row.id,
+        ownerLearnerId: row.guest_owner_id ?? undefined,
         title: row.title,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        createdAt: new Date(row.created_at).toISOString(),
+        updatedAt: new Date(row.updated_at).toISOString(),
         activeProvider: row.active_provider,
         activeModel: row.active_model,
         level: row.level,
@@ -105,6 +111,7 @@ export function createSupabaseStore(): ConversationStore | null {
       if (!isUuid(record.id)) throw new Error("Refusing to store a conversation with an invalid id.");
       const { error: conversationError } = await supabase.from("conversations").upsert({
         id: record.id,
+        guest_owner_id: record.ownerLearnerId ?? null,
         user_id: null,
         title: record.title,
         active_provider: record.activeProvider,
@@ -173,7 +180,7 @@ function databaseError(message: string): Error {
   if (/schema cache|does not exist|PGRST205/i.test(message)) {
     return new ClearError(
       "database_not_ready",
-      "Supabase is connected, but the CLEAR tables are not there yet. Run supabase/migrations/20261004120000_init.sql in the Supabase SQL editor, then try again.",
+      "Supabase is connected, but the CLEAR schema is not ready. Apply the migrations in supabase/migrations, then try again.",
       { status: 503 },
     );
   }

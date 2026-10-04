@@ -37,6 +37,18 @@ Open **Skill** to choose learner level, depth, analogies, visuals, interview pra
 
 Unzip it and keep the `clear-explainer` folder together, then add it to the skill location supported by your agent. The package contains public teaching instructions and examples. It excludes conversations, uploads, learning memory, and provider keys. Exporting needs no account or API key; the host agent supplies its own model and tools.
 
+## Sharing and lesson downloads
+
+New lessons belong to the browser that created them. Return to their address in the same browser; clearing its site data removes access until accounts and a saved library are available. Earlier ownerless lesson URLs remain read-only and offer **Make a private copy** to continue with the explanation alone. The copy starts future turns with CLEAR Free.
+
+Open **Share & export** in a lesson. Review **Preview the shared explanation**, then explicitly create a share link. It publishes a frozen snapshot with eight read-only learning views, quizzes, and trusted interactive controls. Later follow-ups leave the snapshot unchanged. **Replace link with current lesson** invalidates the previous link; **Revoke link** removes access. Files already downloaded remain with their recipients.
+
+Markdown, JSON, and PDF downloads contain canonical teaching content and quiz answers. Original uploads, conversation history, learning records, ownership identifiers, and provider keys are excluded. The explanation itself can contain material from your question or files. Provider/model names stay hidden unless the creator includes them. Public downloads follow that creator choice.
+
+PDFs paginate text, examples, code, and diagram/interactive descriptions using an embedded DejaVu font. Common math symbols are supported; unsupported glyphs (including many Hindi/Chinese characters) use explicit Unicode notation with a notice. Markdown and JSON preserve their original text. PDF exports are limited to 500 pages.
+
+For Supabase deployments, apply all migrations, including `supabase/migrations/20261004160000_private_guests_and_shares.sql`, **before deploying this version**. It adds browser ownership and a server-only share table. The migration has not been applied to a live database by this task. Without Supabase, `.data/conversations` and `.data/shares` use the local file store; production still needs durable storage and Phase 11 controls. A deployment proxy must overwrite `X-Forwarded-Host` and `X-Forwarded-Proto` with the public request origin so sharing writes can validate it.
+
 ## Checks
 
 ```bash

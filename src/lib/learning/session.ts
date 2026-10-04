@@ -20,7 +20,7 @@ export async function ensureLearnerId(): Promise<string> {
   const existing = jar.get(COOKIE)?.value;
   if (existing && isUuid(existing)) return existing;
   const id = randomUUID();
-  jar.set(COOKIE, id, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 400 });
+  jar.set(COOKIE, id, cookieOptions());
   return id;
 }
 
@@ -33,7 +33,7 @@ export async function setLearningEnabled(enabled: boolean): Promise<LearningProf
   let id = jar.get(COOKIE)?.value;
   if (!id || !isUuid(id)) {
     id = randomUUID();
-    jar.set(COOKIE, id, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 400 });
+    jar.set(COOKIE, id, cookieOptions());
   }
   const existing = await readLearningProfile(id);
   const profile = { ...existing, enabled };
@@ -46,4 +46,14 @@ export async function eraseLearningMemory(): Promise<void> {
   if (!id) return;
   await deleteLearningProfile(id);
   await writeLearningProfile(id, emptyProfile(false));
+}
+
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 400,
+  };
 }

@@ -12,7 +12,8 @@ import { continueExplanation } from "@/src/lib/explanation/follow-up";
 import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
 import type { TeachBackResult } from "@/src/lib/explanation/teach-back";
 import { applyTeachBackMemory } from "@/src/lib/learning/memory";
-import { currentLearnerId } from "@/src/lib/learning/session";
+import { currentLearnerId, ensureLearnerId } from "@/src/lib/learning/session";
+import { getOwnedLesson } from "@/src/lib/sharing/ownership";
 import { readLearningProfile, writeLearningProfile } from "@/src/lib/learning/store";
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
 import { generateExplanation } from "@/src/lib/explanation/generate";
@@ -36,6 +37,7 @@ export async function createLesson(input: {
 }): Promise<ConversationRecord> {
   const now = new Date().toISOString();
   const id = randomUUID();
+  const ownerLearnerId = await ensureLearnerId();
 
   if (input.exampleId === "mutex") {
     const document: ExplanationDocument = {
@@ -53,6 +55,7 @@ export async function createLesson(input: {
     };
     const record = buildRecord({
       id,
+      ownerLearnerId,
       now,
       title: document.topic,
       provider: "sample",
@@ -73,7 +76,7 @@ export async function createLesson(input: {
   }
 
   if (input.compareProvider) {
-    return createComparison({ ...input, question, id, now });
+    return createComparison({ ...input, question, id, now, ownerLearnerId });
   }
 
   const preferences = await readRoutingPreferences(await currentLearnerId());
@@ -121,6 +124,7 @@ export async function createLesson(input: {
   }
   const record = buildRecord({
     id,
+    ownerLearnerId,
     now,
     title: generated.document.topic,
     provider: generated.providerId,
@@ -145,10 +149,8 @@ export async function addFollowUp(input: {
   model?: string;
 }): Promise<ConversationRecord> {
   const store = getConversationStore();
-  const existing = await store.get(input.conversationId);
-  if (!existing?.document) {
-    throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
-  }
+  const existing = await getOwnedLesson(input.conversationId);
+  if (!existing.document) throw new ClearError("not_found", "That lesson is not available.", { status: 404 });
 
   const turn = await followUpTurn(existing, input.provider, input.model);
   const continued = await continueExplanation({
@@ -184,10 +186,8 @@ export async function submitTeachBack(input: {
   explanation: string;
 }): Promise<{ record: ConversationRecord; result: TeachBackResult }> {
   const store = getConversationStore();
-  const existing = await store.get(input.conversationId);
-  if (!existing?.document) {
-    throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
-  }
+  const existing = await getOwnedLesson(input.conversationId);
+  if (!existing.document) throw new ClearError("not_found", "That lesson is not available.", { status: 404 });
   const ownKey = await savedKey(existing.activeProvider);
   const result = await reviewTeachBack(input.explanation, existing.document, {
     model: existing.activeModel,
@@ -225,6 +225,7 @@ export async function submitTeachBack(input: {
 
 function buildRecord(input: {
   id: string;
+  ownerLearnerId: string;
   now: string;
   title: string;
   provider: string;
@@ -238,6 +239,7 @@ function buildRecord(input: {
 }): ConversationRecord {
   return {
     id: input.id,
+    ownerLearnerId: input.ownerLearnerId,
     title: input.title,
     createdAt: input.now,
     updatedAt: input.now,
@@ -257,6 +259,7 @@ function buildRecord(input: {
 async function createComparison(input: {
   question: string;
   id: string;
+  ownerLearnerId: string;
   now: string;
   level: LearnerLevel;
   depth: Depth;
@@ -332,6 +335,7 @@ async function createComparison(input: {
   }
   const record = buildRecord({
     id: input.id,
+    ownerLearnerId: input.ownerLearnerId,
     now: input.now,
     title: winner.document.topic,
     provider: winner.provider,
@@ -355,7 +359,7 @@ export async function chooseComparison(input: {
   use?: boolean;
 }): Promise<{ record: ConversationRecord; meta: LessonMeta }> {
   const store = getConversationStore();
-  const existing = await store.get(input.conversationId);
+  const existing = await getOwnedLesson(input.conversationId);
   const meta = await readLessonMeta(input.conversationId);
   const option = meta.comparison?.options.find((item) => item.id === input.optionId);
   if (!existing?.document || !option) {

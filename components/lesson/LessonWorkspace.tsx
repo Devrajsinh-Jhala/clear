@@ -15,6 +15,7 @@ import { VerifyView } from "@/components/lesson/VerifyView";
 import { VisualView } from "@/components/lesson/VisualView";
 import { CompareView } from "@/components/lesson/CompareView";
 import { ProviderLabel } from "@/components/provider-label";
+import { ShareExportPanel } from "@/components/lesson/ShareExportPanel";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 import type { ApprovedTarget } from "@/src/lib/routing/choose";
 import type { LessonMeta } from "@/src/lib/routing/store";
@@ -118,7 +119,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
         <div className="rounded-2xl border border-line bg-card/60 p-5">
           <p className="eyebrow">Your lesson</p>
           <p className="mt-3 font-serif text-xl leading-snug">{title}</p>
-          <p className="mt-4 text-xs leading-relaxed text-muted">Return here using this lesson’s address. Your follow-ups stay with the same idea.</p>
+          <p className="mt-4 text-xs leading-relaxed text-muted">Return to this address in the same browser. Your lesson and follow-ups stay private until you share an explanation.</p>
         </div>
         <div className="px-2">
           <p className="eyebrow">By the end</p>
@@ -130,11 +131,12 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
       <div className="min-w-0 space-y-6">
         <header>
         <p className="badge bg-card">
-          <ProviderLabel provider={provider} model={model} />
+          {document.metadata.provider === "clear-copy" ? <>Private copy · Follow-ups: <ProviderLabel provider={provider} model={model} /></> : <ProviderLabel provider={provider} model={model} />}
         </p>
         <h1 className="mt-4 font-serif text-4xl leading-[1.08] sm:text-5xl">{title}</h1>
         {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted">{lessonMeta.fallbackNote}</p> : null}
         </header>
+        <ShareExportPanel conversationId={conversation.id} document={document} disabled={busy} />
         {lessonMeta.comparison && !lessonMeta.comparison.pickedId ? (
           <fieldset disabled={busy} className="mt-6">
             <CompareView
@@ -212,7 +214,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
           <h2 className="font-serif text-2xl">Follow-up</h2>
           <ul className="mt-4 space-y-3">
             {messages
-              .filter((message, index) => index > 1 && message.kind !== "teach-back")
+              .filter((message, index) => (message.kind === "follow-up" || index > 1) && message.kind !== "teach-back")
               .map((message) => (
               <li key={message.id} className={message.role === "user" ? "text-muted" : ""}>
                 <span className="mr-2 text-xs uppercase tracking-[0.14em] text-muted">

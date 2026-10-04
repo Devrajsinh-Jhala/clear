@@ -12,7 +12,7 @@ export function ProviderLabel({ provider, model }: { provider: string; model: st
       </span>
     );
   }
-  if (provider === "gemini") return <span>CLEAR Free · Gemini · {clearFreeModelLabel(model)}</span>;
+  if (provider === "gemini" || provider === "clear-free") return <span>CLEAR Free · Gemini · {clearFreeModelLabel(model)}</span>;
   return (
     <span>
       {provider} · {model}

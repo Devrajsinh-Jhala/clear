@@ -22,7 +22,7 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
   onTeachBack: () => void;
 }) {
   const [section, setSection] = useState<NarrationSection>("understand");
-  const turns = messages.filter((message, index) => index > 1 && message.kind !== "teach-back");
+  const turns = messages.filter((message, index) => (message.kind === "follow-up" || index > 1) && message.kind !== "teach-back");
   const latestReply = turns.findLast((message) => message.role === "assistant");
 
   async function send() {

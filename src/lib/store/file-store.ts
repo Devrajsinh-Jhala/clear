@@ -1,4 +1,5 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import { isUuid } from "@/src/lib/explanation/normalize";
@@ -21,7 +22,7 @@ export function createFileStore(root = path.join(process.cwd(), ".data", "conver
       }
       await mkdir(root, { recursive: true });
       const destination = path.join(root, `${record.id}.json`);
-      const temporary = path.join(root, `${record.id}.${process.pid}.tmp`);
+      const temporary = path.join(root, `${record.id}.${randomUUID()}.tmp`);
       await writeFile(temporary, JSON.stringify(record), "utf8");
       await rename(temporary, destination);
     },
