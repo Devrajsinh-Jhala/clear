@@ -166,6 +166,27 @@ export const interactiveWidgetSpecSchema = z.discriminatedUnion("type", [
       )
       .min(1),
   }),
+  z.object({
+    type: z.literal("code-trace"),
+    title: z.string().min(1),
+    language: z.string().min(1),
+    code: z.string().min(1),
+    steps: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          line: z.number().int().positive(),
+          explanation: z.string().min(1),
+          locals: z.array(
+            z.object({
+              name: z.string().min(1),
+              value: z.string().min(1),
+            }),
+          ),
+        }),
+      )
+      .min(1),
+  }),
 ]);
 
 export const misconceptionSchema = z.object({
@@ -299,6 +320,7 @@ export const INTERACTIVE_WIDGET_TYPES = [
   "timeline",
   "graph-traversal",
   "parameter-explorer",
+  "code-trace",
 ] as const;
 
-export const RENDERED_INTERACTIVE_TYPES = ["generic-step-flow"] as const;
+export const RENDERED_INTERACTIVE_TYPES = INTERACTIVE_WIDGET_TYPES;

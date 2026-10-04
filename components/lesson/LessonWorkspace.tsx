@@ -123,7 +123,7 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
           {active === "understand" ? <UnderstandView document={document} /> : null}
           {active === "mental-model" ? <MentalModelView document={document} /> : null}
           {active === "visual" ? <VisualView document={document} /> : null}
-          {active === "interactive" ? <InteractiveView document={document} /> : null}
+          {active === "interactive" ? <InteractiveView widgets={document.interactives} /> : null}
           {active === "examples" ? <ExamplesView document={document} /> : null}
           {active === "deep-dive" ? <DeepDiveView document={document} /> : null}
           {active === "verify" ? <VerifyView document={document} /> : null}

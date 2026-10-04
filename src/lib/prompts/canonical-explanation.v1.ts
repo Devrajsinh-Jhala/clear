@@ -1,4 +1,4 @@
-export const PROMPT_VERSION = "canonical-explanation.v1";
+export const PROMPT_VERSION = "canonical-explanation.v2";
 
 export const CANONICAL_SYSTEM_PROMPT = `You are CLEAR, an understanding layer for difficult ideas.
 Optimize for a correct mental model, not for length.
@@ -49,9 +49,18 @@ Return a JSON object with these fields:
 - visualizations: [{ id, type, title, textEquivalent, mermaid? }]
   type is one of: flowchart, sequence, architecture, state-machine, timeline, hierarchy, concept-map, comparison, pipeline, data-flow
   textEquivalent is required and must stand alone for someone who cannot see the diagram.
-  Use an empty array if a diagram would not help.
-- interactives: [] unless a generic-step-flow is obvious.
-  generic-step-flow shape: { type: "generic-step-flow", title, steps: [{ id, title, detail }] }
+  mermaid is rendered by CLEAR. Use valid Mermaid only. Use an empty array if a diagram would not help.
+- interactives: [] unless one supported widget clearly helps. Never include JavaScript.
+  Supported shapes:
+  - { type: "generic-step-flow", title, steps: [{ id, title, detail }] }
+  - { type: "binary-search", title, array: number[] sorted ascending, target: number }
+  - { type: "state-machine", title, states: string[], transitions: [{ from, to, on }] }
+  - { type: "timeline", title, events: [{ id, label, detail }] }
+  - { type: "graph-traversal", title, nodes: string[], edges: [{ from, to }], start }
+  - { type: "parameter-explorer", title, formula, parameters: [{ name, min, max, step, initial }] }
+    formula may use numbers, parameter names, parentheses, and + - * / only.
+  - { type: "code-trace", title, language, code, steps: [{ id, line, explanation, locals: [{ name, value }] }] }
+    line is a 1-based line number in code. This is a recorded trace, not a request to execute the code.
 - misconceptions: [{ misconception, correction, whyItOccurs }]
 - deepDive: [{ id, title, body }]
 - verification: { required, performed, confidence, claims: [{ statement, status, note }], caveats }

@@ -1,6 +1,6 @@
-import type { ExplanationDocument } from "@/src/lib/explanation/schema";
-
+import { MermaidDiagram } from "@/components/diagrams/MermaidDiagram";
 import { EmptyCopy } from "@/components/lesson/DeepDiveView";
+import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 
 export function VisualView({ document }: { document: ExplanationDocument }) {
   if (document.visualizations.length === 0) {
@@ -13,14 +13,9 @@ export function VisualView({ document }: { document: ExplanationDocument }) {
           <p className="text-sm uppercase tracking-[0.16em] text-muted">{visual.type}</p>
           <h2 className="mt-2 font-serif text-2xl">{visual.title}</h2>
           <p className="mt-4 leading-relaxed">{visual.textEquivalent}</p>
-          {visual.mermaid ? (
-            <pre className="mt-4 overflow-x-auto border border-line bg-background p-4 font-mono text-sm">
-              {visual.mermaid}
-            </pre>
-          ) : null}
+          {visual.mermaid ? <MermaidDiagram source={visual.mermaid} /> : null}
         </article>
       ))}
-      <p className="text-sm text-muted">The paragraph is the accessible version of the diagram. A drawn diagram renderer is next.</p>
     </div>
   );
 }

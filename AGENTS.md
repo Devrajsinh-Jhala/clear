@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# CLEAR
+
+Read `PRODUCT_SPEC.md` before changing the product. The progress section at the top is the current status. Commit directly to `main` and push. Do not open a pull request unless the user asks. Update that progress section in the same commit.
+
+Support, donations, sponsors, and billing are the last launch item in section 68. Do not implement them until the rest of the launch definition is done. They are separate from BYOK and CLEAR Free.

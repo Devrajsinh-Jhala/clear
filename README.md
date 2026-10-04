@@ -1,5 +1,7 @@
 # CLEAR
 
+Product status and the full specification are in `PRODUCT_SPEC.md`. Commit to `main` directly.
+
 AI knows the answer. CLEAR helps you understand it.
 
 CLEAR turns a question into one explanation document, then renders that document as an understandable lesson: a short account, a mental model, examples, and a follow-up that updates the same lesson.
