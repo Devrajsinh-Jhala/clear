@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f3efe6;
+  --foreground: #1c1915;
+  --card: #fffdf8;
+  --muted: #655f56;
+  --line: #e3dacb;
+  --accent: #0c5f5b;
+  --accent-foreground: #f4fffe;
+  --danger: #8d2b2b;
+  --warning: #7a5410;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #111411;
+  --foreground: #ece6dc;
+  --card: #1a1f1b;
+  --muted: #b1a89c;
+  --line: #2d352f;
+  --accent: #7fd0c8;
+  --accent-foreground: #08211f;
+  --danger: #ffb4b4;
+  --warning: #f0d091;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-newsreader);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  transform: translateY(-200%);
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  z-index: 50;
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
