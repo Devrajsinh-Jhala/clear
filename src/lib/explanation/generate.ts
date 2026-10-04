@@ -2,9 +2,8 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { resolveLessonModel } from "@/src/lib/ai/providers/gemini";
-import { resolveGenerationProvider } from "@/src/lib/ai/router";
-import type { AIProvider, InlineAttachment } from "@/src/lib/ai/types";
+import { assertProviderMedia, selectGeneration } from "@/src/lib/ai/router";
+import type { AIProvider, InlineAttachment, ProviderCredential } from "@/src/lib/ai/types";
 import { ClearError } from "@/src/lib/api/errors";
 import { acceptModelOutput } from "@/src/lib/explanation/validate";
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
@@ -23,10 +22,12 @@ export async function generateExplanation(input: {
   sourceNote?: string;
   attachments?: InlineAttachment[];
   model?: string;
+  adapterId?: string;
+  credential?: ProviderCredential;
 }): Promise<{ document: ExplanationDocument; providerId: string; model: string }> {
-  const provider = resolveGenerationProvider();
-  const model = resolveLessonModel(provider.id, input.model);
-  return generateWithProvider(provider, model, input);
+  const selected = selectGeneration(input);
+  assertProviderMedia(selected.provider, input.attachments);
+  return generateWithProvider(selected.provider, selected.model, input, selected.credential, selected.storedProviderId);
 }
 
 async function generateWithProvider(
@@ -40,6 +41,8 @@ async function generateWithProvider(
     sourceNote?: string;
     attachments?: InlineAttachment[];
   },
+  credential: ProviderCredential | undefined,
+  storedProviderId: string,
 ): Promise<{ document: ExplanationDocument; providerId: string; model: string }> {
   const started = Date.now();
   const response = await provider.generate({
@@ -54,7 +57,7 @@ async function generateWithProvider(
     attachments: input.attachments,
     temperature: input.depth === "quick" ? 0.2 : 0.4,
     maxOutputTokens: input.depth === "deep" ? 12000 : 8000,
-  });
+  }, credential);
   const raw = response.structured ?? response.text;
   if (raw === undefined) {
     throw new ClearError("provider_error", "The model returned no explanation.", {
@@ -79,15 +82,16 @@ async function generateWithProvider(
       latencyMs: Date.now() - started,
       tokenUsage: response.usage,
     },
-    repair: (issues, invalid) => repairOnce(provider, model, issues, invalid),
+    repair: (issues, invalid) => repairOnce(provider, model, credential, issues, invalid),
   });
 
-  return { document, providerId: provider.id, model };
+  return { document, providerId: storedProviderId, model };
 }
 
 async function repairOnce(
   provider: AIProvider,
   model: string,
+  credential: ProviderCredential | undefined,
   issues: string[],
   invalid: unknown,
 ): Promise<unknown> {
@@ -97,7 +101,7 @@ async function repairOnce(
     messages: [{ role: "user", content: buildRepairUserPrompt(invalid, issues) }],
     temperature: 0,
     maxOutputTokens: 8000,
-  });
+  }, credential);
   if (response.structured !== undefined) return response.structured;
   if (response.text) return response.text;
   throw new ClearError("schema_invalid", "CLEAR could not repair the explanation.", {

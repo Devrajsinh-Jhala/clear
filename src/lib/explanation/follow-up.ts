@@ -1,8 +1,7 @@
 import "server-only";
 
-import { resolveLessonModel } from "@/src/lib/ai/providers/gemini";
-import { resolveGenerationProvider } from "@/src/lib/ai/router";
-import type { InlineAttachment } from "@/src/lib/ai/types";
+import { assertProviderMedia, selectGeneration } from "@/src/lib/ai/router";
+import type { InlineAttachment, ProviderCredential } from "@/src/lib/ai/types";
 import { ClearError } from "@/src/lib/api/errors";
 import { isRecord } from "@/src/lib/explanation/normalize";
 import { acceptModelOutput } from "@/src/lib/explanation/validate";
@@ -21,9 +20,13 @@ export async function continueExplanation(input: {
   sourceNote?: string;
   attachments?: InlineAttachment[];
   model?: string;
+  adapterId?: string;
+  credential?: ProviderCredential;
 }): Promise<{ document: ExplanationDocument; reply: string; providerId: string; model: string }> {
-  const provider = resolveGenerationProvider();
-  const model = resolveLessonModel(provider.id, input.model);
+  const selected = selectGeneration(input);
+  assertProviderMedia(selected.provider, input.attachments);
+  const provider = selected.provider;
+  const model = selected.model;
   const started = Date.now();
   const response = await provider.generate({
     model,
@@ -41,7 +44,7 @@ export async function continueExplanation(input: {
     attachments: input.attachments,
     temperature: 0.3,
     maxOutputTokens: 12000,
-  });
+  }, selected.credential);
 
   const raw = response.structured ?? response.text;
   if (raw === undefined) {
@@ -75,12 +78,12 @@ export async function continueExplanation(input: {
         messages: [{ role: "user", content: buildRepairUserPrompt(invalid, issues) }],
         temperature: 0,
         maxOutputTokens: 12000,
-      });
+      }, selected.credential);
       return repaired.structured ?? repaired.text;
     },
   });
 
-  return { document, reply, providerId: provider.id, model };
+  return { document, reply, providerId: selected.storedProviderId, model };
 }
 
 function stripServerFields(document: ExplanationDocument): Record<string, unknown> {

@@ -15,6 +15,15 @@ export async function currentLearnerId(): Promise<string | undefined> {
   return value && isUuid(value) ? value : undefined;
 }
 
+export async function ensureLearnerId(): Promise<string> {
+  const jar = await cookies();
+  const existing = jar.get(COOKIE)?.value;
+  if (existing && isUuid(existing)) return existing;
+  const id = randomUUID();
+  jar.set(COOKIE, id, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 400 });
+  return id;
+}
+
 export async function currentLearningProfile(): Promise<LearningProfile> {
   return readLearningProfile(await currentLearnerId());
 }

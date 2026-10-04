@@ -2,6 +2,8 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
+import { loadLessonCredential, loadOwnCredential } from "@/src/lib/ai/credential-service";
+import { isByokProvider, parseStoredProvider } from "@/src/lib/ai/byok";
 import { ClearError } from "@/src/lib/api/errors";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
 import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
@@ -25,6 +27,7 @@ export async function createLesson(input: {
   exampleId?: "mutex";
   uploads?: PreparedAttachment[];
   model?: string;
+  provider?: string;
 }): Promise<ConversationRecord> {
   const now = new Date().toISOString();
   const id = randomUUID();
@@ -64,6 +67,7 @@ export async function createLesson(input: {
     throw new ClearError("invalid_request", "Enter a question to explain.", { status: 400 });
   }
 
+  const ownKey = input.provider && input.provider !== "clear-free" ? await loadOwnCredential(input.provider) : undefined;
   const generated = await generateExplanation({
     question,
     level: input.level,
@@ -71,7 +75,9 @@ export async function createLesson(input: {
     customLevel: input.customLevel,
     sourceNote: sourceNote(input.uploads),
     attachments: inlineAttachments(input.uploads),
-    model: input.model,
+    model: ownKey ? input.model || ownKey.model : input.model,
+    adapterId: ownKey?.provider,
+    credential: ownKey?.credential,
   });
   const record = buildRecord({
     id,
@@ -101,6 +107,7 @@ export async function addFollowUp(input: {
     throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
   }
 
+  const ownKey = await savedKey(existing.activeProvider);
   const continued = await continueExplanation({
     message: input.message,
     document: existing.document,
@@ -108,6 +115,8 @@ export async function addFollowUp(input: {
     sourceNote: sourceNote(existing.attachments),
     attachments: await imageAttachments(existing.attachments),
     model: existing.activeModel,
+    adapterId: ownKey?.provider,
+    credential: ownKey?.credential,
   });
   const now = new Date().toISOString();
   const record: ConversationRecord = {
@@ -136,7 +145,12 @@ export async function submitTeachBack(input: {
   if (!existing?.document) {
     throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
   }
-  const result = await reviewTeachBack(input.explanation, existing.document, existing.activeModel);
+  const ownKey = await savedKey(existing.activeProvider);
+  const result = await reviewTeachBack(input.explanation, existing.document, {
+    model: existing.activeModel,
+    adapterId: ownKey?.provider,
+    credential: ownKey?.credential,
+  });
   const now = new Date().toISOString();
   const learnerId = await currentLearnerId();
   if (learnerId) {
@@ -195,6 +209,15 @@ function buildRecord(input: {
       { id: randomUUID(), role: "assistant", content: input.assistant, createdAt: input.now },
     ],
   };
+}
+
+async function savedKey(activeProvider: string) {
+  const parsed = parseStoredProvider(activeProvider);
+  if (!parsed.usesOwnKey) return undefined;
+  if (!isByokProvider(parsed.adapterId)) {
+    throw new ClearError("provider_unavailable", "That saved provider is no longer available.", { status: 400 });
+  }
+  return loadLessonCredential(parsed.adapterId);
 }
 
 function storedAttachments(uploads?: PreparedAttachment[]): LessonAttachment[] | undefined {

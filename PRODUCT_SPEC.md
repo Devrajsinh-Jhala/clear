@@ -31,18 +31,18 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Learning memory is off until the learner turns it on in Settings. It remembers concept state and open misconceptions from teach-it-back for this browser, and the learner can delete one concept or every record. The progress page shows those states. Mastery is a study note, not a certification.
 - Image and PDF attachments on a question. Files stay on the server. Images and a whole PDF are sent to the selected model. A page range sends extracted text instead of the rest of the document. Follow-ups reuse extracted text and do not send the PDF again.
 - CLEAR Free model choice on the ask box: Gemini 2.5 Flash (`gemini-2.5-flash`) and Gemini 3.5 Flash (`gemini-3.5-flash`). The lesson stores that model and uses it for follow-ups and teach-back.
+- Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
 
 ## Partial
 
 - Quiz grading is local to the page. It does not write learning memory.
 - Visual and interactive views render when the explanation document includes those specs. Generation still prefers an empty interactive list unless one fits.
-- Settings lists providers. Only CLEAR Free and the mock provider are connected.
+- Settings can connect a provider key for this browser. Signed-in accounts do not have their own credential vault yet.
 - Guest lessons persist at their URL on this server. The library screen is still an empty state. Learning records are not tied to an account yet.
 
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- BYOK for OpenAI, Anthropic, xAI, Gemini, and custom OpenAI-compatible endpoints
 - Model routing, fallback permissions, and two-model compare
 - Voice tutor
 - Skill ZIP download
@@ -51,7 +51,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-Phase 6 in the specification: bring-your-own-key providers, starting with encrypted credential storage and one provider besides CLEAR Free. Do not start payments.
+Phase 7: model routing and two-model compare. Do not start payments.
 
 ## Last launch item — support the work
 

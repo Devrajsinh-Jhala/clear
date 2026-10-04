@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { byokProviderLabel, type ByokProviderId } from "@/src/lib/ai/byok";
 import { CLEAR_FREE_MODELS, type ClearFreeModelId } from "@/src/lib/ai/models";
 import { DEPTH_OPTIONS, EXAMPLE_QUESTIONS, LEVEL_OPTIONS } from "@/src/lib/explanation/labels";
 import type { Depth, LearnerLevel } from "@/src/lib/explanation/schema";
@@ -19,6 +20,8 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
   const [level, setLevel] = useState<LearnerLevel>("student");
   const [depth, setDepth] = useState<Depth>("balanced");
   const [model, setModel] = useState<ClearFreeModelId>(defaultModel);
+  const [provider, setProvider] = useState<"clear-free" | ByokProviderId>("clear-free");
+  const [connected, setConnected] = useState<Array<{ id: ByokProviderId; label: string; model: string }>>([]);
   const [customLevel, setCustomLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState(0);
@@ -27,6 +30,15 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
   const [files, setFiles] = useState<File[]>([]);
   const [pdfScope, setPdfScope] = useState<"whole" | "pages">("whole");
   const [pdfPages, setPdfPages] = useState("");
+
+  useEffect(() => {
+    void fetch("/api/providers")
+      .then((response) => response.json())
+      .then((payload: { connected?: Array<{ id: ByokProviderId; label: string; model: string }> }) => {
+        setConnected(payload.connected ?? []);
+      })
+      .catch(() => setConnected([]));
+  }, []);
 
   useEffect(() => {
     if (!loading) return;
@@ -51,7 +63,10 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
       if (!exampleId && question.trim()) body.set("question", question);
       body.set("level", level);
       body.set("depth", depth);
-      body.set("model", model);
+      body.set("provider", provider);
+      if (provider === "clear-free") body.set("model", model);
+      const saved = connected.find((item) => item.id === provider);
+      if (provider !== "clear-free" && saved) body.set("model", saved.model);
       if (level === "custom" && customLevel.trim()) body.set("customLevel", customLevel);
       if (exampleId) body.set("exampleId", exampleId);
       if (!exampleId) {
@@ -195,20 +210,42 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           </select>
         </label>
         <label className="text-sm text-muted">
-          Model
+          Provider
           <select
-            aria-label="CLEAR Free model"
-            value={model}
-            onChange={(event) => setModel(event.target.value as ClearFreeModelId)}
+            aria-label="Explanation provider"
+            value={provider}
+            onChange={(event) => setProvider(event.target.value as "clear-free" | ByokProviderId)}
             className="ml-2 bg-transparent text-foreground"
           >
-            {CLEAR_FREE_MODELS.map((item) => (
+            <option value="clear-free">CLEAR Free</option>
+            {connected.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.label}
+                Your API · {item.label}
               </option>
             ))}
           </select>
         </label>
+        {provider === "clear-free" ? (
+          <label className="text-sm text-muted">
+            Model
+            <select
+              aria-label="CLEAR Free model"
+              value={model}
+              onChange={(event) => setModel(event.target.value as ClearFreeModelId)}
+              className="ml-2 bg-transparent text-foreground"
+            >
+              {CLEAR_FREE_MODELS.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <span className="text-sm text-muted">
+            Model {connected.find((item) => item.id === provider)?.model ?? byokProviderLabel(provider)}
+          </span>
+        )}
         {level === "custom" ? (
           <label className="text-sm text-muted">
             Describe the learner
