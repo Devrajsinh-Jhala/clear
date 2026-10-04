@@ -1,7 +1,7 @@
 import "server-only";
 
 import { ClearError } from "@/src/lib/api/errors";
-import { defaultGeminiModel } from "@/src/lib/ai/providers/gemini";
+import { resolveLessonModel } from "@/src/lib/ai/providers/gemini";
 import { resolveGenerationProvider } from "@/src/lib/ai/router";
 import {
   evaluateTeachBackLocally,
@@ -14,12 +14,13 @@ import { buildTeachBackUserPrompt, TEACH_BACK_SYSTEM_PROMPT } from "@/src/lib/pr
 export async function reviewTeachBack(
   explanation: string,
   document: ExplanationDocument,
+  model?: string,
 ): Promise<TeachBackResult> {
   try {
     const provider = resolveGenerationProvider();
-    const model = provider.id === "gemini" ? defaultGeminiModel() : "clear-mock";
+    const selected = resolveLessonModel(provider.id, model);
     const response = await provider.generate({
-      model,
+      model: selected,
       system: TEACH_BACK_SYSTEM_PROMPT,
       messages: [
         {

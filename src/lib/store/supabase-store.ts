@@ -17,6 +17,14 @@ type ConversationRow = {
   updated_at: string;
 };
 
+type AttachmentRow = {
+  id: string;
+  mime_type: string;
+  storage_path: string;
+  size_bytes: number;
+  metadata: { filename?: string; pageCount?: number; extractedText?: string } | null;
+};
+
 type MessageRow = {
   id: string;
   role: "user" | "assistant" | "system";
@@ -25,8 +33,8 @@ type MessageRow = {
 };
 
 export function createSupabaseStore(): ConversationStore | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   if (!url || !serviceKey) return null;
 
   const supabase = createClient(url, serviceKey, {
@@ -56,6 +64,11 @@ export function createSupabaseStore(): ConversationStore | null {
         .order("created_at", { ascending: false })
         .limit(1);
 
+      const { data: attachments } = await supabase
+        .from("attachments")
+        .select("id, mime_type, storage_path, size_bytes, metadata")
+        .eq("conversation_id", id);
+
       const row = conversation as ConversationRow;
       return {
         id: row.id,
@@ -76,6 +89,15 @@ export function createSupabaseStore(): ConversationStore | null {
             kind: message.content?.kind,
           })),
         document: (documents?.[0]?.document as ExplanationDocument | undefined) ?? null,
+        attachments: ((attachments ?? []) as AttachmentRow[]).map((item) => ({
+          id: item.id,
+          filename: typeof item.metadata?.filename === "string" ? item.metadata.filename : "upload",
+          mimeType: item.mime_type,
+          sizeBytes: item.size_bytes,
+          storageName: item.storage_path,
+          pageCount: typeof item.metadata?.pageCount === "number" ? item.metadata.pageCount : undefined,
+          extractedText: typeof item.metadata?.extractedText === "string" ? item.metadata.extractedText : undefined,
+        })),
       };
     },
     async save(record) {
@@ -121,6 +143,26 @@ export function createSupabaseStore(): ConversationStore | null {
           created_at: record.updatedAt,
         });
         if (documentError) throw new Error(documentError.message);
+      }
+
+      await supabase.from("attachments").delete().eq("conversation_id", record.id);
+      if (record.attachments && record.attachments.length > 0) {
+        const { error: attachmentError } = await supabase.from("attachments").insert(
+          record.attachments.map((attachment) => ({
+            id: attachment.id,
+            conversation_id: record.id,
+            type: attachment.mimeType === "application/pdf" ? "pdf" : "image",
+            mime_type: attachment.mimeType,
+            storage_path: attachment.storageName,
+            size_bytes: attachment.sizeBytes,
+            metadata: {
+              filename: attachment.filename,
+              pageCount: attachment.pageCount,
+              extractedText: attachment.extractedText,
+            },
+          })),
+        );
+        if (attachmentError) throw new Error(attachmentError.message);
       }
     },
   };

@@ -29,6 +29,8 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Trusted interactive widgets: step flow, binary search, state machine, timeline, graph traversal, parameter explorer, code trace. Unknown widgets are rejected. Model JavaScript is never executed.
 - Teach-it-back on a lesson. A configured model reviews the mechanism. Without a model key, CLEAR checks which concept names were used and says a model did not review the wording. Writing style is not graded.
 - Learning memory is off until the learner turns it on in Settings. It remembers concept state and open misconceptions from teach-it-back for this browser, and the learner can delete one concept or every record. The progress page shows those states. Mastery is a study note, not a certification.
+- Image and PDF attachments on a question. Files stay on the server. Images and a whole PDF are sent to the selected model. A page range sends extracted text instead of the rest of the document. Follow-ups reuse extracted text and do not send the PDF again.
+- CLEAR Free model choice on the ask box: Gemini 2.5 Flash (`gemini-2.5-flash`) and Gemini 3.5 Flash (`gemini-3.5-flash`). The lesson stores that model and uses it for follow-ups and teach-back.
 
 ## Partial
 
@@ -40,7 +42,6 @@ The full product specification starts at "Product Specification & Codex Build Br
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Image and PDF input
 - BYOK for OpenAI, Anthropic, xAI, Gemini, and custom OpenAI-compatible endpoints
 - Model routing, fallback permissions, and two-model compare
 - Voice tutor
@@ -50,7 +51,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-Phase 5 in the specification: image and PDF input. Do not start provider keys or payments before the learning loop is solid unless the user changes this note.
+Phase 6 in the specification: bring-your-own-key providers, starting with encrypted credential storage and one provider besides CLEAR Free. Do not start payments.
 
 ## Last launch item — support the work
 

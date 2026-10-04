@@ -1,4 +1,5 @@
 import { AskComposer } from "@/components/ask/AskComposer";
+import { defaultClearFreeModel } from "@/src/lib/ai/models";
 
 export default function HomePage() {
   return (
@@ -9,7 +10,7 @@ export default function HomePage() {
         Ask a difficult question. CLEAR turns it into precise explanations, mental models, diagrams, interactive examples, and questions that make sure it actually clicked.
       </p>
       <div className="mt-10">
-        <AskComposer />
+        <AskComposer defaultModel={defaultClearFreeModel()} />
       </div>
       <section className="mt-16 grid gap-8 border-t border-line pt-10 sm:grid-cols-3">
         <div>

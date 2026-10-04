@@ -21,10 +21,16 @@ export type UnifiedMessage = {
   content: string;
 };
 
+export type InlineAttachment = {
+  mimeType: string;
+  dataBase64: string;
+};
+
 export type UnifiedGenerationRequest = {
   model: string;
   system?: string;
   messages: UnifiedMessage[];
+  attachments?: InlineAttachment[];
   temperature?: number;
   maxOutputTokens?: number;
 };

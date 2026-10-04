@@ -1,5 +1,15 @@
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
 
+export type LessonAttachment = {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  storageName: string;
+  pageCount?: number;
+  extractedText?: string;
+};
+
 export type ConversationMessage = {
   id: string;
   role: "user" | "assistant";
@@ -19,6 +29,7 @@ export type ConversationRecord = {
   depth: Depth;
   messages: ConversationMessage[];
   document: ExplanationDocument | null;
+  attachments?: LessonAttachment[];
 };
 
 export interface ConversationStore {

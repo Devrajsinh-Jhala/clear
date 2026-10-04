@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { CLEAR_FREE_MODELS, type ClearFreeModelId } from "@/src/lib/ai/models";
 import { DEPTH_OPTIONS, EXAMPLE_QUESTIONS, LEVEL_OPTIONS } from "@/src/lib/explanation/labels";
 import type { Depth, LearnerLevel } from "@/src/lib/explanation/schema";
 
@@ -12,16 +13,20 @@ const STAGES = [
   "Creating your explanation…",
 ];
 
-export function AskComposer() {
+export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }) {
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [level, setLevel] = useState<LearnerLevel>("student");
   const [depth, setDepth] = useState<Depth>("balanced");
+  const [model, setModel] = useState<ClearFreeModelId>(defaultModel);
   const [customLevel, setCustomLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState(0);
   const [error, setError] = useState("");
   const [retryable, setRetryable] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [pdfScope, setPdfScope] = useState<"whole" | "pages">("whole");
+  const [pdfPages, setPdfPages] = useState("");
 
   useEffect(() => {
     if (!loading) return;
@@ -32,22 +37,31 @@ export function AskComposer() {
     return () => window.clearInterval(timer);
   }, [loading]);
 
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    setFiles((current) => [...current, ...Array.from(list)].slice(0, 3));
+  }
+
   async function submit(exampleId?: "mutex") {
     setLoading(true);
     setError("");
     setStage(0);
     try {
-      const response = await fetch("/api/explanations", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          question: exampleId ? undefined : question,
-          level,
-          depth,
-          customLevel: level === "custom" ? customLevel : undefined,
-          exampleId,
-        }),
-      });
+      const body = new FormData();
+      if (!exampleId && question.trim()) body.set("question", question);
+      body.set("level", level);
+      body.set("depth", depth);
+      body.set("model", model);
+      if (level === "custom" && customLevel.trim()) body.set("customLevel", customLevel);
+      if (exampleId) body.set("exampleId", exampleId);
+      if (!exampleId) {
+        for (const file of files) body.append("files", file);
+        if (files.some((file) => file.type === "application/pdf")) {
+          body.set("pdfScope", pdfScope);
+          body.set("pdfPages", pdfPages);
+        }
+      }
+      const response = await fetch("/api/explanations", { method: "POST", body });
       const payload = (await response.json()) as {
         conversationId?: string;
         error?: { message?: string; retryable?: boolean };
@@ -92,6 +106,63 @@ export function AskComposer() {
         placeholder="Why does virtual memory exist?"
         className="mt-4 w-full resize-y bg-transparent text-lg outline-none placeholder:text-muted"
       />
+      <div
+        className="mt-4 border border-dashed border-line p-3"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault();
+          addFiles(event.dataTransfer.files);
+        }}
+      >
+        <label className="text-sm text-muted">
+          Add an image or PDF
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+            multiple
+            className="mt-2 block text-foreground"
+            onChange={(event) => {
+              addFiles(event.target.files);
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {files.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {files.map((file) => (
+              <li key={`${file.name}-${file.size}`} className="flex items-center justify-between gap-3 text-sm">
+                <span>
+                  {file.name} · {Math.ceil(file.size / 1024)} KB
+                </span>
+                <button type="button" className="underline" onClick={() => setFiles((current) => current.filter((item) => item !== file))}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {files.some((file) => file.type === "application/pdf") ? (
+          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+            <label>
+              <input type="radio" name="pdf-scope" checked={pdfScope === "whole"} onChange={() => setPdfScope("whole")} /> Whole document
+            </label>
+            <label>
+              <input type="radio" name="pdf-scope" checked={pdfScope === "pages"} onChange={() => setPdfScope("pages")} /> Selected pages
+            </label>
+            {pdfScope === "pages" ? (
+              <label>
+                Pages
+                <input
+                  value={pdfPages}
+                  onChange={(event) => setPdfPages(event.target.value)}
+                  placeholder="1-3, 5"
+                  className="ml-2 border-b border-line bg-transparent"
+                />
+              </label>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       <div className="mt-4 flex flex-wrap gap-3">
         <label className="text-sm text-muted">
           Level
@@ -119,6 +190,21 @@ export function AskComposer() {
             {DEPTH_OPTIONS.map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm text-muted">
+          Model
+          <select
+            aria-label="CLEAR Free model"
+            value={model}
+            onChange={(event) => setModel(event.target.value as ClearFreeModelId)}
+            className="ml-2 bg-transparent text-foreground"
+          >
+            {CLEAR_FREE_MODELS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
               </option>
             ))}
           </select>
@@ -155,7 +241,9 @@ export function AskComposer() {
       <p className="mt-4 text-sm text-muted" role="status">
         {loading
           ? STAGES[stage]
-          : "CLEAR Free sends a new question to Google Gemini. The sample lesson stays on this server."}
+          : files.length > 0
+            ? "CLEAR Free sends your question and these files to Google Gemini."
+            : "CLEAR Free sends a new question to Google Gemini. The sample lesson stays on this server."}
       </p>
       {error ? (
         <div className="mt-4 border border-danger/40 bg-background p-3 text-sm" role="alert">

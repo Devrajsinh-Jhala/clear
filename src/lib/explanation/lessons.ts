@@ -11,9 +11,11 @@ import { currentLearnerId } from "@/src/lib/learning/session";
 import { readLearningProfile, writeLearningProfile } from "@/src/lib/learning/store";
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
 import { generateExplanation } from "@/src/lib/explanation/generate";
+import type { PreparedAttachment } from "@/src/lib/uploads/prepare";
+import { readStoredUpload } from "@/src/lib/uploads/prepare";
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
 import { getConversationStore } from "@/src/lib/store";
-import type { ConversationRecord } from "@/src/lib/store/types";
+import type { ConversationRecord, LessonAttachment } from "@/src/lib/store/types";
 
 export async function createLesson(input: {
   question?: string;
@@ -21,6 +23,8 @@ export async function createLesson(input: {
   depth: Depth;
   customLevel?: string;
   exampleId?: "mutex";
+  uploads?: PreparedAttachment[];
+  model?: string;
 }): Promise<ConversationRecord> {
   const now = new Date().toISOString();
   const id = randomUUID();
@@ -65,6 +69,9 @@ export async function createLesson(input: {
     level: input.level,
     depth: input.depth,
     customLevel: input.customLevel,
+    sourceNote: sourceNote(input.uploads),
+    attachments: inlineAttachments(input.uploads),
+    model: input.model,
   });
   const record = buildRecord({
     id,
@@ -77,6 +84,7 @@ export async function createLesson(input: {
     question,
     assistant: generated.document.essence,
     document: generated.document,
+    attachments: storedAttachments(input.uploads),
   });
   await getConversationStore().save(record);
   return record;
@@ -97,6 +105,9 @@ export async function addFollowUp(input: {
     message: input.message,
     document: existing.document,
     activeView: input.activeView,
+    sourceNote: sourceNote(existing.attachments),
+    attachments: await imageAttachments(existing.attachments),
+    model: existing.activeModel,
   });
   const now = new Date().toISOString();
   const record: ConversationRecord = {
@@ -125,7 +136,7 @@ export async function submitTeachBack(input: {
   if (!existing?.document) {
     throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
   }
-  const result = await reviewTeachBack(input.explanation, existing.document);
+  const result = await reviewTeachBack(input.explanation, existing.document, existing.activeModel);
   const now = new Date().toISOString();
   const learnerId = await currentLearnerId();
   if (learnerId) {
@@ -166,6 +177,7 @@ function buildRecord(input: {
   question: string;
   assistant: string;
   document: ExplanationDocument;
+  attachments?: LessonAttachment[];
 }): ConversationRecord {
   return {
     id: input.id,
@@ -177,9 +189,51 @@ function buildRecord(input: {
     level: input.level,
     depth: input.depth,
     document: input.document,
+    attachments: input.attachments,
     messages: [
       { id: randomUUID(), role: "user", content: input.question, createdAt: input.now },
       { id: randomUUID(), role: "assistant", content: input.assistant, createdAt: input.now },
     ],
   };
+}
+
+function storedAttachments(uploads?: PreparedAttachment[]): LessonAttachment[] | undefined {
+  if (!uploads?.length) return undefined;
+  return uploads.map((item) => ({
+    id: item.id,
+    filename: item.filename,
+    mimeType: item.mimeType,
+    sizeBytes: item.sizeBytes,
+    storageName: item.storageName,
+    pageCount: item.pageCount,
+    extractedText: item.extractedText,
+  }));
+}
+
+function inlineAttachments(uploads?: PreparedAttachment[]) {
+  return (uploads ?? [])
+    .filter((item) => item.dataBase64.length > 0)
+    .map((item) => ({ mimeType: item.mimeType, dataBase64: item.dataBase64 }));
+}
+
+function sourceNote(uploads?: Array<{ filename: string; pageCount?: number; extractedText?: string }>) {
+  if (!uploads?.length) return undefined;
+  return uploads
+    .map((item) => {
+      const header = `${item.filename}${item.pageCount ? ` (${item.pageCount} pages)` : ""}`;
+      return item.extractedText ? `${header}\n${item.extractedText}` : header;
+    })
+    .join("\n\n")
+    .slice(0, 30000);
+}
+
+async function imageAttachments(uploads?: LessonAttachment[]) {
+  const images = [];
+  for (const item of uploads ?? []) {
+    if (!item.mimeType.startsWith("image/") || item.sizeBytes > 4_000_000) continue;
+    const bytes = await readStoredUpload(item.storageName);
+    if (!bytes) continue;
+    images.push({ mimeType: item.mimeType, dataBase64: bytes.toString("base64") });
+  }
+  return images;
 }

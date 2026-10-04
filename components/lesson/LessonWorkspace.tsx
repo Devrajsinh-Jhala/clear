@@ -92,6 +92,16 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
           <ProviderLabel provider={provider} model={model} />
         </p>
         <h1 className="mt-2 font-serif text-4xl leading-tight">{title}</h1>
+        {conversation.attachments && conversation.attachments.length > 0 ? (
+          <ul className="mt-3 text-sm text-muted">
+            {conversation.attachments.map((attachment) => (
+              <li key={attachment.id}>
+                {attachment.filename}
+                {attachment.pageCount ? ` · ${attachment.pageCount} pages` : ""} · sent to the selected provider
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <div role="tablist" aria-label="Explanation views" className="mt-6 flex gap-2 overflow-x-auto border-b border-line">
           {TABS.map(([id, label]) => {
             const selected = active === id;

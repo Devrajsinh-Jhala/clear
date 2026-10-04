@@ -3,7 +3,7 @@ import { redactSecrets } from "@/src/lib/ai/redact";
 import type { AIProvider, UnifiedGenerationRequest, UnifiedGenerationResponse } from "@/src/lib/ai/types";
 import { isRecord, parseJsonText } from "@/src/lib/explanation/normalize";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+import { defaultClearFreeModel, resolveClearFreeModel } from "@/src/lib/ai/models";
 
 export const geminiProvider: AIProvider = {
   id: "gemini",
@@ -34,20 +34,25 @@ export const geminiProvider: AIProvider = {
 };
 
 export function defaultGeminiModel(): string {
-  return process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  return defaultClearFreeModel();
+}
+
+export function resolveLessonModel(providerId: string, requested?: string): string {
+  if (providerId === "mock") return "clear-mock";
+  return resolveClearFreeModel(requested);
 }
 
 async function requestGemini(
   request: UnifiedGenerationRequest,
   apiKey: string,
 ): Promise<UnifiedGenerationResponse> {
-  const model = request.model || DEFAULT_MODEL;
+  const model = request.model || defaultGeminiModel();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const contents = request.messages
     .filter((message) => message.role !== "system")
-    .map((message) => ({
+    .map((message, index, messages) => ({
       role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content }],
+      parts: partsFor(message.content, index === messages.length - 1 ? request.attachments : undefined),
     }));
 
   let response: Response;
@@ -114,6 +119,15 @@ async function requestGemini(
     usage: readUsage(payload),
     finishReason: readFinishReason(payload),
   };
+}
+
+function partsFor(text: string, attachments: UnifiedGenerationRequest["attachments"]) {
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [{ text }];
+  for (const attachment of attachments ?? []) {
+    if (!attachment.dataBase64) continue;
+    parts.push({ inlineData: { mimeType: attachment.mimeType, data: attachment.dataBase64 } });
+  }
+  return parts;
 }
 
 function readGeminiText(payload: unknown): string {
