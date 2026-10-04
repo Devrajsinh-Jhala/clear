@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 
 import { DeepDiveView } from "@/components/lesson/DeepDiveView";
 import { ExamplesView } from "@/components/lesson/ExamplesView";
@@ -18,6 +19,10 @@ import type { ApprovedTarget } from "@/src/lib/routing/choose";
 import type { LessonMeta } from "@/src/lib/routing/store";
 import type { ConversationMessage, ConversationRecord } from "@/src/lib/store/types";
 
+const VoiceTutorView = dynamic(() => import("@/components/lesson/VoiceTutorView").then((module) => module.VoiceTutorView), {
+  loading: () => <p role="status">Preparing voice controls…</p>,
+});
+
 const TABS = [
   ["understand", "Understand"],
   ["mental-model", "Mental Model"],
@@ -28,6 +33,7 @@ const TABS = [
   ["verify", "Verify"],
   ["quiz", "Quiz"],
   ["teach-back", "Teach it back"],
+  ["voice", "Voice Tutor"],
 ] as const;
 
 type TabId = (typeof TABS)[number][0];
@@ -40,7 +46,12 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
   const [model, setModel] = useState(conversation.activeModel);
   const [title, setTitle] = useState(conversation.title);
   const [draft, setDraft] = useState("");
+  const [voiceDraft, setVoiceDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const sending = useRef(false);
+  const reviewing = useRef(false);
+  const [reviewPending, setReviewPending] = useState(false);
+  const busy = pending || reviewPending;
   const [error, setError] = useState("");
   const [lessonMeta, setLessonMeta] = useState(meta);
   const [nextProvider, setNextProvider] = useState("same");
@@ -57,7 +68,9 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
     return <p>This lesson has no explanation yet.</p>;
   }
 
-  async function sendFollowUp(message: string) {
+  async function sendFollowUp(message: string, view = active, turnProvider = nextProvider): Promise<boolean> {
+    if (sending.current || reviewing.current) return false;
+    sending.current = true;
     setPending(true);
     setError("");
     try {
@@ -66,8 +79,8 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           message,
-          activeView: active,
-          provider: nextProvider === "same" ? undefined : nextProvider,
+          activeView: view,
+          provider: turnProvider === "same" ? undefined : turnProvider,
         }),
       });
       const payload = (await response.json()) as {
@@ -80,17 +93,19 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
       };
       if (!response.ok || !payload.document || !payload.messages) {
         setError(payload.error?.message ?? "The follow-up did not update the lesson.");
-        return;
+        return false;
       }
       setDocument(payload.document);
       setMessages(payload.messages);
       setProvider(payload.activeProvider ?? provider);
       setModel(payload.activeModel ?? model);
       setTitle(payload.title ?? title);
-      setDraft("");
+      return true;
     } catch {
       setError("The follow-up did not finish. Try again.");
+      return false;
     } finally {
+      sending.current = false;
       setPending(false);
     }
   }
@@ -104,14 +119,14 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
           Sign-in and a saved library come with accounts. This address reloads the lesson on this server.
         </p>
       </aside>
-      <div>
+      <div className="min-w-0">
         <p className="text-sm text-muted">
           <ProviderLabel provider={provider} model={model} />
         </p>
         <h1 className="mt-2 font-serif text-4xl leading-tight">{title}</h1>
         {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted">{lessonMeta.fallbackNote}</p> : null}
         {lessonMeta.comparison && !lessonMeta.comparison.pickedId ? (
-          <div className="mt-6">
+          <fieldset disabled={busy} className="mt-6">
             <CompareView
               conversationId={conversation.id}
               options={lessonMeta.comparison.options}
@@ -124,7 +139,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 setTitle(chosen.title);
               }}
             />
-          </div>
+          </fieldset>
         ) : null}
         {conversation.attachments && conversation.attachments.length > 0 ? (
           <ul className="mt-3 text-sm text-muted">
@@ -152,12 +167,14 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 onClick={() => setActive(id)}
                 onKeyDown={(event) => {
                   const index = TABS.findIndex(([tabId]) => tabId === active);
-                  if (event.key === "ArrowRight") {
-                    setActive(TABS[(index + 1) % TABS.length][0]);
-                  }
-                  if (event.key === "ArrowLeft") {
-                    setActive(TABS[(index - 1 + TABS.length) % TABS.length][0]);
-                  }
+                  const nextIndex = event.key === "ArrowRight" ? (index + 1) % TABS.length
+                    : event.key === "ArrowLeft" ? (index - 1 + TABS.length) % TABS.length
+                    : event.key === "Home" ? 0 : event.key === "End" ? TABS.length - 1 : -1;
+                  if (nextIndex < 0) return;
+                  event.preventDefault();
+                  const next = TABS[nextIndex][0];
+                  setActive(next);
+                  window.document.getElementById(`tab-${next}`)?.focus();
                 }}
               >
                 {label}
@@ -174,9 +191,14 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
           {active === "deep-dive" ? <DeepDiveView document={document} /> : null}
           {active === "verify" ? <VerifyView document={document} /> : null}
           {active === "quiz" ? <QuizView items={document.quiz} /> : null}
-          {active === "teach-back" ? <TeachBackView conversationId={conversation.id} initial={null} /> : null}
+          <div hidden={active !== "teach-back"}>
+            <TeachBackView conversationId={conversation.id} initial={null} lessonRevision={`${document.metadata.generatedAt}:${provider}:${model}`} active={active === "teach-back"} disabled={pending} onPendingChange={(value) => { reviewing.current = value; setReviewPending(value); }} />
+          </div>
+          {active === "voice" ? (
+            <VoiceTutorView document={document} messages={messages} provider={provider} model={model} pending={busy} error={error} draft={voiceDraft} onDraftChange={setVoiceDraft} onSend={(message) => sendFollowUp(message, "voice", "same")} onTeachBack={() => setActive("teach-back")} />
+          ) : null}
         </div>
-        <section className="border-t border-line pt-6">
+        {active !== "voice" ? <section className="border-t border-line pt-6">
           <h2 className="font-serif text-2xl">Follow-up</h2>
           <ul className="mt-4 space-y-3">
             {messages
@@ -197,7 +219,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                   <button
                     type="button"
                     className="border border-line px-3 py-1 text-left text-sm"
-                    disabled={pending}
+                    disabled={busy}
                     onClick={() => void sendFollowUp(suggestion)}
                   >
                     {suggestion}
@@ -210,7 +232,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             className="mt-4 flex flex-col gap-3 sm:flex-row"
             onSubmit={(event) => {
               event.preventDefault();
-              if (draft.trim()) void sendFollowUp(draft.trim());
+              if (draft.trim()) void sendFollowUp(draft.trim()).then((sent) => { if (sent) setDraft(""); });
             }}
           >
             <label className="sr-only" htmlFor="follow-up">
@@ -219,6 +241,8 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             <input
               id="follow-up"
               value={draft}
+              maxLength={2000}
+              disabled={busy}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="Ask a follow-up…"
               className="min-w-0 flex-1 border border-line bg-card px-3 py-3"
@@ -228,6 +252,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
               <select
                 aria-label="Provider for the next turn"
                 value={nextProvider}
+                disabled={busy}
                 onChange={(event) => setNextProvider(event.target.value)}
                 className="ml-2 bg-transparent text-foreground"
               >
@@ -239,8 +264,8 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 ))}
               </select>
             </label>
-            <button type="submit" disabled={pending || !draft.trim()} className="bg-accent px-4 py-3 text-accent-foreground disabled:opacity-50">
-              {pending ? "Updating" : "Send"}
+            <button type="submit" disabled={busy || !draft.trim()} className="bg-accent px-4 py-3 text-accent-foreground disabled:opacity-50">
+              {busy ? "Updating" : "Send"}
             </button>
           </form>
           {error ? (
@@ -248,7 +273,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
               {error}
             </p>
           ) : null}
-        </section>
+        </section> : null}
       </div>
     </div>
   );

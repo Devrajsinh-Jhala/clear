@@ -33,6 +33,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 - CLEAR Free model choice on the ask box: Gemini 2.5 Flash (`gemini-2.5-flash`) and Gemini 3.5 Flash (`gemini-3.5-flash`). The lesson stores that model and uses it for follow-ups and teach-back.
 - Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
 - Model routing for this browser: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison notes live in `.data` until accounts exist.
+- Voice tutor through browser speech: speak a question, dictate an editable follow-up, listen to sections of the canonical lesson, and speak a teach-back and hear its feedback. Follow-ups use the lesson's current provider and update the same document. Transcripts stay readable. Microphone and narration start only on request, stop when their view closes, and have unsupported-browser, permission, network, and retry states. Narration supports pause, resume, and stop. A shared speech transport coordinates capture and playback and remains separate from the explanation provider. CLEAR does not store raw audio; the browser's speech service may process audio or narration text remotely.
 
 ## Partial
 
@@ -40,18 +41,21 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Visual and interactive views render when the explanation document includes those specs. Generation still prefers an empty interactive list unless one fits.
 - Settings can connect a provider key for this browser. Signed-in accounts do not have their own credential vault yet.
 - Guest lessons persist at their URL on this server. The library screen is still an empty state. Learning records are not tied to an account yet.
+- Voice uses speech-to-text, a normal model turn, and browser text-to-speech. Provider-native realtime audio is not implemented. Microphone recognition depends on the browser and still needs manual testing with real microphones across target devices.
+- Launch hardening still needs lesson ownership checks and durable storage for the `.data` records and uploads, alongside the production checks below. Guest lesson addresses currently grant access to anyone who has the URL.
 
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Voice tutor
 - Skill ZIP download
 - Share links and Markdown, JSON, and PDF export
 - Playwright, quotas, rate limits, Sentry, and the prompt eval suite
 
 ## Next product slice
 
-Phase 8: voice tutor. Do not start payments.
+Phase 9: portable CLEAR skill configurator and ZIP download. Keep provider-native realtime audio and device voice testing tracked above. Do not start payments.
+
+Latest voice checks: 69 unit tests passed, lint and production build passed. Browser checks covered narration play/pause/resume/stop, a mock follow-up through the existing lesson pipeline, retained drafts, keyboard tab focus, oral teach-back request locking, and a phone-width layout. Real microphone accuracy and live provider voice turns remain unverified.
 
 ## Last launch item — support the work
 

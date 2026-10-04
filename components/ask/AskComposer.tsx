@@ -3,11 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { SpeechInput } from "@/components/voice/SpeechInput";
 import { byokProviderLabel, type ByokProviderId } from "@/src/lib/ai/byok";
 import type { ApprovedTarget } from "@/src/lib/routing/choose";
 import { CLEAR_FREE_MODELS, type ClearFreeModelId } from "@/src/lib/ai/models";
 import { DEPTH_OPTIONS, EXAMPLE_QUESTIONS, LEVEL_OPTIONS } from "@/src/lib/explanation/labels";
 import type { Depth, LearnerLevel } from "@/src/lib/explanation/schema";
+import { appendTranscript } from "@/src/lib/voice/transcript";
 
 const STAGES = [
   "Understanding your question…",
@@ -131,10 +133,13 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           }
         }}
         rows={5}
+        maxLength={4000}
+        disabled={loading}
         required
         placeholder="Why does virtual memory exist?"
         className="mt-4 w-full resize-y bg-transparent text-lg outline-none placeholder:text-muted"
       />
+      <SpeechInput disabled={loading} label="Speak a question" onTranscript={(text) => setQuestion((current) => appendTranscript(current, text, 4000))} />
       <div
         className="mt-4 border border-dashed border-line p-3"
         onDragOver={(event) => event.preventDefault()}

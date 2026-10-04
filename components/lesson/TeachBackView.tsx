@@ -2,22 +2,36 @@
 
 import { useState } from "react";
 
+import { SpeechInput } from "@/components/voice/SpeechInput";
+import { SpeechPlayer } from "@/components/voice/SpeechPlayer";
 import type { TeachBackResult } from "@/src/lib/explanation/teach-back";
+import { appendTranscript, teachBackTranscript } from "@/src/lib/voice/transcript";
 
 export function TeachBackView({
   conversationId,
   initial,
+  lessonRevision,
+  active = true,
+  disabled = false,
+  onPendingChange,
 }: {
   conversationId: string;
   initial: TeachBackResult | null;
+  lessonRevision: string;
+  active?: boolean;
+  disabled?: boolean;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [explanation, setExplanation] = useState("");
-  const [result, setResult] = useState<TeachBackResult | null>(initial);
+  const [review, setReview] = useState({ revision: lessonRevision, result: initial });
+  const result = review.revision === lessonRevision ? review.result : null;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   async function submit() {
+    if (pending || disabled) return;
     setPending(true);
+    onPendingChange?.(true);
     setError("");
     try {
       const response = await fetch(`/api/explanations/${conversationId}/teach-back`, {
@@ -33,11 +47,12 @@ export function TeachBackView({
         setError(payload.error?.message ?? "CLEAR could not review that explanation.");
         return;
       }
-      setResult(payload.result);
+      setReview({ revision: lessonRevision, result: payload.result });
     } catch {
       setError("The review did not finish. Try again.");
     } finally {
       setPending(false);
+      onPendingChange?.(false);
     }
   }
 
@@ -60,10 +75,13 @@ export function TeachBackView({
           rows={6}
           required
           minLength={8}
+          maxLength={4000}
+          disabled={pending || disabled}
           className="mt-4 w-full border border-line bg-card p-3"
           placeholder="A mutex lets one thread into the critical section…"
         />
-        <button type="submit" disabled={pending} className="mt-4 bg-accent px-4 py-2 text-accent-foreground disabled:opacity-60">
+        <SpeechInput disabled={!active || pending || disabled} label="Speak your explanation" onTranscript={(text) => setExplanation((current) => appendTranscript(current, text, 4000))} />
+        <button type="submit" disabled={pending || disabled} className="mt-4 bg-accent px-4 py-2 text-accent-foreground disabled:opacity-60">
           {pending ? "Reviewing" : "Check my explanation"}
         </button>
       </form>
@@ -72,12 +90,12 @@ export function TeachBackView({
           {error}
         </p>
       ) : null}
-      {result ? <TeachBackResultView result={result} /> : null}
+      {result ? <TeachBackResultView result={result} disabled={!active || pending || disabled} /> : null}
     </div>
   );
 }
 
-function TeachBackResultView({ result }: { result: TeachBackResult }) {
+function TeachBackResultView({ result, disabled }: { result: TeachBackResult; disabled: boolean }) {
   return (
     <section className="border border-line bg-card p-5" aria-live="polite">
       <h2 className="font-serif text-3xl">{result.headline}</h2>
@@ -108,6 +126,7 @@ function TeachBackResultView({ result }: { result: TeachBackResult }) {
       ) : null}
       <h3 className="mt-5 font-medium">Repaired explanation</h3>
       <p className="mt-2 max-w-2xl leading-relaxed">{result.repairedExplanation}</p>
+      <div className="mt-5"><SpeechPlayer text={teachBackTranscript(result)} label="Listen to feedback" disabled={disabled} /></div>
     </section>
   );
 }
