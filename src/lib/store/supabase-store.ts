@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { ClearError } from "@/src/lib/api/errors";
 import { isUuid } from "@/src/lib/explanation/normalize";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 import type { ConversationMessage, ConversationRecord, ConversationStore } from "@/src/lib/store/types";
@@ -113,7 +114,7 @@ export function createSupabaseStore(): ConversationStore | null {
         created_at: record.createdAt,
         updated_at: record.updatedAt,
       });
-      if (conversationError) throw new Error(conversationError.message);
+      if (conversationError) throw databaseError(conversationError.message);
 
       await supabase.from("messages").delete().eq("conversation_id", record.id);
       if (record.messages.length > 0) {
@@ -128,7 +129,7 @@ export function createSupabaseStore(): ConversationStore | null {
             created_at: message.createdAt,
           })),
         );
-        if (messageError) throw new Error(messageError.message);
+        if (messageError) throw databaseError(messageError.message);
       }
 
       if (record.document) {
@@ -142,7 +143,7 @@ export function createSupabaseStore(): ConversationStore | null {
           prompt_version: record.document.metadata.promptVersion,
           created_at: record.updatedAt,
         });
-        if (documentError) throw new Error(documentError.message);
+        if (documentError) throw databaseError(documentError.message);
       }
 
       await supabase.from("attachments").delete().eq("conversation_id", record.id);
@@ -162,8 +163,19 @@ export function createSupabaseStore(): ConversationStore | null {
             },
           })),
         );
-        if (attachmentError) throw new Error(attachmentError.message);
+        if (attachmentError) throw databaseError(attachmentError.message);
       }
     },
   };
+}
+
+function databaseError(message: string): Error {
+  if (/schema cache|does not exist|PGRST205/i.test(message)) {
+    return new ClearError(
+      "database_not_ready",
+      "Supabase is connected, but the CLEAR tables are not there yet. Run supabase/migrations/20261004120000_init.sql in the Supabase SQL editor, then try again.",
+      { status: 503 },
+    );
+  }
+  return new Error(message);
 }
