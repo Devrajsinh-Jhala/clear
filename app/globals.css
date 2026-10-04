@@ -3,12 +3,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f3efe6;
-  --foreground: #1c1915;
-  --card: #fffdf8;
-  --muted: #655f56;
-  --line: #e3dacb;
-  --accent: #0c5f5b;
+  --background: #f6f5f0;
+  --foreground: #20271f;
+  --card: #fffefa;
+  --muted: #657060;
+  --line: #dfe4d9;
+  --accent: #1c665b;
   --accent-foreground: #f4fffe;
   --danger: #8d2b2b;
   --warning: #7a5410;
@@ -16,11 +16,11 @@
 }
 
 .dark {
-  --background: #111411;
-  --foreground: #ece6dc;
-  --card: #1a1f1b;
-  --muted: #b1a89c;
-  --line: #2d352f;
+  --background: #121713;
+  --foreground: #edf0e7;
+  --card: #1a221c;
+  --muted: #a8b5a7;
+  --line: #303e33;
   --accent: #7fd0c8;
   --accent-foreground: #08211f;
   --danger: #ffb4b4;
@@ -49,6 +49,98 @@ body {
   font-family: var(--font-sans), sans-serif;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+button, summary, select {
+  cursor: pointer;
+}
+
+button:disabled, select:disabled {
+  cursor: not-allowed;
+}
+
+select option {
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.surface-panel {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: 0 8px 32px rgb(25 40 24 / 3%);
+}
+
+.field-control {
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.625rem;
+  background: var(--background);
+  padding: 0.625rem 0.75rem;
+  color: var(--foreground);
+}
+
+.field-control:disabled {
+  opacity: 0.6;
+}
+
+.button-primary, .button-secondary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, var(--foreground));
+}
+
+.button-secondary {
+  border-color: var(--line);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.button-secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--card));
+}
+
+.button-primary:disabled, .button-secondary:disabled {
+  opacity: 0.55;
+}
+
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 .skip-link {
   position: absolute;
   left: 1rem;
@@ -73,5 +165,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .button-primary, .button-secondary {
+    transition: none;
   }
 }

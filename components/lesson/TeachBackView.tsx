@@ -77,11 +77,11 @@ export function TeachBackView({
           minLength={8}
           maxLength={4000}
           disabled={pending || disabled}
-          className="mt-4 w-full border border-line bg-card p-3"
+          className="field-control mt-4 w-full p-3"
           placeholder="A mutex lets one thread into the critical section…"
         />
         <SpeechInput disabled={!active || pending || disabled} label="Speak your explanation" onTranscript={(text) => setExplanation((current) => appendTranscript(current, text, 4000))} />
-        <button type="submit" disabled={pending || disabled} className="mt-4 bg-accent px-4 py-2 text-accent-foreground disabled:opacity-60">
+        <button type="submit" disabled={pending || disabled} className="button-primary mt-4">
           {pending ? "Reviewing" : "Check my explanation"}
         </button>
       </form>
@@ -97,7 +97,7 @@ export function TeachBackView({
 
 function TeachBackResultView({ result, disabled }: { result: TeachBackResult; disabled: boolean }) {
   return (
-    <section className="border border-line bg-card p-5" aria-live="polite">
+    <section className="rounded-xl border border-line bg-background/60 p-5" aria-live="polite">
       <h2 className="font-serif text-3xl">{result.headline}</h2>
       <p className="mt-2 text-sm text-muted">
         {result.source === "model"

@@ -104,7 +104,7 @@ export function SpeechPlayer({
           <button
             type="button"
             disabled={disabled || !supported || !text.trim()}
-            className="border border-line bg-card px-3 py-2 text-sm disabled:opacity-60"
+            className="button-secondary text-sm"
             onClick={() => void play()}
           >
             {state === "error" ? "Try listening again" : label}
@@ -114,12 +114,12 @@ export function SpeechPlayer({
             <button
               type="button"
               disabled={state === "starting"}
-              className="border border-line bg-card px-3 py-2 text-sm disabled:opacity-60"
+              className="button-secondary text-sm"
               onClick={() => state === "paused" ? operation.current?.resume() : operation.current?.pause()}
             >
               {state === "paused" ? "Resume" : "Pause"}
             </button>
-            <button type="button" className="border border-line bg-card px-3 py-2 text-sm" onClick={() => operation.current?.stop()}>
+            <button type="button" className="button-secondary text-sm" onClick={() => operation.current?.stop()}>
               Stop
             </button>
           </>
@@ -127,9 +127,9 @@ export function SpeechPlayer({
       </div>
       <p className="text-xs text-muted" role="status">{status}</p>
       {error ? <p className="text-sm text-danger" role="alert">{error}</p> : null}
-      <details className="border border-line bg-card p-3">
+      <details className="rounded-lg border border-line bg-card/80 p-3">
         <summary className="cursor-pointer text-sm font-medium">Read the transcript</summary>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{text || "There is no explanation to read yet."}</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{text || "There is no explanation to read yet."}</p>
       </details>
     </div>
   );

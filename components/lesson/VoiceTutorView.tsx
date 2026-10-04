@@ -39,13 +39,13 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
         <p className="mt-2 text-sm text-muted">Speech uses your browser. The explanation and follow-ups use the model shown above.</p>
         <button type="button" className="mt-3 text-sm underline" onClick={onTeachBack}>Try oral teach-it-back</button>
       </div>
-      <section className="border border-line bg-card p-4 sm:p-5" aria-label="Lesson narration">
+      <section className="rounded-xl border border-line bg-background/60 p-4 sm:p-5" aria-label="Lesson narration">
         <label className="text-sm" htmlFor="narration-section">Listen to</label>
         <select
           id="narration-section"
           value={section}
           onChange={(event) => setSection(event.target.value as NarrationSection)}
-          className="ml-3 border border-line bg-card p-2"
+          className="field-control ml-3 max-w-full text-sm"
         >
           {NARRATION_SECTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
         </select>
@@ -56,9 +56,9 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
         {turns.length ? (
           <ol className="mt-4 space-y-4">
             {turns.map((message) => (
-              <li key={message.id} className="border-l-2 border-line pl-4">
+              <li key={message.id} className="rounded-xl border border-line bg-background/50 p-4">
                 <p className="text-xs uppercase tracking-[0.14em] text-muted">{message.role === "user" ? "You" : "CLEAR"}</p>
-                <p className="mt-1 whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                <p className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
               </li>
             ))}
           </ol>
@@ -74,10 +74,10 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
             rows={3}
             disabled={pending}
             placeholder="Which part should I picture first?"
-            className="mt-3 w-full border border-line bg-card p-3"
+            className="field-control mt-3 w-full p-3"
           />
           <SpeechInput disabled={pending} label="Speak a follow-up" onTranscript={(text) => onDraftChange((current) => appendTranscript(current, text, 2000))} />
-          <button type="submit" disabled={pending || !draft.trim()} className="mt-4 bg-accent px-4 py-2 text-accent-foreground disabled:opacity-60">
+          <button type="submit" disabled={pending || !draft.trim()} className="button-primary mt-4">
             {pending ? "Updating lesson…" : "Send follow-up"}
           </button>
           {pending ? <p className="mt-3 text-sm text-muted" role="status">The selected model is updating your lesson.</p> : null}

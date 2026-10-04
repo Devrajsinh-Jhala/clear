@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { DeepDiveView } from "@/components/lesson/DeepDiveView";
@@ -111,20 +112,29 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[16rem_1fr]">
-      <aside className="hidden lg:block">
-        <p className="text-sm uppercase tracking-[0.16em] text-muted">This lesson</p>
-        <p className="mt-3 font-serif text-2xl leading-tight">{title}</p>
-        <p className="mt-4 text-sm text-muted">
-          Sign-in and a saved library come with accounts. This address reloads the lesson on this server.
-        </p>
+    <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
+      <aside className="hidden space-y-6 lg:sticky lg:top-8 lg:block">
+        <Link href="/" className="button-secondary w-full gap-2 text-sm"><span aria-hidden="true">+</span> New lesson</Link>
+        <div className="rounded-2xl border border-line bg-card/60 p-5">
+          <p className="eyebrow">Your lesson</p>
+          <p className="mt-3 font-serif text-xl leading-snug">{title}</p>
+          <p className="mt-4 text-xs leading-relaxed text-muted">Return here using this lesson’s address. Your follow-ups stay with the same idea.</p>
+        </div>
+        <div className="px-2">
+          <p className="eyebrow">By the end</p>
+          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted">
+            {document.learningObjectives.map((objective) => <li key={objective.id} className="flex gap-2"><span aria-hidden="true" className="text-accent">↗</span><span>{objective.statement}</span></li>)}
+          </ul>
+        </div>
       </aside>
-      <div className="min-w-0">
-        <p className="text-sm text-muted">
+      <div className="min-w-0 space-y-6">
+        <header>
+        <p className="badge bg-card">
           <ProviderLabel provider={provider} model={model} />
         </p>
-        <h1 className="mt-2 font-serif text-4xl leading-tight">{title}</h1>
+        <h1 className="mt-4 font-serif text-4xl leading-[1.08] sm:text-5xl">{title}</h1>
         {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted">{lessonMeta.fallbackNote}</p> : null}
+        </header>
         {lessonMeta.comparison && !lessonMeta.comparison.pickedId ? (
           <fieldset disabled={busy} className="mt-6">
             <CompareView
@@ -151,7 +161,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             ))}
           </ul>
         ) : null}
-        <div role="tablist" aria-label="Explanation views" className="mt-6 flex gap-2 overflow-x-auto border-b border-line">
+        <div role="tablist" aria-label="Explanation views" className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-card/60 p-1.5">
           {TABS.map(([id, label]) => {
             const selected = active === id;
             return (
@@ -163,7 +173,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 aria-selected={selected}
                 aria-controls={`panel-${id}`}
                 tabIndex={selected ? 0 : -1}
-                className={`shrink-0 border-b-2 px-3 py-2 text-sm ${selected ? "border-accent text-foreground" : "border-transparent text-muted"}`}
+                className={`shrink-0 rounded-lg px-3 py-2.5 text-sm transition-colors ${selected ? "bg-accent font-medium text-accent-foreground" : "text-muted hover:bg-background hover:text-foreground"}`}
                 onClick={() => setActive(id)}
                 onKeyDown={(event) => {
                   const index = TABS.findIndex(([tabId]) => tabId === active);
@@ -182,7 +192,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             );
           })}
         </div>
-        <div role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`} className="py-8">
+        <div role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`} className="surface-panel p-5 sm:p-7">
           {active === "understand" ? <UnderstandView document={document} /> : null}
           {active === "mental-model" ? <MentalModelView document={document} /> : null}
           {active === "visual" ? <VisualView document={document} /> : null}
@@ -198,7 +208,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             <VoiceTutorView document={document} messages={messages} provider={provider} model={model} pending={busy} error={error} draft={voiceDraft} onDraftChange={setVoiceDraft} onSend={(message) => sendFollowUp(message, "voice", "same")} onTeachBack={() => setActive("teach-back")} />
           ) : null}
         </div>
-        {active !== "voice" ? <section className="border-t border-line pt-6">
+        {active !== "voice" ? <section className="surface-panel p-5 sm:p-6">
           <h2 className="font-serif text-2xl">Follow-up</h2>
           <ul className="mt-4 space-y-3">
             {messages
@@ -218,7 +228,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 <li key={suggestion}>
                   <button
                     type="button"
-                    className="border border-line px-3 py-1 text-left text-sm"
+                    className="rounded-full border border-line bg-background/60 px-3 py-2 text-left text-sm text-muted hover:border-accent hover:text-foreground disabled:opacity-50"
                     disabled={busy}
                     onClick={() => void sendFollowUp(suggestion)}
                   >
@@ -245,7 +255,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
               disabled={busy}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="Ask a follow-up…"
-              className="min-w-0 flex-1 border border-line bg-card px-3 py-3"
+              className="field-control min-w-0 flex-1"
             />
             <label className="text-sm text-muted">
               Next turn
@@ -254,7 +264,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 value={nextProvider}
                 disabled={busy}
                 onChange={(event) => setNextProvider(event.target.value)}
-                className="ml-2 bg-transparent text-foreground"
+                className="ml-2 max-w-full rounded-md bg-background p-2 text-foreground"
               >
                 <option value="same">Keep this model</option>
                 {targets.map((target) => (
@@ -264,7 +274,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 ))}
               </select>
             </label>
-            <button type="submit" disabled={busy || !draft.trim()} className="bg-accent px-4 py-3 text-accent-foreground disabled:opacity-50">
+            <button type="submit" disabled={busy || !draft.trim()} className="button-primary">
               {busy ? "Updating" : "Send"}
             </button>
           </form>

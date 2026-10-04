@@ -10,8 +10,8 @@ export function PageShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-14">
-      <h1 className="font-serif text-5xl">{title}</h1>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+      <h1 className="font-serif text-4xl leading-tight sm:text-5xl">{title}</h1>
       <p className="mt-4 text-lg text-muted">{lede}</p>
       {children ? <div className="mt-8 space-y-4 leading-relaxed">{children}</div> : null}
     </div>

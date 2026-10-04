@@ -23,7 +23,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Canonical generation and follow-up that update one explanation document
 - Landing page and lesson workspace: Understand, Mental Model, Examples, Deep Dive, Verify, Quiz, follow-up
 - Sample mutex lesson that does not call a model
-- Base `skills/clear-explainer/SKILL.md` preview
+- Portable CLEAR skill: learner level, depth, analogy, visual, interview, quiz, and verbosity preferences; live previews for all seven public files; copy SKILL.md; ZIP download rooted at `clear-explainer/`. Preview and export share one generator. The package contains teaching instructions and synthetic examples, never conversations, uploads, learning memory, or provider keys. Runtime assets are included in the production trace.
 - About, privacy, and terms pages
 - Mermaid diagrams from validated visualization specs, with a text equivalent
 - Trusted interactive widgets: step flow, binary search, state machine, timeline, graph traversal, parameter explorer, code trace. Unknown widgets are rejected. Model JavaScript is never executed.
@@ -34,6 +34,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
 - Model routing for this browser: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison notes live in `.data` until accounts exist.
 - Voice tutor through browser speech: speak a question, dictate an editable follow-up, listen to sections of the canonical lesson, and speak a teach-back and hear its feedback. Follow-ups use the lesson's current provider and update the same document. Transcripts stay readable. Microphone and narration start only on request, stop when their view closes, and have unsupported-browser, permission, network, and retry states. Narration supports pause, resume, and stop. A shared speech transport coordinates capture and playback and remains separate from the explanation provider. CLEAR does not store raw audio; the browser's speech service may process audio or narration text remotely.
+- UI refinement: paper/ink/teal light and dark surfaces, an editorial home with a focused ask card, grouped attachment/voice/model controls, a lesson sidebar and clearer view tabs, and a responsive skill configurator. Provider notices name the selected destination and enabled fallback.
 
 ## Partial
 
@@ -47,13 +48,14 @@ The full product specification starts at "Product Specification & Codex Build Br
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Skill ZIP download
 - Share links and Markdown, JSON, and PDF export
 - Playwright, quotas, rate limits, Sentry, and the prompt eval suite
 
 ## Next product slice
 
-Phase 9: portable CLEAR skill configurator and ZIP download. Keep provider-native realtime audio and device voice testing tracked above. Do not start payments.
+Phase 10: public share links with revocation, plus Markdown, JSON, and PDF export. Keep provider-native realtime audio and device voice testing tracked above. Do not start payments.
+
+Latest portable-skill checks: 78 unit tests passed, lint and production build passed. Tests cover strict preferences, private-field rejection, safe resource paths, exact preview/export content, ZIP round-trips, and export errors. The running production endpoint returned seven files with selected preferences, matching all seven browser previews exactly. Browser checks covered preference changes/reset, all-file preview selection, export/copy success states, composer disclosures and comparison controls, a sample lesson and mock follow-up, keyboard tab navigation, and light/dark phone-width layouts. The in-app preview cannot expose the saved download or clipboard contents; installing the package in other agent hosts remains unverified.
 
 Latest voice checks: 69 unit tests passed, lint and production build passed. Browser checks covered narration play/pause/resume/stop, a mock follow-up through the existing lesson pipeline, retained drafts, keyboard tab focus, oral teach-back request locking, and a phone-width layout. Real microphone accuracy and live provider voice turns remain unverified.
 
@@ -2456,7 +2458,7 @@ Do not call v1 complete unless:
 - [ ] Voice tutor path works.
 - [ ] Share link works.
 - [ ] Markdown/JSON/PDF export works.
-- [ ] Agent Skill export works.
+- [x] Agent Skill export works.
 
 ## Providers
 - [ ] CLEAR Free works.

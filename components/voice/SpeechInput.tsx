@@ -117,7 +117,7 @@ export function SpeechInput({
       </p>
       <button
         type="button"
-        className="border border-line bg-card px-3 py-2 text-sm disabled:opacity-60"
+        className="button-secondary text-sm"
         disabled={disabled || !supported || state === "stopping"}
         aria-describedby={disclosureId}
         aria-pressed={active}
