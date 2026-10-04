@@ -7,6 +7,7 @@ import { ExamplesView } from "@/components/lesson/ExamplesView";
 import { InteractiveView } from "@/components/lesson/InteractiveView";
 import { MentalModelView } from "@/components/lesson/MentalModelView";
 import { QuizView } from "@/components/lesson/QuizView";
+import { TeachBackView } from "@/components/lesson/TeachBackView";
 import { UnderstandView } from "@/components/lesson/UnderstandView";
 import { VerifyView } from "@/components/lesson/VerifyView";
 import { VisualView } from "@/components/lesson/VisualView";
@@ -23,6 +24,7 @@ const TABS = [
   ["deep-dive", "Deep Dive"],
   ["verify", "Verify"],
   ["quiz", "Quiz"],
+  ["teach-back", "Teach it back"],
 ] as const;
 
 type TabId = (typeof TABS)[number][0];
@@ -128,11 +130,14 @@ export function LessonWorkspace({ conversation }: { conversation: ConversationRe
           {active === "deep-dive" ? <DeepDiveView document={document} /> : null}
           {active === "verify" ? <VerifyView document={document} /> : null}
           {active === "quiz" ? <QuizView items={document.quiz} /> : null}
+          {active === "teach-back" ? <TeachBackView conversationId={conversation.id} initial={null} /> : null}
         </div>
         <section className="border-t border-line pt-6">
           <h2 className="font-serif text-2xl">Follow-up</h2>
           <ul className="mt-4 space-y-3">
-            {messages.slice(2).map((message) => (
+            {messages
+              .filter((message, index) => index > 1 && message.kind !== "teach-back")
+              .map((message) => (
               <li key={message.id} className={message.role === "user" ? "text-muted" : ""}>
                 <span className="mr-2 text-xs uppercase tracking-[0.14em] text-muted">
                   {message.role === "user" ? "You" : "CLEAR"}

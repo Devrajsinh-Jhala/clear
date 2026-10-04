@@ -27,6 +27,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 - About, privacy, and terms pages
 - Mermaid diagrams from validated visualization specs, with a text equivalent
 - Trusted interactive widgets: step flow, binary search, state machine, timeline, graph traversal, parameter explorer, code trace. Unknown widgets are rejected. Model JavaScript is never executed.
+- Teach-it-back on a lesson. A configured model reviews the mechanism. Without a model key, CLEAR checks which concept names were used and says a model did not review the wording. Writing style is not graded.
 
 ## Partial
 
@@ -38,7 +39,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 ## Not started
 
 - Accounts and Supabase Auth in the UI
-- Teach-it-back, mastery, misconceptions memory, progress data
+- Mastery, misconceptions memory, progress data
 - Image and PDF input
 - BYOK for OpenAI, Anthropic, xAI, Gemini, and custom OpenAI-compatible endpoints
 - Model routing, fallback permissions, and two-model compare
@@ -49,7 +50,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-Phase 4 in the specification: teach-it-back, then learning memory that can be turned off and deleted, then a real progress page. Do not start provider keys or payments before that unless the user changes this note.
+Phase 4 in the specification: learning memory that can be turned off and deleted, then a real progress page. Do not start provider keys or payments before that unless the user changes this note.
 
 ## Last launch item — support the work
 

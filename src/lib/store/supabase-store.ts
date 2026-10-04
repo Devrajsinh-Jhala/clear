@@ -20,7 +20,7 @@ type ConversationRow = {
 type MessageRow = {
   id: string;
   role: "user" | "assistant" | "system";
-  content: { text?: string };
+  content: { text?: string; kind?: "follow-up" | "teach-back" };
   created_at: string;
 };
 
@@ -73,6 +73,7 @@ export function createSupabaseStore(): ConversationStore | null {
             role: message.role as ConversationMessage["role"],
             content: message.content?.text ?? "",
             createdAt: message.created_at,
+            kind: message.content?.kind,
           })),
         document: (documents?.[0]?.document as ExplanationDocument | undefined) ?? null,
       };
@@ -99,7 +100,7 @@ export function createSupabaseStore(): ConversationStore | null {
             id: message.id,
             conversation_id: record.id,
             role: message.role,
-            content: { text: message.content },
+            content: { text: message.content, kind: message.kind },
             provider: record.activeProvider,
             model: record.activeModel,
             created_at: message.createdAt,

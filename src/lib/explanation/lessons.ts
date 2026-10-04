@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 
 import { ClearError } from "@/src/lib/api/errors";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
+import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
+import type { TeachBackResult } from "@/src/lib/explanation/teach-back";
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
 import { generateExplanation } from "@/src/lib/explanation/generate";
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
@@ -103,12 +105,36 @@ export async function addFollowUp(input: {
     document: continued.document,
     messages: [
       ...existing.messages,
-      { id: randomUUID(), role: "user", content: input.message, createdAt: now },
-      { id: randomUUID(), role: "assistant", content: continued.reply, createdAt: now },
+      { id: randomUUID(), role: "user", content: input.message, createdAt: now, kind: "follow-up" },
+      { id: randomUUID(), role: "assistant", content: continued.reply, createdAt: now, kind: "follow-up" },
     ],
   };
   await store.save(record);
   return record;
+}
+
+export async function submitTeachBack(input: {
+  conversationId: string;
+  explanation: string;
+}): Promise<{ record: ConversationRecord; result: TeachBackResult }> {
+  const store = getConversationStore();
+  const existing = await store.get(input.conversationId);
+  if (!existing?.document) {
+    throw new ClearError("not_found", "That lesson is not on this server.", { status: 404 });
+  }
+  const result = await reviewTeachBack(input.explanation, existing.document);
+  const now = new Date().toISOString();
+  const record: ConversationRecord = {
+    ...existing,
+    updatedAt: now,
+    messages: [
+      ...existing.messages,
+      { id: randomUUID(), role: "user", content: input.explanation, createdAt: now, kind: "teach-back" },
+      { id: randomUUID(), role: "assistant", content: result.headline, createdAt: now, kind: "teach-back" },
+    ],
+  };
+  await store.save(record);
+  return { record, result };
 }
 
 function buildRecord(input: {

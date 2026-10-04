@@ -5,6 +5,7 @@ export type ConversationMessage = {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  kind?: "follow-up" | "teach-back";
 };
 
 export type ConversationRecord = {

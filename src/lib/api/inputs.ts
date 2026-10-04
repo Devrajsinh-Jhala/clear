@@ -14,6 +14,10 @@ export const createExplanationInputSchema = z
     message: "Enter a question or open the sample lesson.",
   });
 
+export const teachBackInputSchema = z.object({
+  explanation: z.string().trim().min(8).max(4000),
+});
+
 export const followUpInputSchema = z.object({
   message: z.string().trim().min(1).max(2000),
   activeView: z.string().trim().max(40).optional(),
