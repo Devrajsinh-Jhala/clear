@@ -3,12 +3,13 @@ import { mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/pro
 import path from "node:path";
 
 import { isUuid } from "@/src/lib/explanation/normalize";
+import { dataDirectory } from "@/src/lib/storage/path";
 import { shareSnapshotSchema, validShareSlug, type ShareSnapshot, type ShareStore } from "@/src/lib/sharing/types";
 
 const pendingWrites = new Map<string, Promise<void>>();
 
 /** A lesson has one atomic state file, so concurrent replacements cannot orphan active links. */
-export function createFileShareStore(root = path.join(process.cwd(), ".data", "shares")): ShareStore {
+export function createFileShareStore(root = dataDirectory("shares")): ShareStore {
   async function getForLesson(id: string): Promise<ShareSnapshot | null> {
     if (!isUuid(id)) return null;
     try {

@@ -1,3 +1,5 @@
+// These isolated feature tests exercise the handler; admission has its own integration tests.
+vi.mock("@/src/lib/api/guard", () => ({ withApiGuard: async (_request: Request, _action: string, handler: () => Promise<Response>) => handler() }));
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));

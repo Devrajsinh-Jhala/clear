@@ -22,6 +22,8 @@ export type ConversationRecord = {
   id: string;
   /** Server-only bearer identity. Never send this field to a client component. */
   ownerLearnerId?: string;
+  /** Verified account ownership. Server-only; never inferred from a guest cookie. */
+  ownerUserId?: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -36,5 +38,5 @@ export type ConversationRecord = {
 
 export interface ConversationStore {
   get(id: string): Promise<ConversationRecord | null>;
-  save(record: ConversationRecord): Promise<void>;
+  save(record: ConversationRecord, expectedUpdatedAt?: string): Promise<void>;
 }

@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 
 import { defaultClearFreeModel } from "@/src/lib/ai/models";
 import { ClearError } from "@/src/lib/api/errors";
+import { currentAccount } from "@/src/lib/auth/session";
 import { projectExplanation } from "@/src/lib/export/document";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 import { ensureLearnerId } from "@/src/lib/learning/session";
@@ -66,6 +67,7 @@ export async function copyLegacyLesson(id: string): Promise<ConversationRecord> 
   const record: ConversationRecord = {
     id: copyId,
     ownerLearnerId,
+    ownerUserId: (await currentAccount())?.id,
     title: document.topic,
     createdAt: now,
     updatedAt: now,

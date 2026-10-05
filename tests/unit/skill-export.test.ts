@@ -1,3 +1,5 @@
+// These isolated feature tests exercise the handler; admission has its own integration tests.
+vi.mock("@/src/lib/api/guard", () => ({ withApiGuard: async (_request: Request, _action: string, handler: () => Promise<Response>) => handler() }));
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { strFromU8, unzipSync } from "fflate";
@@ -136,7 +138,7 @@ describe("portable CLEAR skill", () => {
 
   it("blocks malformed, oversized, private, and cross-origin inputs before reading resources", async () => {
     const malformed = new Request("https://clear.example/api/skills/export", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: "{",
+      method: "POST", headers: { "Content-Type": "application/json", "Origin": "https://clear.example" }, body: "{",
     });
     const attempts: Array<[Request, number]> = [
       [malformed, 400],

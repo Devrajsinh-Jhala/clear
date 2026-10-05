@@ -25,18 +25,25 @@ function isBlockedIpv4(address: string): boolean {
   if (a === 172 && b >= 16 && b <= 31) return true;
   if (a === 192 && b === 168) return true;
   if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 192 && ((b === 0 && (parts[2] === 0 || parts[2] === 2)) || (b === 88 && parts[2] === 99))) return true;
+  if (a === 198 && (b === 18 || b === 19 || (b === 51 && parts[2] === 100))) return true;
+  if (a === 203 && b === 0 && parts[2] === 113) return true;
   if (a >= 224) return true;
   return false;
 }
 
 function isBlockedIpv6(address: string): boolean {
-  const normalized = address.toLowerCase();
-  if (normalized === "::1" || normalized === "::") return true;
-  if (normalized.startsWith("fc") || normalized.startsWith("fd")) return true;
-  if (normalized.startsWith("fe80")) return true;
-  if (normalized.startsWith("::ffff:")) {
-    return isBlockedIp(normalized.slice("::ffff:".length));
-  }
+  // URL normalization removes equivalent expanded/IPv4-embedded spellings.
+  let normalized: string;
+  try { normalized = new URL(`http://[${address}]/`).hostname.slice(1, -1).toLowerCase(); }
+  catch { return true; } // Scoped/zone identifiers cannot be a public provider.
+  const [first, second = "0"] = normalized.split(":");
+  const prefix = parseInt(first, 16);
+  // Only globally routed unicast can be a production provider. This rejects the
+  // entire link-local/multicast/ULA/loopback/mapped/NAT64 address spaces.
+  if (!Number.isFinite(prefix) || prefix < 0x2000 || prefix > 0x3fff) return true;
+  if (prefix === 0x2002 || prefix === 0x3fff) return true; // 6to4 and documentation.
+  if (prefix === 0x2001 && (parseInt(second || "0", 16) < 0x0200 || second === "db8")) return true;
   return false;
 }
 
@@ -93,5 +100,8 @@ export async function assertSafeProviderUrl(
 }
 
 function isLoopback(address: string): boolean {
-  return address === "127.0.0.1" || address === "::1" || address.startsWith("127.");
+  let canonical: string;
+  try { canonical = isIP(address) === 6 ? new URL(`http://[${address}]/`).hostname.slice(1, -1) : address; }
+  catch { return false; }
+  return canonical === "::1" || canonical.startsWith("127.");
 }

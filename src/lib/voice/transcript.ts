@@ -57,7 +57,8 @@ export function teachBackTranscript(result: TeachBackResult): string {
     ...result.missingConcepts.map((concept) => `Missing. ${concept}`),
     ...result.misleadingStatements.map((statement) => `Slightly incorrect. ${statement}`),
     `Repaired explanation. ${result.repairedExplanation}`,
-  ].join("\n\n");
+    result.memoryWarning,
+  ].filter(Boolean).join("\n\n");
 }
 
 export function appendTranscript(current: string, spoken: string, limit: number): string {

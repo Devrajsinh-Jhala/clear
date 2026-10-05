@@ -1,11 +1,15 @@
 import { ZodError } from "zod";
 
 import { ClearError, toErrorBody } from "@/src/lib/api/errors";
+import { reportServerError } from "@/src/lib/monitoring/server";
 
 export function assertShareWriteOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   if (request.headers.get("sec-fetch-site") === "cross-site" || !origin) throw forbiddenOrigin();
   try {
+    const env = process.env;
+    const configured = [env.NEXT_PUBLIC_APP_URL, ...(env.VERCEL_URL ? [`https://${env.VERCEL_URL}`] : [])].filter((value): value is string => !!value);
+    if (configured.length && !configured.some((value) => new URL(value).origin === origin)) throw forbiddenOrigin();
     const requestUrl = new URL(request.url);
     const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? requestUrl.host;
     const protocol = request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.slice(0, -1);
@@ -25,10 +29,14 @@ export function noStore(response: Response): Response {
 }
 
 export function shareErrorResponse(error: unknown): Response {
-  if (error instanceof ClearError) return noStore(Response.json(toErrorBody(error), { status: error.status }));
+  if (error instanceof ClearError) {
+    if (error.status >= 500) reportServerError(error, { operation: "share", code: error.code });
+    return noStore(Response.json(toErrorBody(error), { status: error.status }));
+  }
   if (error instanceof ZodError || error instanceof SyntaxError) {
     return noStore(Response.json({ error: { code: "invalid_request", message: "Choose valid sharing options and try again.", retryable: false } }, { status: 400 }));
   }
+  reportServerError(error, { operation: "share", code: "share_unavailable" });
   return noStore(Response.json({ error: { code: "share_unavailable", message: "Sharing could not be updated. Try again.", retryable: true } }, { status: 503 }));
 }
 

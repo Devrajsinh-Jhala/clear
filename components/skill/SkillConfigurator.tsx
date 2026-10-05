@@ -130,7 +130,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
         </form>
         <section className="rounded-2xl border border-accent/20 bg-accent/5 p-5 sm:p-6">
           <h2 className="font-serif text-2xl">A teaching style, without your history.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted">The download includes the CLEAR protocol, three public examples, and the preferences you choose here. Your conversations, documents, learning memory, and provider keys stay out of it.</p>
+          <p className="mt-3 text-sm leading-relaxed text-foreground">The download includes the CLEAR protocol, three public examples, and the preferences you choose here. Your conversations, documents, learning memory, and provider keys stay out of it.</p>
         </section>
       </div>
       <div className="min-w-0 space-y-6 lg:sticky lg:top-8">

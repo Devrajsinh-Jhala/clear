@@ -13,6 +13,7 @@ export const teachBackResultSchema = z.object({
 export type TeachBackResult = z.infer<typeof teachBackResultSchema> & {
   headline: string;
   source: "model" | "lesson-concepts";
+  memoryWarning?: string;
 };
 
 const HEADLINES = {

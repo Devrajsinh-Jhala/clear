@@ -6,6 +6,11 @@ import { geminiProvider, resolveLessonModel } from "@/src/lib/ai/providers/gemin
 import { mockProvider } from "@/src/lib/ai/providers/mock";
 import { compatibleProvider, openaiProvider, xaiProvider } from "@/src/lib/ai/providers/openai";
 import type { AIProvider, InlineAttachment, ProviderCredential } from "@/src/lib/ai/types";
+import { requestContext } from "@/src/lib/api/context";
+import { currentAccount } from "@/src/lib/auth/session";
+import { currentLearnerId } from "@/src/lib/learning/session";
+import { withModelLimits } from "@/src/lib/security/limits";
+import { reportServerError } from "@/src/lib/monitoring/server";
 
 const providers: Record<string, AIProvider> = {
   gemini: geminiProvider,
@@ -27,11 +32,11 @@ export function getProvider(id: string): AIProvider {
       status: 400,
     });
   }
-  return provider;
+  return guardedProvider(provider);
 }
 
 export function resolveGenerationProvider(): AIProvider {
-  if (process.env.CLEAR_PROVIDER === "mock") return mockProvider;
+  if (process.env.CLEAR_PROVIDER === "mock") return guardedProvider(mockProvider);
   if (!process.env.GEMINI_API_KEY) {
     throw new ClearError(
       "provider_not_configured",
@@ -39,7 +44,34 @@ export function resolveGenerationProvider(): AIProvider {
       { status: 503 },
     );
   }
-  return geminiProvider;
+  return guardedProvider(geminiProvider);
+}
+
+/** Quotas wrap dispatch itself, so repairs and enabled fallback each spend an attempt. */
+function guardedProvider(provider: AIProvider): AIProvider {
+  return {
+    ...provider,
+    async generate(input, credential) {
+      const context = requestContext.getStore();
+      // Standalone evals and adapter tests explicitly select their own model and budget.
+      if (!context) return provider.generate(input, credential);
+      const account = await currentAccount();
+      try {
+        return await withModelLimits({
+          providerId: provider.id,
+          learnerId: await currentLearnerId(),
+          authenticated: !!account,
+          request: context.request,
+          clearFree: provider.id === "gemini" && !credential?.apiKey,
+        }, () => provider.generate(input, credential));
+      } catch (error) {
+        if (!(error instanceof ClearError) || error.status >= 500 || error.code === "model_unavailable" || error.code === "provider_key_invalid") {
+          reportServerError(error, { operation: "provider", providerId: provider.id });
+        }
+        throw error;
+      }
+    },
+  };
 }
 
 export function selectGeneration(input: {

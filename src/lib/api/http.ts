@@ -1,27 +1,18 @@
 import { ZodError } from "zod";
 
 import { ClearError, toErrorBody } from "@/src/lib/api/errors";
-import { redactSecrets } from "@/src/lib/ai/redact";
+import { assertShareWriteOrigin } from "@/src/lib/sharing/http";
+import { limitResponseHeaders } from "@/src/lib/security/limits";
+import { reportServerError } from "@/src/lib/monitoring/server";
 
 export function assertSameOrigin(request: Request): void {
-  const origin = request.headers.get("origin");
-  if (!origin) return;
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  if (!host) return;
-  let originHost = "";
-  try {
-    originHost = new URL(origin).host;
-  } catch {
-    throw new ClearError("forbidden", "The request origin is not valid.", { status: 403 });
-  }
-  if (originHost !== host) {
-    throw new ClearError("forbidden", "Cross-origin request blocked.", { status: 403 });
-  }
+  assertShareWriteOrigin(request);
 }
 
 export function errorResponse(error: unknown): Response {
   if (error instanceof ClearError) {
-    return Response.json(toErrorBody(error), { status: error.status });
+    if (error.status >= 500) reportServerError(error, { operation: "api", code: error.code });
+    return Response.json(toErrorBody(error), { status: error.status, headers: { "Cache-Control": "private, no-store", ...limitResponseHeaders(error) } });
   }
   if (error instanceof ZodError) {
     return Response.json(
@@ -36,8 +27,9 @@ export function errorResponse(error: unknown): Response {
       { status: 400 },
     );
   }
-  const message = error instanceof Error ? error.message : "Unknown failure";
-  console.error(redactSecrets(message));
+  // Provider/database exception text may contain private content or credentials.
+  reportServerError(error, { operation: "api", code: "internal_error" });
+  console.error(JSON.stringify({ event: "clear_error", operation: "api", code: "internal_error" }));
   return Response.json(
     {
       error: {

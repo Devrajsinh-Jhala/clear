@@ -1,3 +1,6 @@
+vi.mock("@/src/lib/auth/session", () => ({ currentAccount: async () => null }));
+// These isolated feature tests exercise the handler; admission has its own integration tests.
+vi.mock("@/src/lib/api/guard", () => ({ withApiGuard: async (_request: Request, _action: string, handler: () => Promise<Response>) => handler() }));
 import { randomUUID } from "node:crypto";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -246,5 +249,14 @@ describe("private guest lessons and share snapshots", () => {
       headers: { Origin: "https://clear.example", Host: "clear.example", "X-Forwarded-Proto": "https" },
     });
     expect((await DELETE(hostOnlyRequest, context)).status).toBe(200);
+  });
+
+  it("does not let spoofed forwarding headers authorize an unconfigured browser origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://clear.example");
+    vi.stubEnv("VERCEL_URL", "clear-preview.vercel.app");
+    const spoof = request("POST", { showProvider: false }, { Origin: "https://evil.example", "X-Forwarded-Host": "evil.example", "X-Forwarded-Proto": "https", "Sec-Fetch-Site": "same-site" });
+    expect((await POST(spoof, context)).status).toBe(403);
+    expect((await POST(request("POST", { showProvider: false }), context)).status).toBe(200);
+    vi.unstubAllEnvs();
   });
 });

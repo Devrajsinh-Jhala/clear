@@ -37,7 +37,7 @@ export function SiteHeader() {
             );
           })}
         </nav>
-        <div className="ml-auto pl-3 sm:ml-2 sm:border-l sm:border-line"><ThemeToggle /></div>
+        <div className="ml-auto flex items-center gap-3 pl-3 sm:ml-2 sm:border-l sm:border-line"><Link href="/auth" className="text-sm text-muted hover:text-foreground">Account</Link><ThemeToggle /></div>
       </div>
     </header>
   );

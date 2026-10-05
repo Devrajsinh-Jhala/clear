@@ -2,6 +2,8 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
+import { currentAccount } from "@/src/lib/auth/session";
+import { accountLearnerId } from "@/src/lib/learning/identity";
 
 import { isUuid } from "@/src/lib/explanation/normalize";
 import { deleteLearningProfile, readLearningProfile, writeLearningProfile } from "@/src/lib/learning/store";
@@ -10,12 +12,16 @@ import { emptyProfile, type LearningProfile } from "@/src/lib/learning/memory";
 const COOKIE = "clear_learner";
 
 export async function currentLearnerId(): Promise<string | undefined> {
+  const account = await currentAccount();
+  if (account) return accountLearnerId(account.id);
   const jar = await cookies();
   const value = jar.get(COOKIE)?.value;
   return value && isUuid(value) ? value : undefined;
 }
 
 export async function ensureLearnerId(): Promise<string> {
+  const account = await currentAccount();
+  if (account) return accountLearnerId(account.id);
   const jar = await cookies();
   const existing = jar.get(COOKIE)?.value;
   if (existing && isUuid(existing)) return existing;
@@ -29,12 +35,7 @@ export async function currentLearningProfile(): Promise<LearningProfile> {
 }
 
 export async function setLearningEnabled(enabled: boolean): Promise<LearningProfile> {
-  const jar = await cookies();
-  let id = jar.get(COOKIE)?.value;
-  if (!id || !isUuid(id)) {
-    id = randomUUID();
-    jar.set(COOKIE, id, cookieOptions());
-  }
+  const id = await ensureLearnerId();
   const existing = await readLearningProfile(id);
   const profile = { ...existing, enabled };
   await writeLearningProfile(id, profile);

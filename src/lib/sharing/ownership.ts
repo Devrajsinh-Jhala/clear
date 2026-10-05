@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ClearError } from "@/src/lib/api/errors";
+import { currentAccount } from "@/src/lib/auth/session";
 import { currentLearnerId } from "@/src/lib/learning/session";
 import { getConversationStore } from "@/src/lib/store";
 import type { ConversationRecord } from "@/src/lib/store/types";
@@ -11,6 +12,7 @@ export type LessonAccess = { record: ConversationRecord; legacy: boolean };
 export async function getReadableLesson(id: string): Promise<LessonAccess> {
   const record = await getConversationStore().get(id);
   if (!record?.document) throw lessonNotFound();
+  if (record.ownerUserId && (await currentAccount())?.id !== record.ownerUserId) throw lessonNotFound();
   if (!record.ownerLearnerId) return { record, legacy: true };
   const learnerId = await currentLearnerId();
   if (!learnerId || record.ownerLearnerId !== learnerId) throw lessonNotFound();
@@ -27,6 +29,7 @@ export async function getOwnedLesson(id: string): Promise<ConversationRecord> {
 export function clientLesson(record: ConversationRecord): ConversationRecord {
   const copy = { ...record };
   delete copy.ownerLearnerId;
+  delete copy.ownerUserId;
   return copy;
 }
 

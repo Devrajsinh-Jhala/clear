@@ -126,6 +126,7 @@ function TeachBackResultView({ result, disabled }: { result: TeachBackResult; di
       ) : null}
       <h3 className="mt-5 font-medium">Repaired explanation</h3>
       <p className="mt-2 max-w-2xl leading-relaxed">{result.repairedExplanation}</p>
+      {result.memoryWarning ? <p role="status" className="mt-4 text-sm text-foreground">{result.memoryWarning}</p> : null}
       <div className="mt-5"><SpeechPlayer text={teachBackTranscript(result)} label="Listen to feedback" disabled={disabled} /></div>
     </section>
   );

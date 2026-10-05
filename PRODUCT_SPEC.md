@@ -29,34 +29,36 @@ The full product specification starts at "Product Specification & Codex Build Br
 - Mermaid diagrams from validated visualization specs, with a text equivalent
 - Trusted interactive widgets: step flow, binary search, state machine, timeline, graph traversal, parameter explorer, code trace. Unknown widgets are rejected. Model JavaScript is never executed.
 - Teach-it-back on a lesson. A configured model reviews the mechanism. Without a model key, CLEAR checks which concept names were used and says a model did not review the wording. Writing style is not graded.
-- Learning memory is off until the learner turns it on in Settings. It remembers concept state and open misconceptions from teach-it-back for this browser, and the learner can delete one concept or every record. The progress page shows those states. Mastery is a study note, not a certification.
+- Learning memory is off until the learner turns it on in Settings. It remembers concept state and open misconceptions from teach-it-back for this browser or signed-in account, and the learner can delete one concept or every record. A rejected lesson revision does not update memory; a failed memory write keeps saved feedback and displays a warning. The progress page shows those states. Mastery is a study note, not a certification.
 - Image and PDF attachments on a question. Files stay on the server. Images and a whole PDF are sent to the selected model. A page range sends extracted text instead of the rest of the document. Follow-ups reuse extracted text and do not send the PDF again.
 - CLEAR Free model choice on the ask box: Gemini 2.5 Flash (`gemini-2.5-flash`) and Gemini 3.5 Flash (`gemini-3.5-flash`). The lesson stores that model and uses it for follow-ups and teach-back.
-- Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored for this browser. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts. PDFs stay on providers that can read them. Guest keys live in `.data/credentials` until accounts exist, because `provider_credentials.user_id` requires a user.
-- Model routing for this browser: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison notes live in `.data` until accounts exist.
+- Bring-your-own-key for Gemini, OpenAI, Anthropic, xAI, and a custom OpenAI-compatible endpoint. Keys are encrypted with `APP_ENCRYPTION_KEY` and stored in separate private guest/account scopes. Settings can test, replace, and remove a key. The ask box can use a connected provider, and that lesson keeps it for follow-ups and teach-back. A missing or failed key stops the request. CLEAR does not switch to CLEAR Free. Custom endpoints are checked for unsafe hosts and redirects. PDFs stay on providers that can read them. Hosted credentials use a server-only Supabase table; local development uses `.data`.
+- Model routing for this browser or account: a default provider, task rules for everyday, coding, research, and math, and Auto. Auto only picks a provider that is already approved and can read the attachment. Fallback is off until the learner turns it on. When it is on and the chosen provider fails, the lesson says it used CLEAR Free. Compare runs the same question on two models, shows both explanation documents, and lets the learner mark one clearer, more accurate, or preferred, then keep that version. A later turn can switch provider. Routing and comparison records use private durable Supabase storage when configured.
 - Voice tutor through browser speech: speak a question, dictate an editable follow-up, listen to sections of the canonical lesson, and speak a teach-back and hear its feedback. Follow-ups use the lesson's current provider and update the same document. Transcripts stay readable. Microphone and narration start only on request, stop when their view closes, and have unsupported-browser, permission, network, and retry states. Narration supports pause, resume, and stop. A shared speech transport coordinates capture and playback and remains separate from the explanation provider. CLEAR does not store raw audio; the browser's speech service may process audio or narration text remotely.
 - Phase 10 sharing and export: explicit public snapshots, preview before publication, optional provider/model disclosure, replacement and revocation, and Markdown/JSON/PDF downloads. Public pages render eight read-only learning views with local quiz and interactive controls. Snapshots stay frozen across private follow-ups; old pages and all downloads stop resolving after replacement/revocation. Only canonical teaching content crosses the boundary, with conversation/owner identifiers, raw normalized questions, assumed-knowledge profiles, operational metadata, uploads, messages, and keys excluded. Explanation content can still include material from the learner's question or files; the UI asks the creator to review it.
 - New guest lessons are owned by an HttpOnly browser identity. Lesson reads, mutations, sharing, and private downloads check ownership. Earlier ownerless URLs remain read-only and offer a fresh explanation-only private copy; they are never claimed automatically, and their old messages, uploads, provider connections, and learning records are not copied. Copies start future turns with CLEAR Free. Supabase ownership/share migration is included; database read failures surface as storage failures rather than missing or partial lessons.
 - UI refinement: paper/ink/teal light and dark surfaces, an editorial home with a focused ask card, grouped attachment/voice/model controls, a lesson sidebar and clearer view tabs, and a responsive skill configurator. Provider notices name the selected destination and enabled fallback.
+- Accounts: verified Supabase email-code sessions, HttpOnly secure cookies, local sign-out, and a saved library with title search, provider filters, favorites, rename, archive/restore and deletion. New signed-in lessons persist with account ownership across devices. Guest lessons, keys, settings and memory are not automatically imported. The library shows the latest 100 lessons. Atomic deletion queues private file cleanup durably and retries unfinished own jobs when the library opens.
+- Phase 11 code: bounded request/provider bodies, whole-batch file validation, private durable uploads, selected-page PDF extraction, atomic lesson saves with exact PostgreSQL revision preservation, immutable ownership, tested RLS/browser grants, durable rolling rate limits, UTC-day CLEAR Free budgets, per-provider concurrency and operational pauses. Custom endpoints validate DNS at connection time, pin a public IP, preserve TLS hostname verification and share one deadline across connection, response and retry. Repairs/comparisons/enabled fallback spend actual dispatch attempts; BYOK never spends the CLEAR Free budget. Hosted storage and quota failures stop requests.
+- Privacy-filtered Sentry integration with automatic context, breadcrumbs, replay, traces, logs and attachments disabled; nonce-based CSP and private responses. Operational reports omit learner content and identifiers. Build traces exclude local data, environment files and deployment credentials.
+- Versioned prompt eval corpus/rubric, typed canonical/follow-up/repair contracts, provider adapter contract tests, Playwright regression and accessibility checks in Chromium, Firefox, WebKit and mobile Chromium, and pinned GitHub Actions checks. Offline goldens validate the test machinery; live quality remains a separate launch gate.
+- New Vercel project `devrajsinhjhalas-projects/clear` created and connected to this repository. No site published; Git deployments remain disabled until setup and launch checks pass. `DEPLOYMENT.md` and a read-only readiness checker document the Vercel/Supabase configuration.
 
 ## Partial
 
 - Quiz grading is local to the page. It does not write learning memory.
 - Visual and interactive views render when the explanation document includes those specs. Generation still prefers an empty interactive list unless one fits.
-- Settings can connect a provider key for this browser. Signed-in accounts do not have their own credential vault yet.
-- New guest lessons persist at their URL on this server and reload only in their owner browser. Clearing that browser's site data loses access. The library screen is still an empty state. Learning records are not tied to an account yet. Earlier ownerless URLs retain read-only access by address.
+- New guest lessons persist at their URL and reload only in their owner browser. Clearing that browser's site data loses access. Accounts add a private library for new signed-in lessons, but real email delivery and cross-device sign-in still need validation against the live Supabase project. Earlier ownerless URLs retain read-only access by address.
 - Voice uses speech-to-text, a normal model turn, and browser text-to-speech. Provider-native realtime audio is not implemented. Microphone recognition depends on the browser and still needs manual testing with real microphones across target devices.
-- Launch hardening still needs durable storage for `.data` records and uploads, broader storage/RLS testing, quotas, rate limits, monitoring, and the production checks below. The local share store scans current state files; production scale remains Phase 11 work. Apply `supabase/migrations/20261004160000_private_guests_and_shares.sql` before deploying this version with Supabase; no live database migration was applied during this task. Proxies must overwrite forwarded origin headers.
+- Production setup is pending: the five new `20261005*` migrations have not been applied live, SMTP and Sentry are unconfigured/unverified, and real Supabase Auth/Storage/ownership/share smoke tests remain. The user will add management access and Sentry DSNs later; push the code first. `npm run check:deployment -- --remote` reports missing setup without printing secrets or learner data. Local file stores are for development; Vercel requires Supabase. Proxies must overwrite forwarded origin/IP headers.
+- Full live evals have not passed. The configured key cannot access Gemini 2.5 Flash, so the default is now 3.5 Flash while explicit selections remain explicit. Live diagnostics found list/string prompt ambiguity and the canonical v3/follow-up v2/repair v2 contracts now specify the correct types. Subsequent diagnostics returned Gemini HTTP 503; successful generation with the updated prompt remains unverified. Do not claim model quality from passing mock/offline checks.
 - PDF exports include written diagram/interactive summaries, not rendered diagrams or running widgets. The embedded font supports common Greek/math symbols; unsupported glyphs, including many Hindi/Chinese characters, use Unicode notation with a notice. Markdown and JSON preserve original text. PDFs have a 500-page limit.
-
-## Not started
-
-- Accounts and Supabase Auth in the UI
-- Playwright, quotas, rate limits, Sentry, and the prompt eval suite
 
 ## Next product slice
 
-Phase 11: production hardening, starting with browser regression coverage and server quotas/rate limits, then monitoring and prompt evals. Accounts, a saved library, durable storage, provider-native realtime audio, and device voice testing remain tracked above. Do not start payments.
+Finish operational setup in `DEPLOYMENT.md`, validate a protected Vercel preview with the actual Supabase project and mail service, run the complete live eval plus human review, verify privacy-filtered telemetry receipt, and test real voice devices before public launch. Code hardening and accounts are implemented; v1 is not complete while those launch gates remain. Provider-native realtime audio is still outside the implemented browser-speech path. Do not start payments.
+
+Latest hardening/account checks: 316 unit tests passed across 35 files, lint and the production build passed, and 31 offline prompt checks passed with one live-only check skipped. Coverage includes real PostgreSQL migration/transaction/RLS checks, verified account scopes and deletion cleanup, private storage failures, upload signatures and selected PDF pages, concurrent quotas, provider response bounds and custom-endpoint DNS/TLS/deadline controls, and telemetry redaction. The HTTPS browser matrix passed 39 of 40 scenarios across Chromium, Firefox, WebKit and mobile Chromium; WebKit caught sharing-preview focus return. After fixing it, the final build passed that complete sharing scenario and both affected light/dark 390-pixel accessibility/keyboard paths (3 of 3 targeted WebKit checks). All 40 scenario paths have passed across those runs; the full matrix was not repeated after the focus fix. Account/library guest-state screenshots were reviewed in both themes. All 38 production traces contained no private data, environment files or deployment credentials. The production dependency audit had no advisories; five development lint-chain advisories remain documented in `DEPLOYMENT.md`. Live auth, provider quality, device voice and operational monitoring remain launch gates.
 
 Latest sharing/export checks: 115 unit tests passed, lint and production build passed. Coverage includes browser ownership, legacy copies, strict sharing choices/origin checks (including reverse proxies), frozen snapshots, replacement/revocation, every export format, private-field redaction, safe Markdown/Mermaid, long PDF code, common Unicode math, and Supabase read failures. A running local production build passed 42 HTTP checks using a separate synthetic owner, including unauthorized reads/mutations/exports, all three real downloads, frozen contents, identity choices, stale status, replacement, and revocation. Next.js streamed not-found pages can return HTTP 200 with a not-found shell; they expose no lesson content, while denied APIs return 404. Rendered sample/stress PDFs (5/8 pages) were inspected for clipping and pagination. Browser checks covered preview/keyboard navigation/Escape, copying, three download success states, read-only quizzes/widgets, follow-up stale notices, model disclosure, replacement, revocation, legacy private copies and their first follow-up in both text/voice transcripts, and light/dark desktop layouts. At 390 pixels, the sharing panel and preview fit without page overflow and preview keyboard navigation/Escape work in light/dark layouts. Real microphone/live model and live Supabase checks remain unverified.
 
@@ -2445,21 +2447,23 @@ These are implementation phases, **not separate public MVP releases**. All Launc
 
 Do not call v1 complete unless:
 
+Checked implementation items have local regression coverage. Real account/provider/device checks and production activity remain unchecked until the deployment gates above pass.
+
 ## Product
-- [ ] Guest can ask a text question.
+- [x] Guest can ask a text question.
 - [ ] Signed-in user can persist history.
 - [ ] Understand view is excellent.
-- [ ] Mental Model works.
-- [ ] Visual works.
-- [ ] Interactive mode works for supported categories.
-- [ ] Examples work.
-- [ ] Deep Dive works.
-- [ ] Quiz works.
-- [ ] Teach-It-Back works.
-- [ ] Follow-ups preserve context.
+- [x] Mental Model works.
+- [x] Visual works.
+- [x] Interactive mode works for supported categories.
+- [x] Examples work.
+- [x] Deep Dive works.
+- [x] Quiz works.
+- [x] Teach-It-Back works.
+- [x] Follow-ups preserve context.
 - [ ] Image input works.
 - [ ] PDF input works.
-- [ ] Learning memory works and can be disabled/deleted.
+- [x] Learning memory works and can be disabled/deleted.
 - [ ] Voice tutor path works.
 - [x] Share link works.
 - [x] Markdown/JSON/PDF export works.
@@ -2472,25 +2476,25 @@ Do not call v1 complete unless:
 - [ ] Anthropic BYOK works.
 - [ ] xAI BYOK works.
 - [ ] OpenAI-compatible provider works.
-- [ ] API key encryption verified.
-- [ ] Provider errors are understandable.
-- [ ] No silent provider fallback.
+- [x] API key encryption verified.
+- [x] Provider errors are understandable.
+- [x] No silent provider fallback.
 
 ## Quality
-- [ ] Core flows covered by Playwright.
-- [ ] Explanation schema validated at runtime.
-- [ ] Provider adapters have contract tests.
+- [x] Core flows covered by Playwright.
+- [x] Explanation schema validated at runtime.
+- [x] Provider adapters have contract tests.
 - [ ] Prompt eval suite passes agreed threshold.
-- [ ] No arbitrary model-generated JS execution.
-- [ ] Secrets absent from logs.
-- [ ] Row-level security tested.
-- [ ] Mobile layouts usable.
-- [ ] Dark/light modes complete.
-- [ ] Keyboard navigation works.
-- [ ] Critical accessibility issues resolved.
+- [x] No arbitrary model-generated JS execution.
+- [x] Secrets absent from logs.
+- [x] Row-level security tested.
+- [x] Mobile layouts usable.
+- [x] Dark/light modes complete.
+- [x] Keyboard navigation works.
+- [x] Critical accessibility issues resolved.
 - [ ] Rate limits active.
 - [ ] Error monitoring active.
-- [ ] Privacy/terms pages available.
+- [x] Privacy/terms pages available.
 
 ## Last — support the work
 

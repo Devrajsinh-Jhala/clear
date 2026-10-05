@@ -4,12 +4,14 @@ import { createClient } from "@supabase/supabase-js";
 
 import { ClearError } from "@/src/lib/api/errors";
 import { isUuid } from "@/src/lib/explanation/normalize";
+import { accountLearnerId } from "@/src/lib/learning/identity";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 import type { ConversationMessage, ConversationRecord, ConversationStore } from "@/src/lib/store/types";
 
 type ConversationRow = {
   id: string;
   guest_owner_id: string | null;
+  user_id: string | null;
   title: string;
   active_provider: string;
   active_model: string;
@@ -48,7 +50,7 @@ export function createSupabaseStore(): ConversationStore | null {
       if (!isUuid(id)) return null;
       const { data: conversation, error } = await supabase
         .from("conversations")
-        .select("id, guest_owner_id, title, active_provider, active_model, level, depth, created_at, updated_at")
+        .select("id, guest_owner_id, user_id, title, active_provider, active_model, level, depth, created_at, updated_at")
         .eq("id", id)
         .maybeSingle();
       if (error) throw databaseError(error.message);
@@ -78,10 +80,12 @@ export function createSupabaseStore(): ConversationStore | null {
       const row = conversation as ConversationRow;
       return {
         id: row.id,
-        ownerLearnerId: row.guest_owner_id ?? undefined,
+        ownerLearnerId: row.user_id ? accountLearnerId(row.user_id) : row.guest_owner_id ?? undefined,
+        ownerUserId: row.user_id ?? undefined,
         title: row.title,
         createdAt: new Date(row.created_at).toISOString(),
-        updatedAt: new Date(row.updated_at).toISOString(),
+        // Preserve PostgreSQL microseconds: this is also the optimistic revision.
+        updatedAt: row.updated_at,
         activeProvider: row.active_provider,
         activeModel: row.active_model,
         level: row.level,
@@ -107,82 +111,25 @@ export function createSupabaseStore(): ConversationStore | null {
         })),
       };
     },
-    async save(record) {
+    async save(record, expectedUpdatedAt) {
       if (!isUuid(record.id)) throw new Error("Refusing to store a conversation with an invalid id.");
-      const { error: conversationError } = await supabase.from("conversations").upsert({
-        id: record.id,
-        guest_owner_id: record.ownerLearnerId ?? null,
-        user_id: null,
-        title: record.title,
-        active_provider: record.activeProvider,
-        active_model: record.activeModel,
-        level: record.level,
-        depth: record.depth,
-        created_at: record.createdAt,
-        updated_at: record.updatedAt,
+      const { data, error } = await supabase.rpc("clear_save_lesson", {
+        p_record: record,
+        p_expected_updated_at: expectedUpdatedAt ?? null,
       });
-      if (conversationError) throw databaseError(conversationError.message);
-
-      await supabase.from("messages").delete().eq("conversation_id", record.id);
-      if (record.messages.length > 0) {
-        const { error: messageError } = await supabase.from("messages").insert(
-          record.messages.map((message) => ({
-            id: message.id,
-            conversation_id: record.id,
-            role: message.role,
-            content: { text: message.content, kind: message.kind },
-            provider: record.activeProvider,
-            model: record.activeModel,
-            created_at: message.createdAt,
-          })),
-        );
-        if (messageError) throw databaseError(messageError.message);
+      if (error?.code === "40001") {
+        throw new ClearError("lesson_changed", "This lesson changed in another tab. Reload it before trying again.", { status: 409 });
       }
-
-      if (record.document) {
-        const { error: documentError } = await supabase.from("explanation_documents").insert({
-          id: crypto.randomUUID(),
-          conversation_id: record.id,
-          schema_version: record.document.schemaVersion,
-          document: record.document,
-          provider: record.document.metadata.provider,
-          model: record.document.metadata.model,
-          prompt_version: record.document.metadata.promptVersion,
-          created_at: record.updatedAt,
-        });
-        if (documentError) throw databaseError(documentError.message);
-      }
-
-      await supabase.from("attachments").delete().eq("conversation_id", record.id);
-      if (record.attachments && record.attachments.length > 0) {
-        const { error: attachmentError } = await supabase.from("attachments").insert(
-          record.attachments.map((attachment) => ({
-            id: attachment.id,
-            conversation_id: record.id,
-            type: attachment.mimeType === "application/pdf" ? "pdf" : "image",
-            mime_type: attachment.mimeType,
-            storage_path: attachment.storageName,
-            size_bytes: attachment.sizeBytes,
-            metadata: {
-              filename: attachment.filename,
-              pageCount: attachment.pageCount,
-              extractedText: attachment.extractedText,
-            },
-          })),
-        );
-        if (attachmentError) throw databaseError(attachmentError.message);
-      }
+      if (error) throw databaseError(error.message);
+      if (typeof data !== "string") throw databaseError("Missing saved lesson revision.");
+      record.updatedAt = data;
     },
   };
 }
 
-function databaseError(message: string): Error {
+function databaseError(message: string): ClearError {
   if (/schema cache|does not exist|PGRST205/i.test(message)) {
-    return new ClearError(
-      "database_not_ready",
-      "Supabase is connected, but the CLEAR schema is not ready. Apply the migrations in supabase/migrations, then try again.",
-      { status: 503 },
-    );
+    return new ClearError("database_not_ready", "Supabase is connected, but the CLEAR schema is not ready. Apply the migrations in supabase/migrations, then try again.", { status: 503 });
   }
-  return new Error(message);
+  return new ClearError("storage_unavailable", "Your saved lesson could not be reached. Please try again.", { status: 503, retryable: true });
 }

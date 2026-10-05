@@ -5,7 +5,7 @@ export const CLEAR_FREE_MODELS = [
 
 export type ClearFreeModelId = (typeof CLEAR_FREE_MODELS)[number]["id"];
 
-const DEFAULT_MODEL: ClearFreeModelId = "gemini-2.5-flash";
+const DEFAULT_MODEL: ClearFreeModelId = "gemini-3.5-flash";
 
 export function isClearFreeModel(model: string | undefined): model is ClearFreeModelId {
   return CLEAR_FREE_MODELS.some((item) => item.id === model);

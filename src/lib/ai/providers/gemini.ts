@@ -4,6 +4,7 @@ import type { AIProvider, UnifiedGenerationRequest, UnifiedGenerationResponse } 
 import { isRecord, parseJsonText } from "@/src/lib/explanation/normalize";
 
 import { defaultClearFreeModel, resolveClearFreeModel } from "@/src/lib/ai/models";
+import { discardProviderResponse, readProviderResponse, tokenCount } from "@/src/lib/ai/providers/response-body";
 
 export const geminiProvider: AIProvider = {
   id: "gemini",
@@ -59,6 +60,7 @@ async function requestGemini(
   try {
     response = await fetch(url, {
       method: "POST",
+      redirect: "manual",
       headers: {
         "content-type": "application/json",
         "x-goog-api-key": apiKey,
@@ -83,7 +85,11 @@ async function requestGemini(
     );
   }
 
-  const bodyText = await response.text();
+  if (response.status >= 300 && response.status < 400) {
+    discardProviderResponse(response);
+    throw new ClearError("provider_error", "Gemini tried to redirect the request. CLEAR stopped.", { status: 502 });
+  }
+  const bodyText = await readProviderResponse(response);
   if (!response.ok) {
     throw geminiHttpError(response.status, bodyText);
   }
@@ -137,7 +143,7 @@ function readGeminiText(payload: unknown): string {
     return "";
   }
   return candidate.content.parts
-    .map((part) => (isRecord(part) && typeof part.text === "string" ? part.text : ""))
+    .map((part) => (isRecord(part) && part.thought !== true && typeof part.text === "string" ? part.text : ""))
     .join("");
 }
 
@@ -145,8 +151,8 @@ function readUsage(payload: unknown): UnifiedGenerationResponse["usage"] {
   if (!isRecord(payload) || !isRecord(payload.usageMetadata)) return undefined;
   const usage = payload.usageMetadata;
   return {
-    inputTokens: typeof usage.promptTokenCount === "number" ? usage.promptTokenCount : undefined,
-    outputTokens: typeof usage.candidatesTokenCount === "number" ? usage.candidatesTokenCount : undefined,
+    inputTokens: tokenCount(usage.promptTokenCount),
+    outputTokens: tokenCount(usage.candidatesTokenCount),
   };
 }
 
@@ -178,6 +184,5 @@ function geminiHttpError(status: number, bodyText: string): ClearError {
   return new ClearError("provider_error", "Gemini could not generate this explanation.", {
     retryable: status >= 500,
     status: 502,
-    details: safeBody || undefined,
   });
 }

@@ -1,8 +1,6 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { isUuid } from "@/src/lib/explanation/normalize";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
+import { readPrivateState, writePrivateState } from "@/src/lib/storage/state";
 import {
   defaultRoutingPreferences,
   isRouteProvider,
@@ -30,46 +28,27 @@ export type LessonMeta = {
   };
 };
 
-const routingRoot = path.join(process.cwd(), ".data", "routing");
-const metaRoot = path.join(process.cwd(), ".data", "lesson-meta");
-
 export async function readRoutingPreferences(learnerId: string | undefined): Promise<RoutingPreferences> {
   const fallback = defaultRoutingPreferences();
   if (!learnerId || !isUuid(learnerId)) return fallback;
-  try {
-    const parsed = JSON.parse(await readFile(path.join(routingRoot, `${learnerId}.json`), "utf8")) as RoutingPreferences;
-    return normalizePreferences(parsed);
-  } catch {
-    return fallback;
-  }
+  const parsed = await readPrivateState<RoutingPreferences>("routing", learnerId);
+  return parsed ? normalizePreferences(parsed) : fallback;
 }
 
 export async function writeRoutingPreferences(learnerId: string, preferences: RoutingPreferences): Promise<void> {
   if (!isUuid(learnerId)) throw new Error("Refusing to store routing preferences with an invalid id.");
-  await mkdir(routingRoot, { recursive: true });
-  const destination = path.join(routingRoot, `${learnerId}.json`);
-  const temporary = path.join(routingRoot, `${learnerId}.${process.pid}.tmp`);
-  await writeFile(temporary, JSON.stringify(normalizePreferences(preferences)), "utf8");
-  await rename(temporary, destination);
+  await writePrivateState("routing", learnerId, normalizePreferences(preferences));
 }
 
 export async function readLessonMeta(conversationId: string): Promise<LessonMeta> {
   if (!isUuid(conversationId)) return {};
-  try {
-    const parsed = JSON.parse(await readFile(path.join(metaRoot, `${conversationId}.json`), "utf8")) as LessonMeta;
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
+  const parsed = await readPrivateState<LessonMeta>("lesson-meta", conversationId);
+  return parsed && typeof parsed === "object" ? parsed : {};
 }
 
 export async function writeLessonMeta(conversationId: string, meta: LessonMeta): Promise<void> {
   if (!isUuid(conversationId)) throw new Error("Refusing to store lesson routing with an invalid id.");
-  await mkdir(metaRoot, { recursive: true });
-  const destination = path.join(metaRoot, `${conversationId}.json`);
-  const temporary = path.join(metaRoot, `${conversationId}.${process.pid}.tmp`);
-  await writeFile(temporary, JSON.stringify(meta), "utf8");
-  await rename(temporary, destination);
+  await writePrivateState("lesson-meta", conversationId, meta);
 }
 
 function normalizePreferences(value: RoutingPreferences): RoutingPreferences {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { ApprovedTarget, RouteProviderId, RoutingPreferences, RoutingTaskId } from "@/src/lib/routing/choose";
 import { ROUTING_TASKS } from "@/src/lib/routing/choose";
@@ -16,18 +16,33 @@ export function RoutingControl() {
   const [available, setAvailable] = useState<ApprovedTarget[]>([]);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    void fetch("/api/routing")
-      .then((response) => response.json())
-      .then((payload: Payload) => {
-        if (payload.preferences) setPreferences(payload.preferences);
-        setAvailable(payload.available ?? []);
-      })
-      .catch(() => setMessage("Routing settings could not be loaded."));
-  }, []);
+  const load = useCallback(() => fetch("/api/routing")
+    .then(async (response) => {
+      const payload = (await response.json()) as Payload;
+      if (!response.ok || !payload.preferences) {
+        setMessage(payload.error?.message ?? "Routing settings could not be loaded.");
+        return;
+      }
+      setPreferences(payload.preferences);
+      setAvailable(payload.available ?? []);
+    }).catch(() => {
+      setMessage("Routing settings could not be loaded. Please try again.");
+    }).finally(() => {
+      setLoading(false);
+    }), []);
+  useEffect(() => { void load(); }, [load]);
 
-  if (!preferences) return <p className="text-sm text-muted">Loading routing…</p>;
+  if (!preferences) return (
+    <section className="space-y-3" aria-busy={loading}>
+      <h2 className="font-serif text-2xl">Model routing</h2>
+      {loading ? <p className="text-sm text-muted">Loading routing…</p> : <>
+        <p role="alert" className="text-sm text-foreground">{message}</p>
+        <button type="button" onClick={() => { setLoading(true); setMessage(""); void load(); }} className="underline">Try again</button>
+      </>}
+    </section>
+  );
 
   function setTask(task: RoutingTaskId, provider: string) {
     setPreferences((current) => {
@@ -59,6 +74,8 @@ export function RoutingControl() {
       }
       setPreferences(payload.preferences);
       setMessage("Routing saved for this browser.");
+    } catch {
+      setMessage("Routing did not save. Please try again.");
     } finally {
       setPending(false);
     }
@@ -131,7 +148,7 @@ export function RoutingControl() {
       <button type="button" disabled={pending} onClick={() => void save()} className="underline">
         {pending ? "Saving…" : "Save routing"}
       </button>
-      {message ? <p className="text-sm text-muted">{message}</p> : null}
+      {message ? <p role="status" className="text-sm text-foreground">{message}</p> : null}
     </section>
   );
 }

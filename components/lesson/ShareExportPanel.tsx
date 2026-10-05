@@ -142,7 +142,7 @@ export function ShareExportPanel({ conversationId, document, disabled }: {
             Show the provider and model on the shared page
           </label>
           <p className="mt-2 text-xs leading-relaxed text-muted">This choice applies when you create or replace the link.</p>
-          <button type="button" disabled={disabled || sharing} className="mt-4 text-sm text-accent underline underline-offset-4" onClick={() => { setPreviewOpen(true); dialog.current?.showModal(); }}>Preview the shared explanation</button>
+          <button type="button" disabled={disabled || sharing} className="mt-4 text-sm text-accent underline underline-offset-4" onClick={(event) => { event.currentTarget.focus(); setPreviewOpen(true); dialog.current?.showModal(); }}>Preview the shared explanation</button>
           {loading ? <p className="mt-4 text-sm text-muted" role="status">Checking this lesson’s sharing settings…</p> : null}
           {share?.active && share.path ? (
             <div className="mt-5 space-y-3 rounded-xl border border-line bg-background/60 p-4">

@@ -1,10 +1,9 @@
-import { lookup } from "node:dns/promises";
-
 import { ClearError } from "@/src/lib/api/errors";
-import { redactSecrets } from "@/src/lib/ai/redact";
 import type { InlineAttachment, UnifiedGenerationRequest, UnifiedGenerationResponse } from "@/src/lib/ai/types";
 import { isRecord, parseJsonText } from "@/src/lib/explanation/normalize";
-import { assertSafeProviderUrl } from "@/src/lib/security/ssrf";
+import { UnsafeUrlError } from "@/src/lib/security/ssrf";
+import { discardProviderResponse, readProviderResponse, tokenCount } from "@/src/lib/ai/providers/response-body";
+import { customProviderRequest } from "@/src/lib/ai/providers/custom-http";
 
 export async function openaiCompatibleGenerate(input: {
   baseUrl: string;
@@ -12,7 +11,11 @@ export async function openaiCompatibleGenerate(input: {
   request: UnifiedGenerationRequest;
   checkSsrf?: boolean;
 }): Promise<UnifiedGenerationResponse> {
-  const endpoint = await chatEndpoint(input.baseUrl, input.checkSsrf === true);
+  // One deadline includes resolution, connection, response reading and the single
+  // compatibility retry, so work stays within its provider concurrency lease.
+  const signal = AbortSignal.timeout(60_000);
+  const root = input.baseUrl.endsWith("/") ? input.baseUrl : `${input.baseUrl}/`;
+  const endpoint = new URL("chat/completions", root);
   const body = {
     model: input.request.model,
     temperature: input.request.temperature ?? 0.4,
@@ -20,7 +23,7 @@ export async function openaiCompatibleGenerate(input: {
     response_format: { type: "json_object" },
     messages: openAiMessages(input.request),
   };
-  return postChat(endpoint, input.apiKey, body, true);
+  return postChat(endpoint, input.apiKey, body, true, signal, input.checkSsrf === true);
 }
 
 async function postChat(
@@ -28,10 +31,13 @@ async function postChat(
   apiKey: string,
   body: Record<string, unknown>,
   allowFormatRetry: boolean,
+  signal: AbortSignal,
+  custom: boolean,
 ): Promise<UnifiedGenerationResponse> {
   let response: Response;
   try {
-    response = await fetch(endpoint, {
+    signal.throwIfAborted();
+    response = custom ? await customProviderRequest(endpoint, { apiKey, body: JSON.stringify(body), signal }) : await fetch(endpoint, {
       method: "POST",
       redirect: "manual",
       headers: {
@@ -39,25 +45,27 @@ async function postChat(
         "content-type": "application/json",
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60_000),
+      signal,
     });
   } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    if (error instanceof UnsafeUrlError) throw new ClearError("unsafe_provider_url", error.message, { status: 400 });
+    const timedOut = signal.aborted || (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError"));
     throw new ClearError(timedOut ? "provider_timeout" : "provider_unreachable", timedOut ? "The provider took too long." : "CLEAR could not reach that provider.", {
       retryable: true,
       status: 504,
     });
   }
   if (response.status >= 300 && response.status < 400) {
+    discardProviderResponse(response);
     throw new ClearError("provider_error", "The provider tried to redirect the request. CLEAR stopped.", { status: 502 });
   }
-  const bodyText = await response.text();
+  const bodyText = await readProviderResponse(response);
   if (!response.ok && allowFormatRetry && response.status === 400 && /response_format/i.test(bodyText)) {
     const next = { ...body };
     delete next.response_format;
-    return postChat(endpoint, apiKey, next, false);
+    return postChat(endpoint, apiKey, next, false, signal, custom);
   }
-  if (!response.ok) throw httpError(response.status, bodyText);
+  if (!response.ok) throw httpError(response.status);
   return parseOpenAi(bodyText);
 }
 
@@ -91,8 +99,12 @@ export async function anthropicGenerate(input: {
       status: 504,
     });
   }
-  const bodyText = await response.text();
-  if (!response.ok) throw httpError(response.status, bodyText);
+  if (response.status >= 300 && response.status < 400) {
+    discardProviderResponse(response);
+    throw new ClearError("provider_error", "Anthropic tried to redirect the request. CLEAR stopped.", { status: 502 });
+  }
+  const bodyText = await readProviderResponse(response);
+  if (!response.ok) throw httpError(response.status);
   let payload: unknown;
   try {
     payload = JSON.parse(bodyText);
@@ -103,29 +115,10 @@ export async function anthropicGenerate(input: {
     throw new ClearError("provider_error", "Anthropic returned an empty explanation.", { retryable: true, status: 502 });
   }
   const text = payload.content
-    .map((part) => (isRecord(part) && typeof part.text === "string" ? part.text : ""))
+    .map((part) => (isRecord(part) && part.type === "text" && typeof part.text === "string" ? part.text : ""))
     .join("");
-  return finishText(text);
-}
-
-async function chatEndpoint(baseUrl: string, checkSsrf: boolean): Promise<URL> {
-  const root = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  const endpoint = new URL("chat/completions", root);
-  if (!checkSsrf) return endpoint;
-  try {
-    await assertSafeProviderUrl(endpoint.toString(), {
-      allowLocal: process.env.NODE_ENV !== "production",
-      lookup: async (hostname) => {
-        const records = await lookup(hostname, { all: true, verbatim: true });
-        return records.map((record) => record.address);
-      },
-    });
-  } catch (error) {
-    throw new ClearError("unsafe_provider_url", error instanceof Error ? error.message : "That provider URL is not allowed.", {
-      status: 400,
-    });
-  }
-  return endpoint;
+  const usage = isRecord(payload.usage) ? { inputTokens: tokenCount(payload.usage.input_tokens), outputTokens: tokenCount(payload.usage.output_tokens) } : undefined;
+  return { ...finishText(text), usage, finishReason: typeof payload.stop_reason === "string" ? payload.stop_reason : undefined };
 }
 
 function openAiMessages(request: UnifiedGenerationRequest) {
@@ -190,12 +183,12 @@ function parseOpenAi(bodyText: string): UnifiedGenerationResponse {
   const text = isRecord(message) && typeof message.content === "string" ? message.content : "";
   const usage = isRecord(payload.usage)
     ? {
-        inputTokens: typeof payload.usage.prompt_tokens === "number" ? payload.usage.prompt_tokens : undefined,
-        outputTokens: typeof payload.usage.completion_tokens === "number" ? payload.usage.completion_tokens : undefined,
+        inputTokens: tokenCount(payload.usage.prompt_tokens),
+        outputTokens: tokenCount(payload.usage.completion_tokens),
       }
     : undefined;
   const parsed = finishText(text);
-  return { ...parsed, usage };
+  return { ...parsed, usage, finishReason: typeof payload.choices[0].finish_reason === "string" ? payload.choices[0].finish_reason : undefined };
 }
 
 function finishText(text: string): UnifiedGenerationResponse {
@@ -211,8 +204,7 @@ function finishText(text: string): UnifiedGenerationResponse {
   return { text, structured };
 }
 
-function httpError(status: number, bodyText: string): ClearError {
-  const safe = redactSecrets(bodyText).slice(0, 300);
+function httpError(status: number): ClearError {
   if (status === 401 || status === 403) {
     return new ClearError("provider_key_invalid", "That API key was rejected.", { status: 401 });
   }
@@ -222,6 +214,5 @@ function httpError(status: number, bodyText: string): ClearError {
   return new ClearError("provider_error", "The provider could not generate this explanation.", {
     retryable: status >= 500,
     status: 502,
-    details: safe || undefined,
   });
 }

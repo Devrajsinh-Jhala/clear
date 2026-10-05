@@ -10,10 +10,10 @@ describe("CLEAR Free models", () => {
     else process.env.GEMINI_MODEL = previous;
   });
 
-  it("uses Gemini 2.5 Flash when the env model is unknown", () => {
+  it("uses Gemini 3.5 Flash when the env model is unknown", () => {
     process.env.GEMINI_MODEL = "gemini-unknown";
-    expect(defaultClearFreeModel()).toBe("gemini-2.5-flash");
-    expect(resolveClearFreeModel("not-a-model")).toBe("gemini-2.5-flash");
+    expect(defaultClearFreeModel()).toBe("gemini-3.5-flash");
+    expect(resolveClearFreeModel("not-a-model")).toBe("gemini-3.5-flash");
   });
 
   it("keeps a known lesson model", () => {

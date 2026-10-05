@@ -39,7 +39,7 @@ Unzip it and keep the `clear-explainer` folder together, then add it to the skil
 
 ## Sharing and lesson downloads
 
-New lessons belong to the browser that created them. Return to their address in the same browser; clearing its site data removes access until accounts and a saved library are available. Earlier ownerless lesson URLs remain read-only and offer **Make a private copy** to continue with the explanation alone. The copy starts future turns with CLEAR Free.
+Guest lessons belong to the browser that created them. Return to their address in the same browser; clearing its site data removes access. With Supabase email sign-in configured, new signed-in lessons belong to your account and appear in **Library** across devices. Earlier guest lessons, connections and settings are not imported automatically. Earlier ownerless URLs remain read-only and offer **Make a private copy** to continue with the explanation alone. The copy starts future turns with CLEAR Free.
 
 Open **Share & export** in a lesson. Review **Preview the shared explanation**, then explicitly create a share link. It publishes a frozen snapshot with eight read-only learning views, quizzes, and trusted interactive controls. Later follow-ups leave the snapshot unchanged. **Replace link with current lesson** invalidates the previous link; **Revoke link** removes access. Files already downloaded remain with their recipients.
 
@@ -47,14 +47,31 @@ Markdown, JSON, and PDF downloads contain canonical teaching content and quiz an
 
 PDFs paginate text, examples, code, and diagram/interactive descriptions using an embedded DejaVu font. Common math symbols are supported; unsupported glyphs (including many Hindi/Chinese characters) use explicit Unicode notation with a notice. Markdown and JSON preserve their original text. PDF exports are limited to 500 pages.
 
-For Supabase deployments, apply all migrations, including `supabase/migrations/20261004160000_private_guests_and_shares.sql`, **before deploying this version**. It adds browser ownership and a server-only share table. The migration has not been applied to a live database by this task. Without Supabase, `.data/conversations` and `.data/shares` use the local file store; production still needs durable storage and Phase 11 controls. A deployment proxy must overwrite `X-Forwarded-Host` and `X-Forwarded-Proto` with the public request origin so sharing writes can validate it.
+For Supabase deployments, apply every migration in filename order **before deploying this version**. The new Phase 11 migrations have not been applied to the live database. Hosted records, encrypted keys, usage budgets and original uploads persist in Supabase; the upload bucket stays private. Vercel refuses a local-storage fallback. Local development uses `.data` or `CLEAR_DATA_DIR` without Supabase. Configured public origins are checked on writes, and deployment proxies must overwrite forwarding headers. See [DEPLOYMENT.md](DEPLOYMENT.md) for the Vercel/Supabase setup and remaining launch checks.
+
+## Account library
+
+**Account** sends a one-time email code. After signing in, **Library** shows the latest 100 account lessons with title search, provider filters, favorites, rename, archive/restore and deletion. Deleting a lesson also removes its uploads and invalidates its share link. Provider keys, routing and opt-in learning memory use a separate private account scope. Sign-out returns to the guest browser identity. Production email delivery needs Supabase SMTP configuration.
+
+## Production controls
+
+API requests have bounded bodies and rolling rate limits. Actual CLEAR Free model calls spend guest/account, network and global daily budgets; repairs and explicitly enabled fallback each spend a dispatch. BYOK uses admission/concurrency controls but does not spend CLEAR Free quota. Operational pauses and limits are configurable in `.env.example`. A missing quota store stops dispatch rather than bypassing limits.
+
+Model responses are bounded, redirects are rejected, and raw provider error bodies are never returned. Lesson saves are transactional with stale revision detection. Every dynamic page receives a nonce-based content security policy. Optional Sentry error reporting strips private content and disables automatic telemetry. Database isolation and provider contracts have executable tests.
 
 ## Checks
 
 ```bash
 npm test
 npm run lint
+npm run test:eval
+npm run build
+npx playwright install --with-deps chromium firefox webkit
+npm run test:e2e
+npm run check:deployment -- --remote
 ```
+
+Browser regression tests use an isolated mock production build and temporary synthetic storage. CI builds with no provider or Supabase secrets and runs Chromium, Firefox, WebKit and mobile Chromium. Offline evals check the reference corpus and rubric; they do not establish live model quality. Billable live evals require explicit process flags and credentials; see the deployment guide. Real email sign-in, live Supabase migrations/storage, telemetry receipt, microphone devices and a successful full live eval remain launch gates.
 
 ## Where things live
 
@@ -62,6 +79,10 @@ npm run lint
 - `src/lib/ai` — provider contract, Gemini adapter, local mock
 - `src/lib/explanation` — validation, repair, generation, follow-up
 - `supabase/migrations` — Postgres schema and row-level security
-- Lessons are stored in `.data/` until Supabase credentials are set
+- `src/lib/auth` — verified email sessions and the account library
+- `src/lib/security/limits` — durable atomic quotas, body limits and concurrency
+- `src/lib/monitoring` — privacy-filtered error reporting
+- `evals` and `tests/e2e` — prompt regression and browser/accessibility coverage
+- Private records use Supabase when configured; `.data/` is a local-development store
 
 Provider requests run on the server. Do not put API keys in `NEXT_PUBLIC_` variables.

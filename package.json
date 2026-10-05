@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:eval": "vitest run --config evals/vitest.config.ts",
+    "test:eval:live": "vitest run --config evals/vitest.config.ts",
+    "check:deployment": "node scripts/check-deployment.mjs"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
+    "@sentry/nextjs": "^11.4.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "fflate": "^0.8.3",
@@ -25,6 +30,9 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22.20.5",
     "@types/react": "^19",

@@ -5,11 +5,12 @@ type QueryResult = { data: unknown; error: { message: string } | null };
 const state = vi.hoisted(() => ({
   results: {} as Record<string, QueryResult>,
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: vi.fn(() => ({ from: state.from })),
+  createClient: vi.fn(() => ({ from: state.from, rpc: state.rpc })),
 }));
 
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
@@ -40,6 +41,7 @@ describe("Supabase lesson reads", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://clear-test.supabase.example");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "synthetic-service-key");
     state.from.mockReset();
+    state.rpc.mockReset();
     state.from.mockImplementation(query);
     state.results = {
       conversations: {
@@ -74,7 +76,7 @@ describe("Supabase lesson reads", () => {
     "propagates %s query failures instead of returning absent or partial teaching data",
     async (table) => {
       state.results[table].error = { message: `Read failed for ${table}` };
-      await expect(createSupabaseStore()!.get(lessonId)).rejects.toThrow(`Read failed for ${table}`);
+      await expect(createSupabaseStore()!.get(lessonId)).rejects.toMatchObject({ code: "storage_unavailable", status: 503 });
     },
   );
 
@@ -92,5 +94,21 @@ describe("Supabase lesson reads", () => {
       document: MUTEX_FIXTURE,
       attachments: [{ filename: "notes.pdf", storageName: "private.pdf", extractedText: "Quoted source" }],
     });
+  });
+
+  it("round-trips exact PostgreSQL revisions across repeated saves without losing microseconds", async () => {
+    const precise = "2026-10-05T12:00:00.123456+00:00";
+    state.results.conversations.data = { ...(state.results.conversations.data as object), updated_at: precise };
+    const store = createSupabaseStore()!;
+    const record = (await store.get(lessonId))!;
+    expect(record.updatedAt).toBe(precise);
+    const next = "2026-10-05T12:01:00.987654+00:00";
+    state.rpc.mockResolvedValueOnce({ data: next, error: null });
+    await store.save(record, record.updatedAt);
+    expect(state.rpc.mock.calls[0][1].p_expected_updated_at).toBe(precise);
+    expect(record.updatedAt).toBe(next);
+    state.rpc.mockResolvedValueOnce({ data: "2026-10-05T12:02:00.456789+00:00", error: null });
+    await store.save(record, record.updatedAt);
+    expect(state.rpc.mock.calls[1][1].p_expected_updated_at).toBe(next);
   });
 });

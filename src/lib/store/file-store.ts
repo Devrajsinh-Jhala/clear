@@ -4,8 +4,9 @@ import path from "node:path";
 
 import { isUuid } from "@/src/lib/explanation/normalize";
 import type { ConversationRecord, ConversationStore } from "@/src/lib/store/types";
+import { dataDirectory } from "@/src/lib/storage/path";
 
-export function createFileStore(root = path.join(process.cwd(), ".data", "conversations")): ConversationStore {
+export function createFileStore(root = dataDirectory("conversations")): ConversationStore {
   return {
     async get(id) {
       if (!isUuid(id)) return null;

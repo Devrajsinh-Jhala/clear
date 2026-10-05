@@ -8,6 +8,7 @@ import { listApprovedTargets } from "@/src/lib/routing/available";
 import { chooseRoute, isRouteProvider, shouldUseClearFreeFallback, type RouteDecision } from "@/src/lib/routing/choose";
 import { readLessonMeta, readRoutingPreferences, writeLessonMeta, type CompareOption, type CompareRating, type LessonMeta } from "@/src/lib/routing/store";
 import { ClearError } from "@/src/lib/api/errors";
+import { currentAccount } from "@/src/lib/auth/session";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
 import { reviewTeachBack } from "@/src/lib/explanation/review-teach-back";
 import type { TeachBackResult } from "@/src/lib/explanation/teach-back";
@@ -21,6 +22,7 @@ import type { PreparedAttachment } from "@/src/lib/uploads/prepare";
 import { readStoredUpload } from "@/src/lib/uploads/prepare";
 import type { Depth, ExplanationDocument, LearnerLevel } from "@/src/lib/explanation/schema";
 import { getConversationStore } from "@/src/lib/store";
+import { flushMonitoring, reportServerError } from "@/src/lib/monitoring/server";
 import type { ConversationRecord, LessonAttachment } from "@/src/lib/store/types";
 
 export async function createLesson(input: {
@@ -38,6 +40,7 @@ export async function createLesson(input: {
   const now = new Date().toISOString();
   const id = randomUUID();
   const ownerLearnerId = await ensureLearnerId();
+  const ownerUserId = (await currentAccount())?.id;
 
   if (input.exampleId === "mutex") {
     const document: ExplanationDocument = {
@@ -56,6 +59,7 @@ export async function createLesson(input: {
     const record = buildRecord({
       id,
       ownerLearnerId,
+      ownerUserId,
       now,
       title: document.topic,
       provider: "sample",
@@ -76,7 +80,7 @@ export async function createLesson(input: {
   }
 
   if (input.compareProvider) {
-    return createComparison({ ...input, question, id, now, ownerLearnerId });
+    return createComparison({ ...input, question, id, now, ownerLearnerId, ownerUserId });
   }
 
   const preferences = await readRoutingPreferences(await currentLearnerId());
@@ -125,6 +129,7 @@ export async function createLesson(input: {
   const record = buildRecord({
     id,
     ownerLearnerId,
+    ownerUserId,
     now,
     title: generated.document.topic,
     provider: generated.providerId,
@@ -136,8 +141,8 @@ export async function createLesson(input: {
     document: generated.document,
     attachments: storedAttachments(input.uploads),
   });
-  await getConversationStore().save(record);
   if (fallbackNote) await writeLessonMeta(id, { fallbackNote });
+  await getConversationStore().save(record);
   return record;
 }
 
@@ -166,7 +171,7 @@ export async function addFollowUp(input: {
   const now = new Date().toISOString();
   const record: ConversationRecord = {
     ...existing,
-    title: continued.document.topic,
+    title: existing.title,
     updatedAt: now,
     activeProvider: continued.providerId,
     activeModel: continued.model,
@@ -177,7 +182,7 @@ export async function addFollowUp(input: {
       { id: randomUUID(), role: "assistant", content: continued.reply, createdAt: now, kind: "follow-up" },
     ],
   };
-  await store.save(record);
+  await store.save(record, existing.updatedAt);
   return record;
 }
 
@@ -195,21 +200,6 @@ export async function submitTeachBack(input: {
     credential: ownKey?.credential,
   });
   const now = new Date().toISOString();
-  const learnerId = await currentLearnerId();
-  if (learnerId) {
-    const profile = await readLearningProfile(learnerId);
-    await writeLearningProfile(
-      learnerId,
-      applyTeachBackMemory(profile, {
-        concepts: existing.document.concepts.map((concept) => ({ id: concept.id, name: concept.name })),
-        verdict: result.verdict,
-        missingConcepts: result.missingConcepts,
-        misleadingStatements: result.misleadingStatements,
-        repairedExplanation: result.repairedExplanation,
-        seenAt: now,
-      }),
-    );
-  }
   const record: ConversationRecord = {
     ...existing,
     updatedAt: now,
@@ -219,13 +209,33 @@ export async function submitTeachBack(input: {
       { id: randomUUID(), role: "assistant", content: result.headline, createdAt: now, kind: "teach-back" },
     ],
   };
-  await store.save(record);
+  await store.save(record, existing.updatedAt);
+  // A rejected lesson revision must never change the learner's progress.
+  try {
+    const learnerId = await currentLearnerId();
+    if (learnerId) {
+      const profile = await readLearningProfile(learnerId);
+      if (profile.enabled) await writeLearningProfile(learnerId, applyTeachBackMemory(profile, {
+        concepts: existing.document.concepts.map((concept) => ({ id: concept.id, name: concept.name })),
+        verdict: result.verdict,
+        missingConcepts: result.missingConcepts,
+        misleadingStatements: result.misleadingStatements,
+        repairedExplanation: result.repairedExplanation,
+        seenAt: now,
+      }));
+    }
+  } catch (error) {
+    result.memoryWarning = "Your feedback was saved. CLEAR could not confirm the learning-memory update.";
+    reportServerError(error, { operation: "storage", code: "storage_unavailable" });
+    await flushMonitoring();
+  }
   return { record, result };
 }
 
 function buildRecord(input: {
   id: string;
   ownerLearnerId: string;
+  ownerUserId?: string;
   now: string;
   title: string;
   provider: string;
@@ -240,6 +250,7 @@ function buildRecord(input: {
   return {
     id: input.id,
     ownerLearnerId: input.ownerLearnerId,
+    ownerUserId: input.ownerUserId,
     title: input.title,
     createdAt: input.now,
     updatedAt: input.now,
@@ -260,6 +271,7 @@ async function createComparison(input: {
   question: string;
   id: string;
   ownerLearnerId: string;
+  ownerUserId?: string;
   now: string;
   level: LearnerLevel;
   depth: Depth;
@@ -336,6 +348,7 @@ async function createComparison(input: {
   const record = buildRecord({
     id: input.id,
     ownerLearnerId: input.ownerLearnerId,
+    ownerUserId: input.ownerUserId,
     now: input.now,
     title: winner.document.topic,
     provider: winner.provider,
@@ -347,8 +360,8 @@ async function createComparison(input: {
     document: winner.document,
     attachments: storedAttachments(input.uploads),
   });
-  await getConversationStore().save(record);
   await writeLessonMeta(input.id, { comparison: { options } });
+  await getConversationStore().save(record);
   return record;
 }
 
@@ -374,13 +387,13 @@ export async function chooseComparison(input: {
     const now = new Date().toISOString();
     const record: ConversationRecord = {
       ...existing,
-      title: option.document.topic,
+      title: existing.title,
       updatedAt: now,
       activeProvider: option.provider,
       activeModel: option.model,
       document: option.document,
     };
-    await store.save(record);
+    await store.save(record, existing.updatedAt);
     await writeLessonMeta(input.conversationId, meta);
     return { record, meta };
   }
