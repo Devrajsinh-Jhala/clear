@@ -49,6 +49,8 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Browser and accessibility regressions
         run: npm run test:e2e
+      - name: Synthetic password-form UI regressions
+        run: npm run test:auth-ui
       - name: Preserve synthetic failure artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -57,6 +59,8 @@ jobs:
           path: |
             .data/e2e-report/
             .data/e2e-results/
+            .data/auth-ui-report/
+            .data/auth-ui-results/
           retention-days: 7
           if-no-files-found: ignore
           include-hidden-files: true

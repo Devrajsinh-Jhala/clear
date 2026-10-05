@@ -6,12 +6,16 @@ test("unconfigured accounts keep guest lessons usable and deny saved-library acc
   await page.goto("/auth");
   await expect(page.getByRole("heading", { name: "Guest lessons are ready", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Email address", exact: true })).toHaveCount(0);
-  const code = await page.request.post("/api/auth/code", { headers: { Origin: ORIGIN }, data: { email: "synthetic@example.test" } });
-  expect(code.status()).toBe(503);
-  expect((await code.json()).error.code).toBe("auth_unavailable");
-  const invalidCode = await page.request.post("/api/auth/verify", { headers: { Origin: ORIGIN }, data: { email: "synthetic@example.test", token: "12345x" } });
-  expect(invalidCode.status()).toBe(400);
-  const unexpectedField = await page.request.post("/api/auth/code", { headers: { Origin: ORIGIN }, data: { email: "synthetic@example.test", userId: "29b354a8-de05-40bd-98c1-0a890ae67ef5" } });
+  await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
+  const credentials = { email: "synthetic@example.test", password: " synthetic-browser-password " };
+  for (const action of ["sign-in", "sign-up"]) {
+    const result = await page.request.post(`/api/auth/${action}`, { headers: { Origin: ORIGIN }, data: credentials });
+    expect(result.status()).toBe(503);
+    expect((await result.json()).error.code).toBe("auth_unavailable");
+  }
+  const shortPassword = await page.request.post("/api/auth/sign-up", { headers: { Origin: ORIGIN }, data: { ...credentials, password: "short" } });
+  expect(shortPassword.status()).toBe(400);
+  const unexpectedField = await page.request.post("/api/auth/sign-in", { headers: { Origin: ORIGIN }, data: { ...credentials, userId: "29b354a8-de05-40bd-98c1-0a890ae67ef5" } });
   expect(unexpectedField.status()).toBe(400);
   const library = await page.request.get("/api/auth/library");
   expect(library.status()).toBe(401);

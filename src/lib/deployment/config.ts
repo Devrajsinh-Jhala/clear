@@ -1,4 +1,8 @@
-export type ReadinessCheck = { name: string; ready: boolean };
+export type ReadinessCheck = { name: string; ready: boolean; required?: boolean };
+
+export function deploymentReady(checks: ReadinessCheck[] = deploymentChecks()): boolean {
+  return checks.every((check) => check.required === false || check.ready);
+}
 
 export function deploymentChecks(env: Record<string, string | undefined> = process.env): ReadinessCheck[] {
   const secureUrl = (value?: string) => { try { return new URL(value || "").protocol === "https:"; } catch { return false; } };
@@ -12,7 +16,7 @@ export function deploymentChecks(env: Record<string, string | undefined> = proce
     { name: "Encryption key", ready: /^[A-Za-z0-9+/]{43}=$/.test(key) && Buffer.from(key, "base64").length === 32 },
     { name: "CLEAR Free live provider", ready: !!env.GEMINI_API_KEY && env.CLEAR_PROVIDER !== "mock" },
     { name: "Trusted Vercel client IP", ready: ["x-forwarded-for", "x-vercel-forwarded-for"].includes(env.CLEAR_TRUSTED_IP_HEADER || "") },
-    { name: "Server monitoring", ready: validDsn(env.SENTRY_DSN) },
-    { name: "Browser monitoring", ready: validDsn(env.NEXT_PUBLIC_SENTRY_DSN) },
+    { name: "Server monitoring", ready: validDsn(env.SENTRY_DSN), required: false },
+    { name: "Browser monitoring", ready: validDsn(env.NEXT_PUBLIC_SENTRY_DSN), required: false },
   ];
 }

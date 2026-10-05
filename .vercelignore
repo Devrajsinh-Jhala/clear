@@ -1,0 +1,20 @@
+# Local credentials, data and repository metadata never enter deployment uploads.
+.env*
+.data/**
+.data
+.vercel/**
+.git/**
+.next/**
+
+# Checks run in GitHub Actions; these fixtures and reports are not app source.
+.github/**
+tests/**
+tests
+evals/**
+evals
+coverage/**
+test-results/**
+playwright-report/**
+playwright*.config.*
+vitest.config.*
+*.tsbuildinfo

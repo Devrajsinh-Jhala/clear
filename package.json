@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:auth-ui": "playwright test --config tests/e2e/auth-ui.config.ts",
     "test:eval": "vitest run --config evals/vitest.config.ts",
     "test:eval:live": "vitest run --config evals/vitest.config.ts",
     "check:deployment": "node scripts/check-deployment.mjs"

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { accountLearnerId } from "@/src/lib/learning/identity";
 import { securityHeaders } from "@/src/lib/security/headers";
-import { deploymentChecks } from "@/src/lib/deployment/config";
+import { deploymentChecks, deploymentReady } from "@/src/lib/deployment/config";
 
 afterEach(() => vi.unstubAllEnvs());
 describe("account identity and deployment boundaries", () => {
@@ -28,7 +28,27 @@ describe("account identity and deployment boundaries", () => {
   });
   it("does not label missing configuration as deployment ready or print values", () => {
     const checks = deploymentChecks({ NEXT_PUBLIC_APP_URL: "http://localhost:3000", APP_ENCRYPTION_KEY: "PRIVATE-invalid-key", CLEAR_PROVIDER: "mock" });
-    expect(checks.every((check) => check.ready)).toBe(false);
+    expect(deploymentReady(checks)).toBe(false);
     expect(JSON.stringify(checks)).not.toContain("PRIVATE");
+  });
+  it("allows deferred monitoring while requiring the core deployment configuration", () => {
+    const env = {
+      NEXT_PUBLIC_APP_URL: "https://clear.example",
+      NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "synthetic-public-key",
+      SUPABASE_SERVICE_ROLE_KEY: "synthetic-server-key",
+      APP_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+      GEMINI_API_KEY: "synthetic-provider-key",
+      CLEAR_TRUSTED_IP_HEADER: "x-vercel-forwarded-for",
+    };
+    const checks = deploymentChecks(env);
+    expect(checks.filter((check) => check.required === false)).toEqual([
+      { name: "Server monitoring", ready: false, required: false },
+      { name: "Browser monitoring", ready: false, required: false },
+    ]);
+    expect(deploymentReady(checks)).toBe(true);
+    expect(deploymentReady(deploymentChecks({ ...env, SUPABASE_SERVICE_ROLE_KEY: "" }))).toBe(false);
+    expect(deploymentReady(deploymentChecks({ ...env, GEMINI_API_KEY: "" }))).toBe(false);
+    expect(JSON.stringify(checks)).not.toContain("synthetic-server-key");
   });
 });

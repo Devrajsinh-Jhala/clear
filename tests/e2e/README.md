@@ -30,6 +30,13 @@ These are application regressions with synthetic provider responses. They do
 not validate live model answer quality, real Supabase email authentication,
 screen readers, or microphone/speech accuracy on actual devices.
 
+Run `npm run test:auth-ui` for configured email/password form behavior. That
+separate suite copies the current form into a temporary Next application on port
+3102, uses intercepted synthetic responses with no Supabase code or session,
+and checks password handling, request locks, confirmation, navigation and mobile
+accessibility. Its `.ui.ts` files are excluded from the production guest suite
+by the default test naming pattern. See `auth-ui/README.md` for its scope.
+
 For a targeted run, use `npm run test:e2e -- --project=chromium`. HTML reports and
 failure traces/screenshots use `.data/e2e-report` and `.data/e2e-results`; all
 captured lessons are synthetic. CI uploads only these failure artifacts and

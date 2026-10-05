@@ -4,7 +4,9 @@ The new Vercel project is `devrajsinhjhalas-projects/clear`, connected to `Devra
 
 ## Database and private storage
 
-Back up an existing project before applying migrations. Apply every file in `supabase/migrations` in filename order, using a linked Supabase CLI project or the SQL editor. The existing CLEAR project already has the initial and sharing schema; the new files for this phase are:
+The current CLEAR project already has the initial and sharing schema. The user successfully ran `supabase/setup-phase11.sql` on 2026-10-05; the read-only remote checker verified every expected table, server function and the private upload bucket. Do not run it again on this project.
+
+For another existing project at the same previous schema, copy the file's entire contents into a new Supabase SQL Editor query and run it once. It bundles the five updates in one transaction and requires no access token. It preserves existing lessons and creates the private state, quota, account and upload infrastructure. Do not run it against a fresh project or one where these updates have already been applied. The source migrations are:
 
 1. `20261005090000_durable_state_and_uploads.sql` — private credentials, learning, routing and comparison records; private upload bucket.
 2. `20261005100000_usage_limits.sql` — atomic request budgets and provider concurrency leases.
@@ -12,19 +14,25 @@ Back up an existing project before applying migrations. Apply every file in `sup
 4. `20261005120000_account_library.sql` — account library permissions and restricted browser writes.
 5. `20261005130000_account_lesson_cleanup.sql` — atomic account deletion and durable media-cleanup jobs.
 
-These migrations were tested together in PostgreSQL via PGlite. They have **not** been applied to the live Supabase project. Browser roles cannot read credential, sharing or quota tables, or call privileged write functions. The app server uses the service key after verifying lesson ownership; the library uses a verified account session and row-level security.
+These migrations were tested together in PostgreSQL via PGlite and are now applied to the current live Supabase project. Browser roles cannot read credential, sharing or quota tables, or call privileged write functions. The app server uses the service key after verifying lesson ownership; the library uses a verified account session and row-level security. Manual SQL application does not update Supabase CLI migration history; reconcile that history before using `supabase db push` later.
 
 The `clear-uploads` bucket must remain private. Original files have no public route or signed download URL. Vercel never falls back to local files. Local development uses `.data` or `CLEAR_DATA_DIR`; changing to Supabase does not import existing local records. Preserve the original encryption key when moving any encrypted credentials.
 
-## Email sign-in
+## Simple email/password sign-in
 
-Enable email authentication in Supabase. Set the signup and magic-link templates to display `{{ .Token }}`: CLEAR accepts an email code rather than a magic-link callback. Configure a production SMTP service and verify delivery to an address outside the project team. The default Supabase mail service restricts recipients; see [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) and [email templates](https://supabase.com/docs/guides/auth/auth-email-templates).
+CLEAR now uses email and password for **Sign in** and **Create account**. Custom SMTP and Sentry are deferred at the user's request. For account creation without any confirmation email, open the Supabase Email auth provider settings and turn **Confirm Email** off. This is a dashboard setting, not part of the SQL file. It permits immediate sessions without verifying ownership of the email address. See [password authentication](https://supabase.com/docs/guides/auth/passwords).
 
-Set the Supabase site URL to the final HTTPS application URL. Test expired and incorrect codes, resend, sign-out, a second device, and two different users. Sign-in creates an account library for new lessons. Earlier guest lessons, connections, memory and routing are not moved automatically. The library displays the latest 100 lessons.
+The user switched confirmation off on 2026-10-05. Read-only Auth settings confirmed email sign-in and signup are enabled and `mailer_autoconfirm` is true. A bounded SDK smoke passed 18 checks for immediate signup, verified own claims, password sign-in, incorrect-password rejection and local sign-out with two synthetic accounts; both were deleted afterward. Application cookies and saved-library flows still need deployment verification.
+
+If confirmation remains enabled, CLEAR reports that email confirmation is required and does not fabricate a signed-in session. Supabase's built-in mail restricts recipients; configure [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) when restoring email verification or adding password recovery. Password reset is not included in this simplified slice. Existing email-code endpoints remain for compatibility, while the account UI uses passwords.
+
+Set the Supabase site URL to the final HTTPS application URL. Test account creation, incorrect passwords, sign-out, a second device and two different users. Sign-in creates an account library for new lessons. Earlier guest lessons, connections, memory and routing are not moved automatically. The library displays the latest 100 lessons.
 
 ## Vercel configuration
 
 Use `.env.example` as the variable inventory. Set production variables in the project dashboard or CLI; never commit an environment file or paste secrets into an issue or chat.
+
+`.vercelignore` excludes local data, environment files, Git/deployment metadata, fixtures and reports from source uploads. A CLI dry run must contain none of those paths before deployment; runtime skill Markdown and PDF fonts must remain included. Runtime tracing exclusions are an additional boundary, not a substitute for source-upload exclusions.
 
 Required production values:
 
@@ -34,7 +42,8 @@ Required production values:
 - `APP_ENCRYPTION_KEY`: a persistent, base64-encoded 32-byte key. Rotating it requires a credential migration and changes account learning identifiers.
 - `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-3.5-flash`. Leave `CLEAR_PROVIDER` blank. The configured key could not access Gemini 2.5 Flash; selecting that model still reports its own failure.
 - `CLEAR_TRUSTED_IP_HEADER=x-vercel-forwarded-for`. Only use a header overwritten by the deployment edge. Unconfigured or malformed network headers share an unknown-network budget.
-- `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`: valid HTTPS Sentry DSNs for error reports. Client DSNs are public identifiers; provider and service keys are not.
+
+Optional for later: `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`. Leave both blank for now; monitoring is not required by the configuration checker or `/api/health`. Client DSNs are public identifiers; provider and service keys are not.
 
 Never set user BYOK credentials as application environment variables. Account and guest credentials are separately scoped, encrypted server records. Keep preview variables separate from production: use an isolated preview Supabase project or keep previews protected. `NEXT_PUBLIC_*` changes require rebuilding.
 
@@ -48,7 +57,7 @@ Defaults are rolling limits per trusted network and browser/account identity. CL
 
 `CLEAR_AI_PAUSED=true` stops model dispatch; `CLEAR_FREE_PAUSED=true` stops only CLEAR Free. `CLEAR_PROVIDER_CONCURRENCY_LIMIT` defaults to eight active calls per provider. Limits fail closed if storage is unavailable. The environment example lists override names, including the separate email-auth limit of 12 network / 6 browser requests per ten minutes.
 
-Sentry is initialized only when a valid DSN is present. Reports contain generic error categories and allowlisted code locations. Questions, lesson text, files, email, cookies, IP addresses, identifiers and provider response bodies are excluded. Tracing, replay, breadcrumbs, logs, attachments and automatic request context are disabled. Verify one synthetic server error and one browser error arrive without any private sentinel values before enabling production traffic.
+Sentry is initialized only when a valid DSN is present. It remains disabled while both DSNs are blank. When added later, reports contain generic error categories and allowlisted code locations. Questions, lesson text, files, email, cookies, IP addresses, identifiers and provider response bodies are excluded. Tracing, replay, breadcrumbs, logs, attachments and automatic request context are disabled. Verify one synthetic server error and one browser error arrive without private sentinel values before relying on monitoring.
 
 ## Release checks
 
@@ -67,10 +76,10 @@ Browser tests need an isolated mock production build with blank Supabase and mon
 
 Offline prompt checks validate reviewed reference material and the rubric, **not live model quality**. For billable live checks, explicitly supply `CLEAR_EVAL_LIVE=1`, `CLEAR_EVAL_ACK_COST=1`, `CLEAR_EVAL_PROVIDER`, `CLEAR_EVAL_MODEL` and `CLEAR_EVAL_API_KEY` in the process environment, then run `npm run test:eval:live`. Add `CLEAR_EVAL_EXTENDED=1` for follow-up and teach-back checks. Reports live under ignored `.data/evals` and record prompt versions, selected cases and failures. Optional `CLEAR_EVAL_CASES` narrows a diagnostic; a subset is not a full launch pass. The rubric uses bounded lexical checks and does not replace human review.
 
-`check:deployment --remote` checks configuration, schema discovery, server functions and bucket privacy without writing learner data or printing secrets. `/api/health` exposes only configuration readiness; it does not test database connectivity, mail, model quality or telemetry delivery.
+`check:deployment --remote` checks configuration, schema discovery, server functions and bucket privacy without writing learner data or printing secrets. Missing Sentry values are labeled `OPTIONAL` and do not fail the check. `/api/health` exposes only required configuration readiness; it does not test database connectivity, sign-in, model quality or telemetry delivery.
 
-Before public launch, require a full successful live eval plus human review, actual Supabase sign-in/storage/share checks with two users, SMTP delivery, Sentry receipt and real microphone tests on target devices. Latest live checks failed: the prompt's list-type mismatch was fixed, but subsequent Gemini requests returned HTTP 503. Successful generation with the updated prompt remains unverified.
+Before public launch, require a full successful live eval plus human review, actual Supabase password sign-in/storage/share checks with two users and real microphone tests on target devices. SMTP delivery and Sentry receipt are explicitly deferred; validate them when those services are added. Latest live checks failed: the prompt's list-type mismatch was fixed, but subsequent Gemini requests returned HTTP 503. Successful generation with the updated prompt remains unverified.
 
-Once the database, mail and environment are configured, publish a protected preview for those live checks. Complete the launch gates and production smoke checks before promoting it publicly. Enable Git deployments only after the database and environment are ready. Donations, sponsors and billing remain the last launch item.
+Once the database, password-auth setting and environment are configured, publish a protected preview for those live checks. Complete the remaining launch gates and production smoke checks before promoting it publicly. Enable Git deployments only after the database and environment are ready. Donations, sponsors and billing remain the last launch item.
 
 The production dependency audit reports zero advisories. The development lint dependency chain still has five high-severity advisories with no compatible upstream fix identified in this run. They are not part of the production runtime; track their upstream updates rather than forcing a breaking framework downgrade.

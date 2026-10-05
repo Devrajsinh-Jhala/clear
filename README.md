@@ -47,11 +47,11 @@ Markdown, JSON, and PDF downloads contain canonical teaching content and quiz an
 
 PDFs paginate text, examples, code, and diagram/interactive descriptions using an embedded DejaVu font. Common math symbols are supported; unsupported glyphs (including many Hindi/Chinese characters) use explicit Unicode notation with a notice. Markdown and JSON preserve their original text. PDF exports are limited to 500 pages.
 
-For Supabase deployments, apply every migration in filename order **before deploying this version**. The new Phase 11 migrations have not been applied to the live database. Hosted records, encrypted keys, usage budgets and original uploads persist in Supabase; the upload bucket stays private. Vercel refuses a local-storage fallback. Local development uses `.data` or `CLEAR_DATA_DIR` without Supabase. Configured public origins are checked on writes, and deployment proxies must overwrite forwarding headers. See [DEPLOYMENT.md](DEPLOYMENT.md) for the Vercel/Supabase setup and remaining launch checks.
+For Supabase deployments, apply every migration in filename order **before deploying this version**. The current live project has received the Phase 11 SQL bundle and passed read-only schema/function/private-bucket checks. Hosted records, encrypted keys, usage budgets and original uploads persist in Supabase; the upload bucket stays private. Vercel refuses a local-storage fallback. Local development uses `.data` or `CLEAR_DATA_DIR` without Supabase. Configured public origins are checked on writes, and deployment proxies must overwrite forwarding headers. See [DEPLOYMENT.md](DEPLOYMENT.md) for the Vercel/Supabase setup and remaining launch checks.
 
 ## Account library
 
-**Account** sends a one-time email code. After signing in, **Library** shows the latest 100 account lessons with title search, provider filters, favorites, rename, archive/restore and deletion. Deleting a lesson also removes its uploads and invalidates its share link. Provider keys, routing and opt-in learning memory use a separate private account scope. Sign-out returns to the guest browser identity. Production email delivery needs Supabase SMTP configuration.
+**Account** offers email/password sign-in and account creation. After signing in, **Library** shows the latest 100 account lessons with title search, provider filters, favorites, rename, archive/restore and deletion. Deleting a lesson also removes its uploads and invalidates its share link. Provider keys, routing and opt-in learning memory use a separate private account scope. Sign-out returns to the guest browser identity. Custom mail and Sentry are deferred; Supabase's **Confirm Email** setting must be off for immediate signup without email. See [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Production controls
 
@@ -71,7 +71,7 @@ npm run test:e2e
 npm run check:deployment -- --remote
 ```
 
-Browser regression tests use an isolated mock production build and temporary synthetic storage. CI builds with no provider or Supabase secrets and runs Chromium, Firefox, WebKit and mobile Chromium. Offline evals check the reference corpus and rubric; they do not establish live model quality. Billable live evals require explicit process flags and credentials; see the deployment guide. Real email sign-in, live Supabase migrations/storage, telemetry receipt, microphone devices and a successful full live eval remain launch gates.
+Browser regression tests use an isolated mock production build and temporary synthetic storage. CI builds with no provider or Supabase secrets and runs Chromium, Firefox, WebKit and mobile Chromium. Offline evals check the reference corpus and rubric; they do not establish live model quality. Billable live evals require explicit process flags and credentials; see the deployment guide. Real password sign-in, live Supabase migrations/storage, microphone devices and a successful full live eval remain launch gates. Custom mail and monitoring are deferred.
 
 ## Where things live
 

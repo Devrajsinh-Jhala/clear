@@ -6,7 +6,7 @@ const env = process.env;
 const secureURL = (value) => { try { return new URL(value).protocol === 'https:'; } catch { return false; } };
 const validDsn = (value) => { try { const url = new URL(value); return url.protocol === 'https:' && !!url.username && !url.password && !url.search && !url.hash && /\/\d+$/.test(url.pathname); } catch { return false; } };
 const checks = [];
-const add = (name, ready) => checks.push({ name, ready: Boolean(ready) });
+const add = (name, ready, required = true) => checks.push({ name, ready: Boolean(ready), required });
 add('Public HTTPS URL', secureURL(env.NEXT_PUBLIC_APP_URL));
 add('Supabase URL', secureURL(env.NEXT_PUBLIC_SUPABASE_URL));
 add('Supabase public auth key', env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -14,8 +14,8 @@ add('Supabase server key', env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_
 add('Encryption key', /^[A-Za-z0-9+/]{43}=$/.test(env.APP_ENCRYPTION_KEY || '') && Buffer.from(env.APP_ENCRYPTION_KEY || '', 'base64').length === 32);
 add('CLEAR Free live provider', env.GEMINI_API_KEY && env.CLEAR_PROVIDER !== 'mock');
 add('Trusted Vercel client IP', ['x-forwarded-for', 'x-vercel-forwarded-for'].includes(env.CLEAR_TRUSTED_IP_HEADER));
-add('Server monitoring', validDsn(env.SENTRY_DSN));
-add('Browser monitoring', validDsn(env.NEXT_PUBLIC_SENTRY_DSN));
+add('Server monitoring', validDsn(env.SENTRY_DSN), false);
+add('Browser monitoring', validDsn(env.NEXT_PUBLIC_SENTRY_DSN), false);
 
 if (process.argv.includes('--remote') && checks.find((check) => check.name === 'Supabase URL').ready && checks.find((check) => check.name === 'Supabase server key').ready) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,6 +33,6 @@ if (process.argv.includes('--remote') && checks.find((check) => check.name === '
   } catch { add('Server functions discoverable', false); }
   try { const { data, error } = await db.storage.getBucket('clear-uploads'); add('Upload bucket is private', !error && data && data.public === false); } catch { add('Upload bucket is private', false); }
 }
-for (const check of checks) console.info(`${check.ready ? 'PASS' : 'MISSING'} ${check.name}`);
-console.info('No secrets or learner data printed. Remote mode performs read-only setup checks. SMTP, live sign-in, delivery, voice devices, telemetry receipt and model quality still need launch checks.');
-process.exitCode = checks.every((check) => check.ready) ? 0 : 1;
+for (const check of checks) console.info(`${check.ready ? 'PASS' : check.required ? 'MISSING' : 'OPTIONAL'} ${check.name}`);
+console.info('No secrets or learner data printed. Remote mode performs read-only setup checks. Live password sign-in, voice devices and model quality still need launch checks. Sentry and custom email delivery are deferred.');
+process.exitCode = checks.every((check) => !check.required || check.ready) ? 0 : 1;

@@ -2,50 +2,84 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
+
+type AccessMode = "sign-in" | "sign-up";
+type AccessResponse = { signedIn?: boolean; needsConfirmation?: boolean; signedOut?: boolean; error?: { message?: string } };
+const subscribe = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 export function AccountForm({ configured, accountEmail, signedIn }: { configured: boolean; accountEmail: string | null; signedIn: boolean }) {
   const router = useRouter();
+  const hydrated = useSyncExternalStore(subscribe, clientReady, serverReady);
   const [email, setEmail] = useState("");
-  const [token, setToken] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<AccessMode>("sign-in");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const locked = useRef(false);
 
-  async function act(action: "code" | "verify" | "logout") {
+  function changeMode(nextMode: AccessMode) {
     if (locked.current) return;
+    setMode(nextMode);
+    setPassword("");
+    setError("");
+    setMessage("");
+  }
+
+  async function act(action: AccessMode | "logout") {
+    if (!hydrated || locked.current) return;
     locked.current = true;
     setPending(true);
     setError("");
+    setMessage("");
     try {
       const response = await fetch(`/api/auth/${action}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: action === "logout" ? undefined : JSON.stringify(action === "code" ? { email: email.trim() } : { email: email.trim(), token: token.trim() }),
+        body: action === "logout" ? undefined : JSON.stringify({ email: email.trim(), password }),
       });
-      const payload = await response.json() as { sent?: boolean; signedIn?: boolean; signedOut?: boolean; error?: { message?: string } };
+      const payload = await response.json() as AccessResponse;
       if (!response.ok) throw new Error(payload.error?.message ?? "Sign-in did not finish. Please try again.");
-      if (action === "code") { setCodeSent(true); setToken(""); }
-      else if (action === "verify") { router.push("/library"); router.refresh(); }
-      else { router.refresh(); }
+      if (action === "logout" && payload.signedOut) {
+        setPassword("");
+        router.refresh();
+      } else if (payload.signedIn) {
+        setPassword("");
+        router.replace("/library");
+        router.refresh();
+      } else if (action === "sign-up" && payload.needsConfirmation) {
+        setPassword("");
+        setMode("sign-in");
+        setMessage("Check your email to confirm your account, then sign in.");
+      } else {
+        throw new Error("Sign-in did not finish. Please try again.");
+      }
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "The request did not finish. Check your connection and try again.");
     } finally { locked.current = false; setPending(false); }
   }
 
-  if (!configured) return <section className="surface-panel p-6"><h2 className="font-serif text-2xl">Guest lessons are ready</h2><p className="mt-3 text-muted">Sign-in is not available on this server yet. You can still ask a question and return to your private lesson in this browser.</p><Link href="/" className="button-primary mt-5">Start a lesson</Link></section>;
-  if (signedIn) return <section className="surface-panel p-6"><h2 className="font-serif text-2xl">You’re signed in</h2>{accountEmail ? <p className="mt-3 break-all text-muted">{accountEmail}</p> : null}<div className="mt-5 flex flex-wrap gap-3"><Link href="/library" className="button-primary">Open your library</Link><button type="button" className="button-secondary" disabled={pending} onClick={() => void act("logout")}>{pending ? "Signing out…" : "Sign out"}</button></div>{error ? <p role="alert" className="mt-4 text-sm text-danger">{error}</p> : null}</section>;
+  if (!configured) return <section className="surface-panel p-6"><h2 className="font-serif text-2xl">Guest lessons are ready</h2><p className="mt-3 text-muted">Sign-in is not available yet. You can still ask a question and return to your private lesson in this browser.</p><Link href="/" className="button-primary mt-5">Start a lesson</Link></section>;
+  if (signedIn) return <section className="surface-panel p-6"><h2 className="font-serif text-2xl">You’re signed in</h2>{accountEmail ? <p className="mt-3 break-all text-muted">{accountEmail}</p> : null}<div className="mt-5 flex flex-wrap gap-3"><Link href="/library" className="button-primary">Open your library</Link><button type="button" className="button-secondary" disabled={pending || !hydrated} onClick={() => void act("logout")}>{pending ? "Signing out…" : "Sign out"}</button></div>{error ? <p role="alert" className="mt-4 text-sm text-danger">{error}</p> : null}</section>;
 
-  return <form className="surface-panel p-5 sm:p-7" onSubmit={(event) => { event.preventDefault(); void act(codeSent ? "verify" : "code"); }}>
-    <h2 className="font-serif text-2xl">Keep your lessons across devices</h2>
-    <p className="mt-3 text-sm leading-relaxed text-muted">Use a one-time email code. No password to remember.</p>
+  return <form action={`/api/auth/${mode}`} method="post" aria-busy={pending} className="surface-panel p-5 sm:p-7" onSubmit={(event) => { event.preventDefault(); void act(mode); }}>
+    <div className="mb-6 flex flex-wrap gap-3" role="group" aria-label="Account access">
+      <button type="button" aria-pressed={mode === "sign-in"} disabled={pending || !hydrated} onClick={() => changeMode("sign-in")} className={mode === "sign-in" ? "button-primary text-sm" : "button-secondary text-sm"}>Sign in</button>
+      <button type="button" aria-pressed={mode === "sign-up"} disabled={pending || !hydrated} onClick={() => changeMode("sign-up")} className={mode === "sign-up" ? "button-primary text-sm" : "button-secondary text-sm"}>Create account</button>
+    </div>
+    <h2 className="font-serif text-2xl">{mode === "sign-up" ? "Create your CLEAR account" : "Welcome back to CLEAR"}</h2>
+    <p className="mt-3 text-sm leading-relaxed text-muted">Keep your lessons across devices with your email and password.</p>
+    {message ? <p role="status" className="mt-4 text-sm text-foreground">{message}</p> : null}
     <label htmlFor="account-email" className="mt-5 block text-sm font-medium">Email address</label>
-    <input id="account-email" type="email" required maxLength={254} autoComplete="email" value={email} disabled={pending || codeSent} onChange={(event) => setEmail(event.target.value)} className="field-control mt-2 w-full" />
-    {codeSent ? <><p role="status" className="mt-4 text-sm text-muted">If this email can receive a code, it has been sent. Check your inbox and spam folder.</p><label htmlFor="account-token" className="mt-5 block text-sm font-medium">Email code</label><input id="account-token" type="text" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6,8}" minLength={6} maxLength={8} value={token} disabled={pending} onChange={(event) => setToken(event.target.value)} className="field-control mt-2 w-full font-mono tracking-[0.2em]" /></> : null}
-    <button type="submit" disabled={pending} className="button-primary mt-5 w-full">{pending ? codeSent ? "Checking your code…" : "Sending your code…" : codeSent ? "Sign in" : "Send email code"}</button>
-    {codeSent ? <div className="mt-4 flex flex-wrap gap-4 text-sm"><button type="button" disabled={pending} onClick={() => void act("code")} className="text-accent underline underline-offset-4">Send a new code</button><button type="button" disabled={pending} onClick={() => { setCodeSent(false); setToken(""); setError(""); }} className="text-muted underline underline-offset-4">Use another email</button></div> : null}
-    {error ? <p role="alert" className="mt-4 text-sm text-danger">{error} Your email is still here.</p> : null}
+    <input id="account-email" name="email" type="email" required maxLength={254} autoComplete="username" value={email} disabled={pending || !hydrated} onChange={(event) => setEmail(event.target.value)} className="field-control mt-2 w-full" />
+    <label htmlFor="account-password" className="mt-5 block text-sm font-medium">Password</label>
+    <input id="account-password" name="password" type="password" required minLength={mode === "sign-up" ? 8 : 1} maxLength={128} autoComplete={mode === "sign-up" ? "new-password" : "current-password"} aria-describedby={mode === "sign-up" ? "account-password-hint" : undefined} value={password} disabled={pending || !hydrated} onChange={(event) => setPassword(event.target.value)} className="field-control mt-2 w-full" />
+    {mode === "sign-up" ? <p id="account-password-hint" className="mt-2 text-xs text-muted">Use at least 8 characters.</p> : null}
+    <button type="submit" disabled={pending || !hydrated} className="button-primary mt-5 w-full">{pending ? mode === "sign-up" ? "Creating your account…" : "Signing in…" : mode === "sign-up" ? "Create account" : "Sign in"}</button>
+    {error ? <p role="alert" className="mt-4 text-sm text-danger">{error}</p> : null}
     <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">New signed-in lessons belong to your account. Earlier guest lessons, keys, and settings stay with their original browser identity and are not moved automatically.</p>
   </form>;
 }
