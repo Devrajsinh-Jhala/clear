@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 
 export function UnderstandView({ document }: { document: ExplanationDocument }) {
@@ -7,10 +9,10 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
       <p className="max-w-3xl text-lg leading-relaxed">{document.whyItMatters}</p>
       {document.prerequisites.length > 0 ? (
         <section>
-          <h2 className="text-sm uppercase tracking-[0.16em] text-muted-foreground">Prerequisites</h2>
+          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Prerequisites</h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {document.prerequisites.map((item) => (
-              <li key={item.id} className="rounded-xl border border-border px-3 py-1 text-sm">
+              <li key={item.id} className="rounded-full border border-border bg-card px-3 py-1 text-sm">
                 {item.name}
               </li>
             ))}
@@ -22,9 +24,9 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
           <h2 className="font-heading text-2xl">{document.process.title}</h2>
           <ol className="mt-4 space-y-3">
             {document.process.steps.map((step, index) => (
-              <li key={step.id} className="grid grid-cols-[2.5rem_1fr] gap-3">
-                <span className="font-heading text-xl text-primary">{index + 1}</span>
-                <p>{step.text}</p>
+              <li key={step.id} className="grid grid-cols-[2rem_1fr] items-start gap-3">
+                <span className="tone-bg tone-text inline-flex size-7 items-center justify-center rounded-full text-sm font-semibold">{index + 1}</span>
+                <p className="pt-0.5 leading-relaxed">{step.text}</p>
               </li>
             ))}
           </ol>
@@ -34,11 +36,16 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
         <h2 className="font-heading text-2xl">Concepts</h2>
         <div className="mt-4 divide-y divide-border border-y border-border">
           {document.concepts.map((concept) => (
-            <details key={concept.id} className="py-3">
-              <summary className="cursor-pointer font-medium">{concept.name}</summary>
-              <p className="mt-2 text-muted-foreground">{concept.definition}</p>
-              <p className="mt-2">{concept.plainExplanation}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Why it matters: {concept.importance}</p>
+            <details key={concept.id} className="group">
+              <summary className="flex list-none items-center justify-between gap-3 py-3.5 font-medium transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+                {concept.name}
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="pb-4">
+                <p className="text-muted-foreground">{concept.definition}</p>
+                <p className="mt-2 leading-relaxed">{concept.plainExplanation}</p>
+                <p className="mt-2 text-sm text-muted-foreground">Why it matters: {concept.importance}</p>
+              </div>
             </details>
           ))}
         </div>

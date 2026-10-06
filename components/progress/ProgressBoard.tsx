@@ -1,5 +1,7 @@
 "use client";
 
+import { Brain, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import type { ConceptMemory, MisconceptionMemory } from "@/src/lib/learning/memory";
@@ -27,9 +29,18 @@ export function ProgressBoard({
 
   if (!enabled) {
     return (
-      <p>
-        Learning memory is off. Turn it on in Settings if you want CLEAR to remember concepts from teach-it-back. Mastery here is a study note, not a certification.
-      </p>
+      <section className="surface-panel flex flex-col items-start gap-4 p-6 sm:p-7">
+        <span className="inline-flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <Brain className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 className="font-heading text-2xl">Learning memory is off</h2>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            Turn it on in Settings if you want CLEAR to remember concepts from teach-it-back. Mastery here is a study note, not a certification.
+          </p>
+        </div>
+        <Link href="/settings" className="button-primary">Open settings</Link>
+      </section>
     );
   }
 
@@ -58,9 +69,10 @@ export function ProgressBoard({
             <h2 className="font-heading text-2xl">{label}</h2>
             <ul className="mt-3 space-y-2">
               {group.map((item) => (
-                <li key={item.key} className="rounded-xl flex items-center justify-between gap-3 border border-border px-3 py-2">
+                <li key={item.key} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-2.5">
                   <span>{item.name}</span>
-                  <button type="button" className="text-sm text-muted-foreground underline" onClick={() => void forget(item.key)}>
+                  <button type="button" aria-label={`Delete ${item.name}`} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" onClick={() => void forget(item.key)}>
+                    <Trash2 className="size-3.5" aria-hidden="true" />
                     Delete
                   </button>
                 </li>
@@ -69,7 +81,7 @@ export function ProgressBoard({
           </section>
         );
       })}
-      {items.length === 0 ? <p>Nothing is stored yet. Teach a lesson back after memory is on.</p> : null}
+      {items.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-muted-foreground">Nothing is stored yet. Teach a lesson back after memory is on.</p> : null}
       {notes.filter((note) => note.status === "open").length > 0 ? (
         <section>
           <h2 className="font-heading text-2xl">Misconceptions</h2>
@@ -77,7 +89,7 @@ export function ProgressBoard({
             {notes
               .filter((note) => note.status === "open")
               .map((note) => (
-                <li key={`${note.conceptKey}-${note.statement}`} className="rounded-xl border border-border p-3">
+                <li key={`${note.conceptKey}-${note.statement}`} className="rounded-xl border border-border bg-card p-4">
                   <p>{note.statement}</p>
                   <p className="mt-2 text-muted-foreground">{note.correction}</p>
                 </li>

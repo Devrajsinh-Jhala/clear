@@ -69,7 +69,7 @@ export function CompareView({
       <p className="text-sm text-muted-foreground">Same question, two models. These notes are your preference, not a score.</p>
       <div className="grid gap-6 md:grid-cols-2">
         {options.map((option) => (
-          <article key={option.id} className="rounded-xl space-y-3 border border-border p-4">
+          <article key={option.id} className="space-y-3 rounded-2xl border border-border bg-card p-5">
             <ProviderLabel provider={option.provider} model={option.model} />
             {option.document ? (
               <>
@@ -87,13 +87,13 @@ export function CompareView({
                       type="button"
                       disabled={pending}
                       onClick={() => void choose(option.id, { rating: id })}
-                      className="underline"
+                      className={`rounded-full border px-3 py-1 transition-colors disabled:opacity-50 ${option.ratings.includes(id) ? "border-primary/50 bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}
                     >
                       {option.ratings.includes(id) ? `${label} · saved` : label}
                     </button>
                   ))}
                 </div>
-                <button type="button" disabled={pending} onClick={() => void choose(option.id, { use: true })} className="bg-primary px-3 py-2 text-primary-foreground">
+                <button type="button" disabled={pending} onClick={() => void choose(option.id, { use: true })} className="button-primary text-sm">
                   Use this version
                 </button>
               </>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useState, type Dispatch, type SetStateAction } from "react";
 
 import { ProviderLabel } from "@/components/provider-label";
@@ -37,15 +38,15 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
         <p className="mt-3 max-w-2xl text-muted-foreground">Listen to this lesson, then speak or type a follow-up. Review the words before sending. Each turn updates the same lesson.</p>
         <p className="mt-3 text-sm"><ProviderLabel provider={provider} model={model} /></p>
         <p className="mt-2 text-sm text-muted-foreground">Speech uses your browser. The explanation and follow-ups use the model shown above.</p>
-        <button type="button" className="mt-3 text-sm underline" onClick={onTeachBack}>Try oral teach-it-back</button>
+        <button type="button" className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline" onClick={onTeachBack}>Try oral teach-it-back<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></button>
       </div>
-      <section className="rounded-xl border border-border bg-background/60 p-4 sm:p-5" aria-label="Lesson narration">
-        <label className="text-sm" htmlFor="narration-section">Listen to</label>
+      <section className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5" aria-label="Lesson narration">
+        <label className="mr-3 text-sm" htmlFor="narration-section">Listen to</label>
         <select
           id="narration-section"
           value={section}
           onChange={(event) => setSection(event.target.value as NarrationSection)}
-          className="field-control ml-3 max-w-full text-sm"
+          className="field-control max-w-full text-sm"
         >
           {NARRATION_SECTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
         </select>

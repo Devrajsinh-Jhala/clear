@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { LogoMark } from "@/components/brand/logo";
+import { SUPPORT_URL } from "@/components/support/chai-button";
 import { CountUp } from "@/components/landing/count-up";
 import { Reveal } from "@/components/landing/reveal";
 import { VIEW_META } from "@/components/lesson/view-meta";
@@ -37,26 +38,26 @@ export function ViewsSection() {
           Every view is drawn from the same explanation document, so the diagram, the analogy and the quiz never disagree with each other.
         </p>
       </Reveal>
-      <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {VIEWS.map((view, index) => {
           const { icon: Icon, hue } = VIEW_META[view.id];
           return (
-            <li key={view.id} className={view.wide ? "sm:col-span-2" : ""}>
+            <li key={view.id} className={view.wide ? "col-span-2" : ""}>
               <Reveal delay={(index % 4) * 70} className="h-full">
-                <article className={`${hue} surface-panel lift group relative h-full overflow-hidden p-6`}>
+                <article className={`${hue} surface-panel lift group relative h-full overflow-hidden p-4 sm:p-6`}>
                   <div className="tone-dot pointer-events-none absolute -right-10 -top-10 size-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-40" aria-hidden="true" />
-                  <span className="tone-bg tone-text inline-flex size-11 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-                    <Icon className="size-5" aria-hidden="true" />
+                  <span className="tone-bg tone-text inline-flex size-9 items-center justify-center rounded-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110 sm:size-11 sm:rounded-2xl">
+                    <Icon className="size-4 sm:size-5" aria-hidden="true" />
                   </span>
-                  <h3 className="mt-5 font-heading text-xl">{view.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{view.text}</p>
+                  <h3 className="mt-3 font-heading text-lg sm:mt-5 sm:text-xl">{view.title}</h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">{view.text}</p>
                   {view.id === "understand" ? (
-                    <p className="tone-border mt-5 border-l-2 pl-4 font-heading text-lg leading-snug">
+                    <p className="tone-border mt-4 border-l-2 pl-4 font-heading text-base leading-snug sm:mt-5 sm:text-lg">
                       A mutex lets only one thread at a time enter a protected critical section.
                     </p>
                   ) : null}
                   {view.id === "interactive" ? (
-                    <div className="mt-5 flex h-14 items-end gap-1.5" aria-hidden="true">
+                    <div className="mt-4 flex h-12 items-end gap-1.5 sm:mt-5 sm:h-14" aria-hidden="true">
                       {[35, 60, 45, 85, 55, 100, 70, 40, 90, 65, 50, 80].map((height, bar) => (
                         <span key={bar} className="tone-bg tone-border flex-1 origin-bottom rounded-t-md border border-b-0" style={{ height: `${height}%`, animation: `bars 3.2s ease-in-out ${bar * -380}ms infinite` }} />
                       ))}
@@ -278,6 +279,7 @@ const FAQ: Array<[string, ReactNode]> = [
   ["Can I trust the explanations?", "Treat CLEAR like a good tutor, not an authority. Models can be wrong. Every lesson has a Verify view that says what was and was not checked, and every analogy is labeled with its limits."],
   ["What happens to my questions and files?", <>Your question goes to the model you chose. Uploads stay private and never get a public link. API keys are encrypted and are not sent back to the browser. Learning memory is off until you turn it on. The <Link href="/privacy">privacy notes</Link> have the details.</>],
   ["What is the portable skill?", "A set of instruction files that teach a compatible AI agent to explain the CLEAR way. You configure it, preview it and download a ZIP. It contains no conversations, uploads or keys."],
+  ["How can I support CLEAR?", <>Support is optional. If a lesson helped, you can <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">buy the maker a chai<span className="sr-only"> (opens in a new tab)</span></a>. It does not unlock anything: CLEAR Free and your own keys work the same either way.</>],
 ];
 
 export function FaqSection() {

@@ -3,6 +3,47 @@
 import { useEffect, useId, useState } from "react";
 import { useTheme } from "next-themes";
 
+// Mermaid needs hex colours. These follow the violet tokens in globals.css.
+const LIGHT = {
+  background: "#fafafd",
+  primaryColor: "#efecfd",
+  primaryBorderColor: "#8e7ff2",
+  primaryTextColor: "#1f1b2e",
+  secondaryColor: "#fcecf5",
+  secondaryBorderColor: "#e08ab8",
+  tertiaryColor: "#f6f5fb",
+  tertiaryBorderColor: "#d9d5e8",
+  lineColor: "#6d6787",
+  textColor: "#1f1b2e",
+  noteBkgColor: "#fff4e0",
+  noteBorderColor: "#e3b866",
+  noteTextColor: "#3d2e10",
+  actorLineColor: "#b9b3d1",
+  labelBoxBkgColor: "#efecfd",
+  labelBoxBorderColor: "#8e7ff2",
+  edgeLabelBackground: "#fafafd",
+};
+
+const DARK = {
+  background: "#0b0b15",
+  primaryColor: "#2c2650",
+  primaryBorderColor: "#8b7cf6",
+  primaryTextColor: "#ece9f8",
+  secondaryColor: "#3b2441",
+  secondaryBorderColor: "#c77aa6",
+  tertiaryColor: "#221e33",
+  tertiaryBorderColor: "#3d3856",
+  lineColor: "#a29cbe",
+  textColor: "#ece9f8",
+  noteBkgColor: "#3a2f1c",
+  noteBorderColor: "#b18d4c",
+  noteTextColor: "#f5ead2",
+  actorLineColor: "#4a4466",
+  labelBoxBkgColor: "#2c2650",
+  labelBoxBorderColor: "#8b7cf6",
+  edgeLabelBackground: "#0b0b15",
+};
+
 export function MermaidDiagram({ source }: { source: string }) {
   const reactId = useId().replace(/:/g, "");
   const { resolvedTheme } = useTheme();
@@ -16,7 +57,9 @@ export function MermaidDiagram({ source }: { source: string }) {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "strict",
-        theme: resolvedTheme === "dark" ? "dark" : "neutral",
+        theme: "base",
+        darkMode: resolvedTheme === "dark",
+        themeVariables: resolvedTheme === "dark" ? DARK : LIGHT,
         fontFamily: "inherit",
       });
       const { svg: markup } = await mermaid.render(`clear-diagram-${reactId}`, source);
@@ -42,7 +85,7 @@ export function MermaidDiagram({ source }: { source: string }) {
   }
   return (
     <div
-      className="rounded-xl mt-4 overflow-x-auto border border-border bg-background p-4"
+      className="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 [&_svg]:mx-auto"
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: svg }}
     />

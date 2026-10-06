@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Wordmark } from "@/components/brand/logo";
+import { ChaiButton } from "@/components/support/chai-button";
 
 const COLUMNS = [
   ["Learn", [["/ask", "Ask a question"], ["/library", "Library"], ["/progress", "Progress"]]],
@@ -11,10 +12,12 @@ const COLUMNS = [
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border bg-card/40">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div>
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-12 sm:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="col-span-2 sm:col-span-1">
           <Wordmark />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">AI knows the answer. CLEAR helps you understand it.</p>
+          <p className="mt-6 max-w-xs text-sm leading-relaxed text-muted-foreground">CLEAR is free. If it helped you, you can say thanks.</p>
+          <ChaiButton className="mt-3" />
         </div>
         {COLUMNS.map(([title, links]) => (
           <nav key={title} aria-label={title}>

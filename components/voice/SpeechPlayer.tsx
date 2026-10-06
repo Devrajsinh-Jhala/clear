@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import type { NarrationSession, NarrationState } from "@/src/lib/voice/types";
@@ -127,9 +128,12 @@ export function SpeechPlayer({
       </div>
       <p className="text-xs text-muted-foreground" role="status">{status}</p>
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
-      <details className="rounded-lg border border-border bg-card/80 p-3">
-        <summary className="cursor-pointer text-sm font-medium">Read the transcript</summary>
-        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{text || "There is no explanation to read yet."}</p>
+      <details className="group rounded-xl border border-border bg-card/80">
+        <summary className="flex list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          Read the transcript
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <p className="border-t border-border px-4 py-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{text || "There is no explanation to read yet."}</p>
       </details>
     </div>
   );

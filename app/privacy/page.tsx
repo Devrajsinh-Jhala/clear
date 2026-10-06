@@ -14,6 +14,7 @@ export default function PrivacyPage() {
       <p>Learning memory is off until you turn it on in Settings. You can delete one concept or every learning record.</p>
       <p>Voice input starts only when you choose a microphone control. Your browser or operating system may send audio to its speech recognition service. CLEAR does not receive or store that audio. Recognized words remain editable and go to CLEAR and the selected model only when you submit them.</p>
       <p>Lesson narration uses your browser or operating system’s speech service, which may process text remotely. A readable transcript is available. You can stop listening at any time.</p>
+      <p>The optional Buy Me a Chai link opens an external page in a new tab. CLEAR loads nothing from that site and sends it nothing; anything you do there is under that site’s own terms.</p>
       <p>Usage limits keep a keyed hash of the browser or account identity and the trusted network address. Operational error monitoring, when configured, receives generic error categories and code locations. CLEAR excludes questions, lesson text, uploads, keys, email addresses, network addresses, cookies and conversation identifiers from those reports.</p>
     </PageShell>
   );

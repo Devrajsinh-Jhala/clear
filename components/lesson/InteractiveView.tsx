@@ -1,11 +1,14 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { EmptyCopy } from "@/components/lesson/DeepDiveView";
 import { binarySearchSteps, breadthFirstSteps } from "@/src/lib/explanation/widget-sim";
 import { evaluateSafeMath } from "@/src/lib/explanation/safe-math";
 import type { InteractiveWidgetSpec } from "@/src/lib/explanation/schema";
+
+const WIDGET = "rounded-2xl border border-border bg-background/50 p-5 sm:p-6";
 
 export function InteractiveView({ widgets }: { widgets: InteractiveWidgetSpec[] }) {
   if (widgets.length === 0) {
@@ -48,21 +51,17 @@ function StepFlow({
   const [index, setIndex] = useState(0);
   const step = steps[index];
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Step {index + 1} of {steps.length}
       </p>
-      <h3 className="mt-6 text-xl">{step.title}</h3>
-      <p className="mt-2 max-w-2xl">{step.detail}</p>
-      <div className="mt-6 flex gap-3">
-        <button type="button" className="rounded-xl border border-border px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => setIndex((current) => current - 1)}>
-          Previous
-        </button>
-        <button type="button" className="bg-primary px-3 py-2 text-primary-foreground disabled:opacity-40" disabled={index === steps.length - 1} onClick={() => setIndex((current) => current + 1)}>
-          Next
-        </button>
+      <Progress index={index} count={steps.length} />
+      <div className="mt-5 rounded-xl border border-border bg-card p-4 sm:p-5">
+        <h3 className="text-xl font-medium">{step.title}</h3>
+        <p className="mt-2 max-w-2xl leading-relaxed">{step.detail}</p>
       </div>
+      <Pager index={index} count={steps.length} onChange={setIndex} showCount={false} />
     </section>
   );
 }
@@ -76,7 +75,7 @@ function BinarySearchWidget({
   const [index, setIndex] = useState(0);
   if (!steps) {
     return (
-      <section className="rounded-xl border border-border bg-card p-5">
+      <section className={WIDGET}>
         <h2 className="font-heading text-2xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available until the values are sorted. Binary search does not apply to an unsorted list.</p>
       </section>
@@ -84,7 +83,7 @@ function BinarySearchWidget({
   }
   const step = steps[index];
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">Looking for {widget.target}</p>
       <ol className="mt-4 flex flex-wrap gap-2">
@@ -92,7 +91,7 @@ function BinarySearchWidget({
           const inside = valueIndex >= step.low && valueIndex <= step.high;
           const mid = valueIndex === step.mid;
           return (
-            <li key={`${value}-${valueIndex}`} className={`min-w-10 border px-2 py-2 text-center ${mid ? "border-primary bg-primary text-primary-foreground" : inside ? "border-border" : "border-border opacity-40"}`}>
+            <li key={`${value}-${valueIndex}`} className={`min-w-10 rounded-lg border px-2.5 py-2 text-center font-mono text-sm transition-colors ${mid ? "border-primary bg-primary text-primary-foreground" : inside ? "border-border bg-card" : "border-border opacity-40"}`}>
               {value}
             </li>
           );
@@ -118,14 +117,14 @@ function StateMachineWidget({
   const [current, setCurrent] = useState(widget.states[0]);
   const options = widget.transitions.filter((transition) => transition.from === current);
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-4 text-sm uppercase tracking-[0.16em] text-muted-foreground">Current state</p>
       <p className="mt-2 font-heading text-3xl">{current}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {options.length === 0 ? <p className="text-muted-foreground">No transition leaves this state.</p> : null}
         {options.map((transition) => (
-          <button key={`${transition.on}-${transition.to}`} type="button" className="rounded-xl border border-border px-3 py-2" onClick={() => setCurrent(transition.to)}>
+          <button key={`${transition.on}-${transition.to}`} type="button" className="button-secondary text-sm" onClick={() => setCurrent(transition.to)}>
             {transition.on}
           </button>
         ))}
@@ -147,14 +146,14 @@ function GraphWidget({
   const step = steps[index];
   if (!step) {
     return (
-      <section className="rounded-xl border border-border bg-card p-5">
+      <section className={WIDGET}>
         <h2 className="font-heading text-2xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available for this graph yet.</p>
       </section>
     );
   }
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">Breadth-first from {widget.start}</p>
       <p className="mt-4">Visiting {step.current}</p>
@@ -175,7 +174,7 @@ function ParameterWidget({
   );
   const result = evaluateSafeMath(widget.formula, values);
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-3 font-mono text-sm">{widget.formula}</p>
       <div className="mt-4 space-y-4">
@@ -212,12 +211,12 @@ function CodeTraceWidget({
   const step = widget.steps[index];
   const lines = widget.code.split("\n");
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
+    <section className={WIDGET}>
       <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{widget.language} trace. CLEAR does not run this code.</p>
-      <pre className="rounded-xl mt-4 overflow-x-auto border border-border bg-background p-3 font-mono text-sm">
+      <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-sm">
         {lines.map((line, lineIndex) => (
-          <div key={`${line}-${lineIndex}`} className={lineIndex + 1 === step.line ? "bg-primary/15" : undefined}>
+          <div key={`${line}-${lineIndex}`} className={lineIndex + 1 === step.line ? "-mx-3 border-l-2 border-primary bg-primary/12 px-2.5" : undefined}>
             {line || " "}
           </div>
         ))}
@@ -237,18 +236,32 @@ function CodeTraceWidget({
   );
 }
 
-function Pager({ index, count, onChange }: { index: number; count: number; onChange: (index: number) => void }) {
+function Progress({ index, count }: { index: number; count: number }) {
   return (
-    <div className="mt-6 flex items-center gap-3">
-      <button type="button" className="rounded-xl border border-border px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => onChange(index - 1)}>
+    <div className="mt-3 flex gap-1.5" aria-hidden="true">
+      {Array.from({ length: count }, (_, step) => (
+        <span key={step} className={`h-1.5 flex-1 rounded-full transition-colors ${step <= index ? "tone-dot" : "bg-muted"}`} />
+      ))}
+    </div>
+  );
+}
+
+function Pager({ index, count, onChange, showCount = true }: { index: number; count: number; onChange: (index: number) => void; showCount?: boolean }) {
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-3">
+      <button type="button" className="button-secondary gap-1.5 text-sm" disabled={index === 0} onClick={() => onChange(index - 1)}>
+        <ChevronLeft className="size-4" aria-hidden="true" />
         Previous
       </button>
-      <button type="button" className="bg-primary px-3 py-2 text-primary-foreground disabled:opacity-40" disabled={index === count - 1} onClick={() => onChange(index + 1)}>
+      <button type="button" className="button-primary gap-1.5 text-sm" disabled={index === count - 1} onClick={() => onChange(index + 1)}>
         Next
+        <ChevronRight className="size-4" aria-hidden="true" />
       </button>
-      <span className="text-sm text-muted-foreground">
-        {index + 1} / {count}
-      </span>
+      {showCount ? (
+        <span className="text-sm text-muted-foreground">
+          {index + 1} / {count}
+        </span>
+      ) : null}
     </div>
   );
 }

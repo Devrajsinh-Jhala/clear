@@ -12,4 +12,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Read `PRODUCT_SPEC.md` before changing the product. The progress section at the top is the current status. Commit directly to `main` and push. Do not open a pull request unless the user asks. Update that progress section in the same commit.
 
-Support, donations, sponsors, and billing are the last launch item in section 68. Do not implement them until the rest of the launch definition is done. They are separate from BYOK and CLEAR Free.
+Support, donations, sponsors, and billing are the last launch item in section 68. Do not implement them until the rest of the launch definition is done. They are separate from BYOK and CLEAR Free. Exception: the owner asked for the optional Buy Me a Chai link on 2026-10-06; keep it. Billing, Stripe and in-app payment collection still wait.

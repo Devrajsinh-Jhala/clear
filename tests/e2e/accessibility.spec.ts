@@ -8,9 +8,11 @@ for (const theme of ["light", "dark"] as const) {
     test.setTimeout(180_000);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    const chooser = page.getByRole("combobox", { name: "Color theme", exact: true });
+    const themeName = theme === "light" ? "Light" : "Dark";
+    const chooser = page.getByRole("radiogroup", { name: "Color theme", exact: true }).getByRole("radio", { name: themeName, exact: true });
     await expect(chooser).toBeEnabled();
-    await chooser.selectOption(theme);
+    await chooser.click();
+    await expect(chooser).toBeChecked();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("theme"))).toBe(theme);
     await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
     await expect(page.getByRole("heading", { level: 1, name: "Understand anything.", exact: true })).toBeVisible();
@@ -85,6 +87,6 @@ for (const theme of ["light", "dark"] as const) {
     await expect(understand).toBeFocused();
     await expectAccessible(page);
     await page.reload();
-    await expect(page.getByRole("combobox", { name: "Color theme", exact: true })).toHaveValue(theme);
+    await expect(page.getByRole("radiogroup", { name: "Color theme", exact: true }).getByRole("radio", { name: themeName, exact: true })).toBeChecked();
   });
 }
