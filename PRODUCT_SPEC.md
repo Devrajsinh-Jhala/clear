@@ -9,7 +9,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## How to continue
 
-1. Read this progress section, then the unfinished phase in the specification.
+1. Read this progress section, then `HANDOFF.md` (last session's decisions, how to run checks in a cloud container, gotchas and screenshots in `docs/handoff/screenshots/`), then the unfinished phase in the specification.
 2. Build the next product slice. Do not jump to payments.
 3. Add or update tests for that slice.
 4. Mark the slice here, commit to `main`, and push.

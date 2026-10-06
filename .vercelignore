@@ -18,3 +18,8 @@ playwright-report/**
 playwright*.config.*
 vitest.config.*
 *.tsbuildinfo
+
+# Session handoff notes and screenshots are for contributors, not the app.
+docs/**
+docs
+HANDOFF.md
