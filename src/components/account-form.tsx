@@ -80,6 +80,6 @@ export function AccountForm({ configured, accountEmail, signedIn }: { configured
     {mode === "sign-up" ? <p id="account-password-hint" className="mt-2 text-xs text-muted">Use at least 8 characters.</p> : null}
     <button type="submit" disabled={pending || !hydrated} className="button-primary mt-5 w-full">{pending ? mode === "sign-up" ? "Creating your account…" : "Signing in…" : mode === "sign-up" ? "Create account" : "Sign in"}</button>
     {error ? <p role="alert" className="mt-4 text-sm text-danger">{error}</p> : null}
-    <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">New signed-in lessons belong to your account. Earlier guest lessons, keys, and settings stay with their original browser identity and are not moved automatically.</p>
+    <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">CLEAR cannot reset a forgotten password yet, so keep yours somewhere safe. New signed-in lessons belong to your account. Earlier guest lessons, keys, and settings stay with their original browser identity and are not moved automatically.</p>
   </form>;
 }

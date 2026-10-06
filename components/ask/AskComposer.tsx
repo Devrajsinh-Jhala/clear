@@ -368,7 +368,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                     if (!next) return;
                     const primary = provider === "clear-free" ? model : defaultModel;
                     if ((compareProvider || "clear-free") === "clear-free") {
-                      setCompareModel(primary === "gemini-2.5-flash" ? "gemini-3.5-flash" : "gemini-2.5-flash");
+                      setCompareModel(CLEAR_FREE_MODELS.find((item) => item.id !== primary)?.id ?? defaultModel);
                     }
                   }}
                 />

@@ -50,8 +50,8 @@ function cancelableResponse(chunks: Uint8Array[], headers: Record<string, string
 describe("provider transport contracts", () => {
   it("serializes Gemini system/history and only attaches image/PDF data to the latest turn", async () => {
     http.mockResolvedValueOnce(Response.json({ candidates: [{ content: { parts: [{ thought: true, text: "PRIVATE_THOUGHT_61" }, { text: '{"essence":' }, { text: '"Canonical answer"}' }] }, finishReason: "STOP" }], usageMetadata: { promptTokenCount: 11, candidatesTokenCount: 19 } }));
-    const result = await geminiProvider.generate({ ...request, model: "gemini-3.5-flash", attachments: [image, { mimeType: "application/pdf", dataBase64: "U1lOVEhFVElDX1BERg==" }] }, { apiKey: KEY });
-    expect(String(http.mock.calls[0][0])).toBe("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent");
+    const result = await geminiProvider.generate({ ...request, model: "gemini-3.6-flash", attachments: [image, { mimeType: "application/pdf", dataBase64: "U1lOVEhFVElDX1BERg==" }] }, { apiKey: KEY });
+    expect(String(http.mock.calls[0][0])).toBe("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent");
     expect(new Headers(http.mock.calls[0][1]!.headers).get("x-goog-api-key")).toBe(KEY);
     expect(http.mock.calls[0][1]!.redirect).toBe("manual");
     const body = sentBody();
@@ -151,6 +151,18 @@ describe("provider transport contracts", () => {
     expect(`${error.message}${JSON.stringify(error)}`).not.toContain(KEY);
     expect(`${error.message}${JSON.stringify(error)}`).not.toContain(PRIVATE);
     expect(http).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells the learner when Gemini is busy or a model is retired, without retrying by itself", async () => {
+    http.mockResolvedValueOnce(Response.json({ error: { message: PRIVATE } }, { status: 503 }));
+    const busy = await rejected(geminiProvider.generate(request, { apiKey: KEY }));
+    expect(busy.status).toBe(503);
+    expect(busy.message).toContain("busy");
+    http.mockResolvedValueOnce(Response.json({ error: { message: PRIVATE } }, { status: 404 }));
+    const retired = await rejected(geminiProvider.generate(request, { apiKey: KEY }));
+    expect(retired.code).toBe("model_unavailable");
+    expect(retired.message).toContain("Choose another model");
+    expect(http).toHaveBeenCalledTimes(2);
   });
 
   it("uses finite generic errors for malformed JSON, aborted reads, authentication failures and rate limits", async () => {

@@ -46,6 +46,7 @@ export async function continueExplanation(input: {
     maxOutputTokens: 12000,
   }, selected.credential);
 
+  const answeredBy = response.model ?? model;
   const raw = response.structured ?? response.text;
   if (raw === undefined) {
     throw new ClearError("provider_error", "The model returned no follow-up.", {
@@ -66,14 +67,14 @@ export async function continueExplanation(input: {
     stamp: {
       id: input.document.id,
       provider: provider.id,
-      model,
+      model: answeredBy,
       promptVersion: FOLLOW_UP_PROMPT_VERSION,
       latencyMs: Date.now() - started,
       tokenUsage: response.usage,
     },
     repair: async (issues, invalid) => {
       const repaired = await provider.generate({
-        model,
+        model: answeredBy,
         system: REPAIR_SYSTEM_PROMPT,
         messages: [{ role: "user", content: buildRepairUserPrompt(invalid, issues) }],
         temperature: 0,
@@ -83,7 +84,7 @@ export async function continueExplanation(input: {
     },
   });
 
-  return { document, reply, providerId: selected.storedProviderId, model };
+  return { document, reply, providerId: selected.storedProviderId, model: answeredBy };
 }
 
 function stripServerFields(document: ExplanationDocument): Record<string, unknown> {

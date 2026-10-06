@@ -4,6 +4,8 @@ export default function PrivacyPage() {
   return (
     <PageShell title="Privacy" lede="CLEAR storage and the AI provider are different places.">
       <p>A question you submit to CLEAR Free is sent to Google Gemini from the CLEAR server. With your own key, the question goes to your selected provider. The sample lesson is not sent.</p>
+      <p>Each provider handles what it receives under its own terms. Depending on the Gemini plan behind CLEAR Free, Google may keep submitted content and use it to improve its products. Do not send anything confidential to CLEAR Free.</p>
+      <p>Accounts use an email address and a password. CLEAR does not currently confirm that you own the address, and it cannot reset a forgotten password yet.</p>
       <p>New guest lessons and submitted conversation text belong to the browser that created them. Their addresses reload only in that browser. Clearing its site data removes access. When sign-in is configured, new lessons created while signed in belong to your account and appear in your library. Signing in does not import earlier guest lessons or keys.</p>
       <p>Earlier lessons created before browser ownership was added remain readable by anyone with their address. They are read-only; making a private copy keeps only the explanation and lets you continue in this browser.</p>
       <p>A share link publishes a frozen explanation that anyone with the link can read and download. Original uploads, follow-up messages, teach-back feedback, learning records, and provider keys stay private. The explanation itself may include material from your question or files, so review its preview before sharing. Replacing or revoking a link stops access through that link; it cannot remove copies already downloaded.</p>

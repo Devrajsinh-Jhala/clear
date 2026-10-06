@@ -40,8 +40,9 @@ Required production values:
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the legacy anon key).
 - `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`): server only.
 - `APP_ENCRYPTION_KEY`: a persistent, base64-encoded 32-byte key. Rotating it requires a credential migration and changes account learning identifiers.
-- `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-3.5-flash`. Leave `CLEAR_PROVIDER` blank. The configured key could not access Gemini 2.5 Flash; selecting that model still reports its own failure.
+- `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-3.5-flash-lite`. Leave `CLEAR_PROVIDER` blank. The other CLEAR Free model is `gemini-3.6-flash`. When the chosen one answers HTTP 503, CLEAR asks the other and labels the lesson with the model that answered; each attempt spends a dispatch. Google retired `gemini-2.5-flash` for this key and `gemini-3.5-flash` returned 503 for two days. If both current models start failing, list the key's models and update `src/lib/ai/models.ts`.
 - `CLEAR_TRUSTED_IP_HEADER=x-vercel-forwarded-for`. Only use a header overwritten by the deployment edge. Unconfigured or malformed network headers share an unknown-network budget.
+- Optional `CLEAR_ALLOWED_ORIGINS`: comma-separated extra origins that may send requests, such as `https://www.example.com`. `NEXT_PUBLIC_APP_URL` and the Vercel deployment, branch and production addresses are always accepted. A request from any other address gets HTTP 403.
 
 Optional for later: `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`. Leave both blank for now; monitoring is not required by the configuration checker or `/api/health`. Client DSNs are public identifiers; provider and service keys are not.
 
@@ -78,7 +79,7 @@ Offline prompt checks validate reviewed reference material and the rubric, **not
 
 `check:deployment --remote` checks configuration, schema discovery, server functions and bucket privacy without writing learner data or printing secrets. Missing Sentry values are labeled `OPTIONAL` and do not fail the check. `/api/health` exposes only required configuration readiness; it does not test database connectivity, sign-in, model quality or telemetry delivery.
 
-Before public launch, require a full successful live eval plus human review, actual Supabase password sign-in/storage/share checks with two users and real microphone tests on target devices. SMTP delivery and Sentry receipt are explicitly deferred; validate them when those services are added. Latest live checks failed: the prompt's list-type mismatch was fixed, but subsequent Gemini requests returned HTTP 503. Successful generation with the updated prompt remains unverified.
+Before public launch, require a full successful live eval plus human review, actual Supabase password sign-in/storage/share checks with two users and real microphone tests on target devices. SMTP delivery and Sentry receipt are explicitly deferred; validate them when those services are added. Latest live checks (2026-10-06): a lesson and a follow-up were generated locally against live Gemini and Supabase. The full 12-case live eval on `gemini-3.5-flash-lite` gave 12 schema-valid lessons, average 0.865, and 1 of 12 at the required 1.0 on every dimension, so the eval gate is still open until a threshold is agreed or a human review replaces it.
 
 Once the database, password-auth setting and environment are configured, publish a protected preview for those live checks. Complete the remaining launch gates and production smoke checks before promoting it publicly. Enable Git deployments only after the database and environment are ready. Donations, sponsors and billing remain the last launch item.
 

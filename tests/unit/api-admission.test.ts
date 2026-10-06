@@ -6,7 +6,7 @@ vi.mock("@/src/lib/auth/session", () => ({ currentAccount: async () => state.acc
 vi.mock("@/src/lib/security/limits/store", () => ({ getLimitStore: () => state.store }));
 vi.mock("@/src/lib/ai/providers/gemini", () => ({
   geminiProvider: { id: "gemini", displayName: "Gemini", capabilities: {}, generate: state.generate },
-  resolveLessonModel: () => "gemini-2.5-flash",
+  resolveLessonModel: () => "gemini-3.6-flash",
 }));
 
 import { getProvider } from "@/src/lib/ai/router";
@@ -18,7 +18,7 @@ import type { LimitStore } from "@/src/lib/security/limits/types";
 function request(origin = "https://clear.example") {
   return new Request("https://clear.example/api/explanations", { method: "POST", headers: { Origin: origin } });
 }
-const input = { model: "gemini-2.5-flash", messages: [{ role: "user" as const, content: "Synthetic lesson" }] };
+const input = { model: "gemini-3.6-flash", messages: [{ role: "user" as const, content: "Synthetic lesson" }] };
 
 beforeEach(() => {
   vi.stubEnv("NODE_ENV", "test");

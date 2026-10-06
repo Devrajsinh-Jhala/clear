@@ -164,6 +164,11 @@ function readFinishReason(payload: unknown): string | undefined {
     : undefined;
 }
 
+/** Gemini refused the call because the model is overloaded, not because of the request. */
+export function isGeminiBusy(error: unknown): boolean {
+  return error instanceof ClearError && error.code === "provider_error" && error.status === 503;
+}
+
 function geminiHttpError(status: number, bodyText: string): ClearError {
   const safeBody = redactSecrets(bodyText).slice(0, 500);
   if (status === 400 && safeBody.includes("API_KEY_INVALID")) {
@@ -179,7 +184,13 @@ function geminiHttpError(status: number, bodyText: string): ClearError {
     });
   }
   if (status === 404) {
-    return new ClearError("model_unavailable", "That Gemini model is not available.", { status: 400 });
+    return new ClearError("model_unavailable", "That Gemini model is not available. Choose another model in Explanation preferences.", { status: 400 });
+  }
+  if (status === 503) {
+    return new ClearError("provider_error", "Gemini is busy right now. Try again in a moment.", {
+      retryable: true,
+      status: 503,
+    });
   }
   return new ClearError("provider_error", "Gemini could not generate this explanation.", {
     retryable: status >= 500,

@@ -1,8 +1,8 @@
 import { ClearError } from "@/src/lib/api/errors";
 import { assertModelId, encodeByokProvider, isByokProvider } from "@/src/lib/ai/byok";
-import { resolveClearFreeModel } from "@/src/lib/ai/models";
+import { CLEAR_FREE_MODELS, resolveClearFreeModel } from "@/src/lib/ai/models";
 import { anthropicProvider } from "@/src/lib/ai/providers/anthropic";
-import { geminiProvider, resolveLessonModel } from "@/src/lib/ai/providers/gemini";
+import { geminiProvider, isGeminiBusy, resolveLessonModel } from "@/src/lib/ai/providers/gemini";
 import { mockProvider } from "@/src/lib/ai/providers/mock";
 import { compatibleProvider, openaiProvider, xaiProvider } from "@/src/lib/ai/providers/openai";
 import type { AIProvider, InlineAttachment, ProviderCredential } from "@/src/lib/ai/types";
@@ -44,7 +44,30 @@ export function resolveGenerationProvider(): AIProvider {
       { status: 503 },
     );
   }
-  return guardedProvider(geminiProvider);
+  return clearFreeProvider();
+}
+
+// CLEAR Free stays on Gemini. When the chosen model is overloaded it asks the
+// other CLEAR Free models in turn and reports which one answered. Each attempt
+// is admitted and counted like any other dispatch. BYOK never switches model.
+function clearFreeProvider(): AIProvider {
+  const guarded = guardedProvider(geminiProvider);
+  return {
+    ...guarded,
+    async generate(input, credential) {
+      const models = [input.model, ...CLEAR_FREE_MODELS.map((item) => item.id).filter((id) => id !== input.model)];
+      let busy: unknown;
+      for (const model of models) {
+        try {
+          return { ...(await guarded.generate({ ...input, model }, credential)), model };
+        } catch (error) {
+          if (!isGeminiBusy(error)) throw error;
+          busy = error;
+        }
+      }
+      throw busy;
+    },
+  };
 }
 
 /** Quotas wrap dispatch itself, so repairs and enabled fallback each spend an attempt. */

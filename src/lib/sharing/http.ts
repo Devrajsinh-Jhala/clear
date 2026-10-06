@@ -8,7 +8,12 @@ export function assertShareWriteOrigin(request: Request): void {
   if (request.headers.get("sec-fetch-site") === "cross-site" || !origin) throw forbiddenOrigin();
   try {
     const env = process.env;
-    const configured = [env.NEXT_PUBLIC_APP_URL, ...(env.VERCEL_URL ? [`https://${env.VERCEL_URL}`] : [])].filter((value): value is string => !!value);
+    // Vercel serves one deployment at its own, branch and production addresses.
+    // CLEAR_ALLOWED_ORIGINS lists further origins, such as a www alias.
+    const hosted = [env.VERCEL_URL, env.VERCEL_BRANCH_URL, env.VERCEL_PROJECT_PRODUCTION_URL].filter((value): value is string => !!value).map((value) => `https://${value}`);
+    // A mistyped entry allows nothing; it must not block the other origins.
+    const listed = (env.CLEAR_ALLOWED_ORIGINS ?? "").split(",").map((value) => value.trim()).filter((value) => URL.canParse(value));
+    const configured = [env.NEXT_PUBLIC_APP_URL, ...hosted, ...listed].filter((value): value is string => !!value);
     if (configured.length && !configured.some((value) => new URL(value).origin === origin)) throw forbiddenOrigin();
     const requestUrl = new URL(request.url);
     const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? requestUrl.host;
@@ -41,5 +46,5 @@ export function shareErrorResponse(error: unknown): Response {
 }
 
 function forbiddenOrigin() {
-  return new ClearError("forbidden", "Sharing requests must come from this CLEAR page.", { status: 403 });
+  return new ClearError("forbidden", "This request did not come from this CLEAR page. Reload the page and try again.", { status: 403 });
 }

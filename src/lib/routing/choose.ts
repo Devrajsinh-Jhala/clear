@@ -47,7 +47,7 @@ const FALLBACK_CODES = new Set([
   "unsupported_attachment",
 ]);
 
-export function defaultRoutingPreferences(model = "gemini-2.5-flash"): RoutingPreferences {
+export function defaultRoutingPreferences(model = "gemini-3.5-flash-lite"): RoutingPreferences {
   return {
     auto: false,
     fallbackAllowed: false,

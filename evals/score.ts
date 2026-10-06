@@ -4,7 +4,7 @@ import { evaluateSafeMath } from "@/src/lib/explanation/safe-math";
 import { explanationDocumentSchema, type ExplanationDocument } from "@/src/lib/explanation/schema";
 import { DIMENSIONS, type CaseResult, type DimensionResult, type EvalCase, type EvalDimension } from "./types";
 
-export const RUBRIC_VERSION = "clear-structural-rubric.v1";
+export const RUBRIC_VERSION = "clear-structural-rubric.v2";
 // Every dimension must meet its threshold; an average cannot hide a broken
 // mechanism, fabricated verification, unsafe widget, or invalid answer key.
 export const THRESHOLDS: Record<EvalDimension, number> = {
@@ -72,7 +72,9 @@ export function scoreExplanation(item: EvalCase, raw: unknown): CaseResult {
   if (document.mentalModel.analogy) {
     const analogy = document.mentalModel.analogy;
     if (!analogy.limitations.some((limit) => limit.length >= 20 && /not|only|unlike|cannot|break|different|fails|no physical|doesn.t/i.test(limit))) analogyFailures.push("An analogy needs a substantive boundary distinguishing it from the mechanism.");
-    if (analogy.mapping.some((mapping) => !item.mustCoverConcepts.some((concept) => concept.aliases.some((alias) => hasTerm(mapping.target, alias))))) analogyFailures.push("Analogy mapping targets must identify actual lesson concepts.");
+    // A target may name any concept or term this lesson defines, not only the corpus's required ones.
+    const lessonTerms = [...item.mustCoverConcepts.flatMap((concept) => concept.aliases), ...document.concepts.map((concept) => concept.name), ...document.terminology.map((term) => term.term)];
+    if (analogy.mapping.some((mapping) => !lessonTerms.some((term) => hasTerm(mapping.target, term)))) analogyFailures.push("Analogy mapping targets must identify actual lesson concepts.");
   }
   dimensions.analogyCorrectness = result(2, analogyFailures, document.mentalModel.analogy ? "Mapping references and explicit analogy limits; semantic correctness needs human review." : "No analogy supplied; no false analogy is implied.");
 

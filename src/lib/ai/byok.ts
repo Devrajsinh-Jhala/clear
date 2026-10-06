@@ -1,5 +1,5 @@
 export const BYOK_PROVIDERS = [
-  { id: "gemini", label: "Google Gemini", needsBaseUrl: false, modelPlaceholder: "gemini-3.5-flash" },
+  { id: "gemini", label: "Google Gemini", needsBaseUrl: false, modelPlaceholder: "gemini-3.6-flash" },
   { id: "openai", label: "OpenAI", needsBaseUrl: false, modelPlaceholder: "gpt-4.1-mini" },
   { id: "anthropic", label: "Anthropic", needsBaseUrl: false, modelPlaceholder: "claude-sonnet-4-5" },
   { id: "xai", label: "xAI", needsBaseUrl: false, modelPlaceholder: "grok-3" },

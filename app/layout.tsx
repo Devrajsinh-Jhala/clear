@@ -23,9 +23,18 @@ const newsreader = Newsreader({
   style: ["normal", "italic"],
 });
 
+const description = "AI knows the answer. CLEAR helps you understand it.";
+
+function siteUrl(): URL | undefined {
+  try { return new URL(process.env.NEXT_PUBLIC_APP_URL || ""); } catch { return undefined; }
+}
+
 export const metadata: Metadata = {
-  title: "CLEAR",
-  description: "AI knows the answer. CLEAR helps you understand it.",
+  metadataBase: siteUrl(),
+  title: { default: "CLEAR", template: "%s · CLEAR" },
+  description,
+  openGraph: { type: "website", siteName: "CLEAR", title: "CLEAR — understand anything", description, url: "/" },
+  twitter: { card: "summary_large_image", title: "CLEAR — understand anything", description },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

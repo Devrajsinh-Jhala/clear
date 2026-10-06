@@ -259,4 +259,20 @@ describe("private guest lessons and share snapshots", () => {
     expect((await POST(request("POST", { showProvider: false }), context)).status).toBe(200);
     vi.unstubAllEnvs();
   });
+
+  it("accepts the deployment's branch, production and listed origins, and no others", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://clear.example");
+    vi.stubEnv("VERCEL_BRANCH_URL", "clear-git-main.vercel.app");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "clear.vercel.app");
+    vi.stubEnv("CLEAR_ALLOWED_ORIGINS", "https://www.clear.example, https://learn.clear.example");
+    const from = (host: string) => request("POST", { showProvider: false }, { Origin: `https://${host}`, "X-Forwarded-Host": host, "X-Forwarded-Proto": "https" });
+    for (const host of ["clear-git-main.vercel.app", "clear.vercel.app", "www.clear.example", "learn.clear.example"]) {
+      expect((await POST(from(host), context)).status).toBe(200);
+    }
+    expect((await POST(from("other.clear.example"), context)).status).toBe(403);
+    vi.stubEnv("CLEAR_ALLOWED_ORIGINS", "not a url, https://www.clear.example");
+    expect((await POST(from("www.clear.example"), context)).status).toBe(200);
+    expect((await POST(from("learn.clear.example"), context)).status).toBe(403);
+    vi.unstubAllEnvs();
+  });
 });

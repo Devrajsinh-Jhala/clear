@@ -73,10 +73,10 @@ test("two synthetic model results can be compared, rated, and selected before co
   await page.getByRole("textbox", { name: "What are you trying to understand?", exact: true }).fill("Explain this synthetic comparison of a counter.");
   await page.locator("summary").filter({ hasText: "Explanation preferences" }).click();
   await page.getByRole("combobox", { name: "Explanation provider", exact: true }).selectOption("clear-free");
-  await page.getByRole("combobox", { name: "CLEAR Free model", exact: true }).selectOption("gemini-2.5-flash");
+  await page.getByRole("combobox", { name: "CLEAR Free model", exact: true }).selectOption("gemini-3.6-flash");
   await page.getByRole("checkbox", { name: "Compare with another model", exact: true }).check();
   await page.getByRole("combobox", { name: "Comparison provider", exact: true }).selectOption("clear-free");
-  await page.getByRole("combobox", { name: "Comparison CLEAR Free model", exact: true }).selectOption("gemini-3.5-flash");
+  await page.getByRole("combobox", { name: "Comparison CLEAR Free model", exact: true }).selectOption("gemini-3.5-flash-lite");
   await page.getByRole("button", { name: "Help me understand", exact: true }).click();
   await expect(page).toHaveURL(/\/learn\/[a-f0-9-]{36}$/);
   await expect(page.getByRole("heading", { name: "Compare", exact: true })).toBeVisible();

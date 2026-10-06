@@ -1,11 +1,11 @@
 export const CLEAR_FREE_MODELS = [
-  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
+  { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash" },
 ] as const;
 
 export type ClearFreeModelId = (typeof CLEAR_FREE_MODELS)[number]["id"];
 
-const DEFAULT_MODEL: ClearFreeModelId = "gemini-3.5-flash";
+const DEFAULT_MODEL: ClearFreeModelId = "gemini-3.5-flash-lite";
 
 export function isClearFreeModel(model: string | undefined): model is ClearFreeModelId {
   return CLEAR_FREE_MODELS.some((item) => item.id === model);

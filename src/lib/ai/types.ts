@@ -44,6 +44,8 @@ export type UnifiedGenerationResponse = {
     outputTokens?: number;
   };
   finishReason?: string;
+  /** The model that answered, when a provider had to use a different one. */
+  model?: string;
 };
 
 export type ModelDescriptor = {

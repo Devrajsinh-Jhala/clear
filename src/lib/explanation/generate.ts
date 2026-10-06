@@ -58,6 +58,7 @@ async function generateWithProvider(
     temperature: input.depth === "quick" ? 0.2 : 0.4,
     maxOutputTokens: input.depth === "deep" ? 12000 : 8000,
   }, credential);
+  const answeredBy = response.model ?? model;
   const raw = response.structured ?? response.text;
   if (raw === undefined) {
     throw new ClearError("provider_error", "The model returned no explanation.", {
@@ -77,15 +78,15 @@ async function generateWithProvider(
     stamp: {
       id: randomUUID(),
       provider: provider.id,
-      model,
+      model: answeredBy,
       promptVersion: PROMPT_VERSION,
       latencyMs: Date.now() - started,
       tokenUsage: response.usage,
     },
-    repair: (issues, invalid) => repairOnce(provider, model, credential, issues, invalid),
+    repair: (issues, invalid) => repairOnce(provider, answeredBy, credential, issues, invalid),
   });
 
-  return { document, providerId: storedProviderId, model };
+  return { document, providerId: storedProviderId, model: answeredBy };
 }
 
 async function repairOnce(

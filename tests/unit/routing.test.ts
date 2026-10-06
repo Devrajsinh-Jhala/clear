@@ -11,7 +11,7 @@ import {
 
 const clearFree: ApprovedTarget = {
   provider: "clear-free",
-  model: "gemini-2.5-flash",
+  model: "gemini-3.6-flash",
   label: "CLEAR Free",
   pdf: true,
   vision: true,
