@@ -15,6 +15,7 @@ import { VerifyView } from "@/components/lesson/VerifyView";
 import { VisualView } from "@/components/lesson/VisualView";
 import { CompareView } from "@/components/lesson/CompareView";
 import { ProviderLabel } from "@/components/provider-label";
+import { VIEW_META, viewTabClass } from "@/components/lesson/view-meta";
 import { ShareExportPanel } from "@/components/lesson/ShareExportPanel";
 import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 import type { ApprovedTarget } from "@/src/lib/routing/choose";
@@ -113,28 +114,30 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
-      <aside className="hidden space-y-6 lg:sticky lg:top-8 lg:block">
-        <Link href="/" className="button-secondary w-full gap-2 text-sm"><span aria-hidden="true">+</span> New lesson</Link>
-        <div className="rounded-2xl border border-line bg-card/60 p-5">
+    <div className="relative">
+    <div className="aurora h-80 opacity-50" aria-hidden="true" />
+    <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <aside className="hidden space-y-6 lg:sticky lg:top-24 lg:block">
+        <Link href="/ask" className="button-secondary w-full gap-2 !rounded-full text-sm"><span aria-hidden="true">+</span> New lesson</Link>
+        <div className="surface-panel p-5">
           <p className="eyebrow">Your lesson</p>
-          <p className="mt-3 font-serif text-xl leading-snug">{title}</p>
-          <p className="mt-4 text-xs leading-relaxed text-muted">Return to this address in the same browser. Your lesson and follow-ups stay private until you share an explanation.</p>
+          <p className="mt-3 font-heading text-xl leading-snug">{title}</p>
+          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Return to this address in the same browser. Your lesson and follow-ups stay private until you share an explanation.</p>
         </div>
         <div className="px-2">
           <p className="eyebrow">By the end</p>
-          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted">
-            {document.learningObjectives.map((objective) => <li key={objective.id} className="flex gap-2"><span aria-hidden="true" className="text-accent">↗</span><span>{objective.statement}</span></li>)}
+          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+            {document.learningObjectives.map((objective) => <li key={objective.id} className="flex gap-2.5"><span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" /><span>{objective.statement}</span></li>)}
           </ul>
         </div>
       </aside>
       <div className="min-w-0 space-y-6">
-        <header>
-        <p className="badge bg-card">
+        <header className="animate-fade-up">
+        <p className="badge bg-card/80 backdrop-blur">
           {document.metadata.provider === "clear-copy" ? <>Private copy · Follow-ups: <ProviderLabel provider={provider} model={model} /></> : <ProviderLabel provider={provider} model={model} />}
         </p>
-        <h1 className="mt-4 font-serif text-4xl leading-[1.08] sm:text-5xl">{title}</h1>
-        {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted">{lessonMeta.fallbackNote}</p> : null}
+        <h1 className="mt-4 font-heading text-4xl leading-[1.02] sm:text-6xl">{title}</h1>
+        {lessonMeta.fallbackNote ? <p className="mt-3 text-sm text-muted-foreground">{lessonMeta.fallbackNote}</p> : null}
         </header>
         <ShareExportPanel conversationId={conversation.id} document={document} disabled={busy} />
         {lessonMeta.comparison && !lessonMeta.comparison.pickedId ? (
@@ -154,7 +157,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
           </fieldset>
         ) : null}
         {conversation.attachments && conversation.attachments.length > 0 ? (
-          <ul className="mt-3 text-sm text-muted">
+          <ul className="mt-3 text-sm text-muted-foreground">
             {conversation.attachments.map((attachment) => (
               <li key={attachment.id}>
                 {attachment.filename}
@@ -163,9 +166,10 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             ))}
           </ul>
         ) : null}
-        <div role="tablist" aria-label="Explanation views" className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-card/60 p-1.5">
+        <div role="tablist" aria-label="Explanation views" className="z-30 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-card/85 p-1.5 shadow-sm backdrop-blur-xl lg:sticky lg:top-[4.5rem] lg:flex-wrap">
           {TABS.map(([id, label]) => {
             const selected = active === id;
+            const { icon: Icon, hue } = VIEW_META[id];
             return (
               <button
                 key={id}
@@ -175,7 +179,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 aria-selected={selected}
                 aria-controls={`panel-${id}`}
                 tabIndex={selected ? 0 : -1}
-                className={`shrink-0 rounded-lg px-3 py-2.5 text-sm transition-colors ${selected ? "bg-accent font-medium text-accent-foreground" : "text-muted hover:bg-background hover:text-foreground"}`}
+                className={`${hue} ${viewTabClass(selected)}`}
                 onClick={() => setActive(id)}
                 onKeyDown={(event) => {
                   const index = TABS.findIndex(([tabId]) => tabId === active);
@@ -189,12 +193,15 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                   window.document.getElementById(`tab-${next}`)?.focus();
                 }}
               >
+                <Icon className={`size-4 shrink-0 ${selected ? "tone-text" : ""}`} aria-hidden="true" />
                 {label}
               </button>
             );
           })}
         </div>
-        <div role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`} className="surface-panel p-5 sm:p-7">
+        <div role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`} className={`${VIEW_META[active].hue} surface-panel relative overflow-hidden p-5 sm:p-8`}>
+          <div className="tone-dot absolute inset-x-0 top-0 h-1 opacity-80" aria-hidden="true" />
+          <div key={active} className="animate-fade-up [animation-duration:350ms]">
           {active === "understand" ? <UnderstandView document={document} /> : null}
           {active === "mental-model" ? <MentalModelView document={document} /> : null}
           {active === "visual" ? <VisualView document={document} /> : null}
@@ -209,15 +216,16 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
           {active === "voice" ? (
             <VoiceTutorView document={document} messages={messages} provider={provider} model={model} pending={busy} error={error} draft={voiceDraft} onDraftChange={setVoiceDraft} onSend={(message) => sendFollowUp(message, "voice", "same")} onTeachBack={() => setActive("teach-back")} />
           ) : null}
+          </div>
         </div>
         {active !== "voice" ? <section className="surface-panel p-5 sm:p-6">
-          <h2 className="font-serif text-2xl">Follow-up</h2>
+          <h2 className="font-heading text-2xl">Follow-up</h2>
           <ul className="mt-4 space-y-3">
             {messages
               .filter((message, index) => (message.kind === "follow-up" || index > 1) && message.kind !== "teach-back")
               .map((message) => (
-              <li key={message.id} className={message.role === "user" ? "text-muted" : ""}>
-                <span className="mr-2 text-xs uppercase tracking-[0.14em] text-muted">
+              <li key={message.id} className={`rounded-2xl border px-4 py-3 leading-relaxed ${message.role === "user" ? "ml-auto w-fit max-w-[90%] border-primary/25 bg-primary/8" : "border-border bg-background/60"}`}>
+                <span className="mr-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                   {message.role === "user" ? "You" : "CLEAR"}
                 </span>
                 {message.content}
@@ -230,7 +238,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
                 <li key={suggestion}>
                   <button
                     type="button"
-                    className="rounded-full border border-line bg-background/60 px-3 py-2 text-left text-sm text-muted hover:border-accent hover:text-foreground disabled:opacity-50"
+                    className="rounded-full border border-border bg-background/60 px-3.5 py-2 text-left text-sm text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:text-foreground disabled:opacity-50"
                     disabled={busy}
                     onClick={() => void sendFollowUp(suggestion)}
                   >
@@ -259,14 +267,14 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
               placeholder="Ask a follow-up…"
               className="field-control min-w-0 flex-1"
             />
-            <label className="text-sm text-muted">
+            <label className="text-sm text-muted-foreground">
               Next turn
               <select
                 aria-label="Provider for the next turn"
                 value={nextProvider}
                 disabled={busy}
                 onChange={(event) => setNextProvider(event.target.value)}
-                className="ml-2 max-w-full rounded-md bg-background p-2 text-foreground"
+                className="field-control ml-2 max-w-full !min-h-0 !py-2"
               >
                 <option value="same">Keep this model</option>
                 {targets.map((target) => (
@@ -281,12 +289,13 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
             </button>
           </form>
           {error ? (
-            <p className="mt-3 text-sm text-danger" role="alert">
+            <p className="mt-3 text-sm text-destructive" role="alert">
               {error}
             </p>
           ) : null}
         </section> : null}
       </div>
+    </div>
     </div>
   );
 }

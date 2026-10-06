@@ -6,7 +6,7 @@ export const MUTEX_TITLE = "How a mutex prevents a race condition";
 export const MUTEX_ESSENCE = "A mutex lets only one thread at a time enter a protected critical section.";
 
 export async function openSample(page: Page) {
-  await page.goto("/");
+  await page.goto("/ask");
   await page.getByRole("button", { name: "See an example", exact: true }).click();
   await expect(page).toHaveURL(/\/learn\/[a-f0-9-]{36}$/);
   await expect(page.getByRole("heading", { name: MUTEX_TITLE, exact: true })).toBeVisible();

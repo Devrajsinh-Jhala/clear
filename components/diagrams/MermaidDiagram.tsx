@@ -35,14 +35,14 @@ export function MermaidDiagram({ source }: { source: string }) {
   }, [reactId, resolvedTheme, source]);
 
   if (failed) {
-    return <p className="mt-4 text-sm text-muted">The diagram source could not be drawn. The paragraph above is the explanation.</p>;
+    return <p className="mt-4 text-sm text-muted-foreground">The diagram source could not be drawn. The paragraph above is the explanation.</p>;
   }
   if (!svg) {
-    return <p className="mt-4 text-sm text-muted">Drawing the diagram…</p>;
+    return <p className="mt-4 text-sm text-muted-foreground">Drawing the diagram…</p>;
   }
   return (
     <div
-      className="mt-4 overflow-x-auto border border-line bg-background p-4"
+      className="rounded-xl mt-4 overflow-x-auto border border-border bg-background p-4"
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: svg }}
     />

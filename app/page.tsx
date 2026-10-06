@@ -1,61 +1,88 @@
-import { AskComposer } from "@/components/ask/AskComposer";
-import { defaultClearFreeModel } from "@/src/lib/ai/models";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
-export default function HomePage() {
+import { HeroDemo } from "@/components/landing/hero-demo";
+import { SampleButton } from "@/components/landing/sample-button";
+import { Accent, ClosingSection, FaqSection, ProvidersSection, SkillSection, StatsSection, StepsSection, ViewsSection } from "@/components/landing/sections";
+
+const QUESTIONS = [
+  ["Why does virtual memory exist?", "How does a mutex prevent a race condition?", "Explain backpropagation visually.", "What happens during a DNS lookup?", "How does public-key encryption work?", "What is Big-O, intuitively?", "Why is the sky blue but sunsets red?"],
+  ["Why do we have seasons?", "How does gradient descent find a minimum?", "What is the difference between a process and a thread?", "Why does compound interest grow so fast?", "How do vaccines train the immune system?", "What does a database transaction guarantee?", "Why can't you divide by zero?"],
+];
+
+function askLink(question: string) {
+  return `/ask?q=${encodeURIComponent(question)}`;
+}
+
+function AskLink({ className = "" }: { className?: string }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:py-20">
-      <div className="grid items-start gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
-        <section className="pt-2 lg:pt-8" aria-labelledby="home-title">
-          <p className="eyebrow">The understanding workspace</p>
-          <h1 id="home-title" className="mt-5 max-w-lg font-serif text-6xl leading-[0.96] tracking-[-0.04em] sm:text-7xl lg:text-[5.5rem]">
-            Understand<br />anything.
+    <Link href="/ask" className={`button-primary group !min-h-12 gap-2 !rounded-full !px-7 text-base ${className}`}>
+      Ask anything
+      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+    </Link>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <>
+      <section className="relative overflow-hidden" aria-labelledby="hero-title">
+        <div className="aurora" aria-hidden="true" />
+        <div className="grid-fade" aria-hidden="true" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-14 text-center sm:pb-24 sm:pt-24">
+          <p className="badge animate-fade-up bg-card/70 backdrop-blur">
+            <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+            The understanding layer for AI
+          </p>
+          <h1 id="hero-title" className="mx-auto mt-7 max-w-5xl animate-fade-up font-heading text-[clamp(3.25rem,11vw,7.75rem)] leading-[0.92] tracking-[-0.035em] [animation-delay:80ms]">
+            Understand <Accent>anything.</Accent>
           </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted">
-            AI knows the answer. CLEAR helps you understand it.
+          <p className="mx-auto mt-8 max-w-2xl animate-fade-up text-lg leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-xl">
+            Ask a difficult question. CLEAR turns it into precise explanations, mental models, diagrams, interactive examples, and questions that make sure it actually clicked.
           </p>
-          <p className="mt-4 max-w-md text-sm leading-7 text-muted">
-            Bring a difficult question, a piece of code, or a document. Build a mental model, explore examples, and check what clicked.
+          <div className="mt-10 flex animate-fade-up flex-wrap items-start justify-center gap-3 [animation-delay:240ms]">
+            <AskLink />
+            <SampleButton className="!min-h-12 !rounded-full !px-6 text-base" />
+          </div>
+          <p className="mt-5 animate-fade-up text-sm text-muted-foreground [animation-delay:300ms]">Free with Gemini. No sign-in. Or bring your own key.</p>
+          <div className="mt-14 animate-fade-up [animation-delay:420ms] sm:mt-20">
+            <HeroDemo />
+          </div>
+          <p className="sr-only">
+            The preview above shows one lesson about virtual memory as six views: a one-sentence explanation, an analogy, a diagram, a step-through, a quiz and a teach-it-back check.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
-            <span className="badge">CLEAR Free or your own model</span>
-            <span>No sign-in required</span>
-          </div>
-          <div className="mt-10 hidden max-w-sm border-t border-line pt-6 lg:block">
-            <p className="font-serif text-xl">One idea, connected views.</p>
-            <p className="mt-2 text-sm leading-6 text-muted">Read the explanation. See the mechanism. Try it yourself. Each view builds on the same lesson.</p>
-          </div>
-        </section>
-        <AskComposer defaultModel={defaultClearFreeModel()} />
-      </div>
-      <section className="mt-14 border-t border-line pt-8 sm:mt-16 sm:pt-10" aria-labelledby="learning-path-title">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
-          <h2 id="learning-path-title" className="font-serif text-3xl tracking-tight">Go beyond the first answer.</h2>
-          <p className="text-sm text-muted">From explanation to understanding</p>
-        </div>
-        <div className="grid gap-7 sm:grid-cols-3 sm:gap-8">
-          <div className="flex gap-4">
-            <span className="pt-1 font-mono text-xs text-accent" aria-hidden="true">01</span>
-            <div>
-              <h3 className="font-serif text-xl">Build the mental model</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">Plain language and labeled analogies make the mechanism easier to hold in your head.</p>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <span className="pt-1 font-mono text-xs text-accent" aria-hidden="true">02</span>
-            <div>
-              <h3 className="font-serif text-xl">Look from another angle</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">Worked examples, diagrams, and interactive views connect back to the same explanation.</p>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <span className="pt-1 font-mono text-xs text-accent" aria-hidden="true">03</span>
-            <div>
-              <h3 className="font-serif text-xl">Find what still needs work</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">Check your recall with a quiz, teach it back, or ask a follow-up where the idea feels unclear.</p>
-            </div>
-          </div>
         </div>
       </section>
-    </div>
+
+      <section className="border-y border-border bg-card/40 py-10" aria-label="Example questions">
+        <p className="eyebrow text-center">Ask it the way you would ask a person</p>
+        <div className="marquee-mask mt-6 space-y-3 overflow-hidden" aria-hidden="true">
+          {QUESTIONS.map((row, index) => (
+            <div key={row[0]} className="marquee-track flex w-max animate-marquee" style={{ animationDirection: index % 2 ? "reverse" : "normal", animationDuration: `${index % 2 ? 62 : 54}s` }}>
+              {[0, 1].map((copy) => (
+                <div key={copy} className="flex shrink-0 gap-3 pr-3">
+                  {row.map((question) => (
+                    <Link key={question} href={askLink(question)} tabIndex={-1} className="whitespace-nowrap rounded-full border border-border bg-background px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+                      {question}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <ViewsSection />
+      <StepsSection />
+      <ProvidersSection />
+      <SkillSection />
+      <StatsSection />
+      <FaqSection />
+      <ClosingSection>
+        <AskLink />
+        <SampleButton className="!min-h-12 !rounded-full !px-6 text-base" />
+      </ClosingSection>
+    </>
   );
 }

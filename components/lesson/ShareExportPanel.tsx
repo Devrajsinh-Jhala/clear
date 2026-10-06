@@ -130,60 +130,60 @@ export function ShareExportPanel({ conversationId, document, disabled }: {
   return (
     <details className="surface-panel group">
       <summary className="flex list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
-        <span><span className="block text-sm font-medium">Share &amp; export</span><span className="mt-1 block text-xs text-muted">{loading ? "Checking sharing settings" : share ? share.active ? "A public snapshot is available" : "Private to this browser" : "Sharing status unavailable"}</span></span>
+        <span><span className="block text-sm font-medium">Share &amp; export</span><span className="mt-1 block text-xs text-muted-foreground">{loading ? "Checking sharing settings" : share ? share.active ? "A public snapshot is available" : "Private to this browser" : "Sharing status unavailable"}</span></span>
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0 transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>
       </summary>
-      <div className="grid gap-7 border-t border-line p-5 sm:p-6 xl:grid-cols-2">
+      <div className="grid gap-7 border-t border-border p-5 sm:p-6 xl:grid-cols-2">
         <section className="min-w-0">
-          <h2 className="font-serif text-2xl">Share an explanation</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted">A link publishes a frozen explanation. Follow-ups, teach-back feedback, learning records, and original uploads stay private. The explanation itself may include material from your question or files, so review the preview before sharing.</p>
+          <h2 className="font-heading text-2xl">Share an explanation</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">A link publishes a frozen explanation. Follow-ups, teach-back feedback, learning records, and original uploads stay private. The explanation itself may include material from your question or files, so review the preview before sharing.</p>
           <label className="mt-4 flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={showProvider} disabled={locked} onChange={(event) => setShowProvider(event.target.checked)} className="mt-1 shrink-0 accent-accent" />
+            <input type="checkbox" checked={showProvider} disabled={locked} onChange={(event) => setShowProvider(event.target.checked)} className="mt-1 shrink-0 accent-primary" />
             Show the provider and model on the shared page
           </label>
-          <p className="mt-2 text-xs leading-relaxed text-muted">This choice applies when you create or replace the link.</p>
-          <button type="button" disabled={disabled || sharing} className="mt-4 text-sm text-accent underline underline-offset-4" onClick={(event) => { event.currentTarget.focus(); setPreviewOpen(true); dialog.current?.showModal(); }}>Preview the shared explanation</button>
-          {loading ? <p className="mt-4 text-sm text-muted" role="status">Checking this lesson’s sharing settings…</p> : null}
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">This choice applies when you create or replace the link.</p>
+          <button type="button" disabled={disabled || sharing} className="mt-4 text-sm text-primary underline underline-offset-4" onClick={(event) => { event.currentTarget.focus(); setPreviewOpen(true); dialog.current?.showModal(); }}>Preview the shared explanation</button>
+          {loading ? <p className="mt-4 text-sm text-muted-foreground" role="status">Checking this lesson’s sharing settings…</p> : null}
           {share?.active && share.path ? (
-            <div className="mt-5 space-y-3 rounded-xl border border-line bg-background/60 p-4">
+            <div className="mt-5 space-y-3 rounded-xl border border-border bg-background/60 p-4">
               <p className="text-sm font-medium">Anyone with this link can read and download the snapshot.</p>
-              <label className="block text-xs text-muted">
+              <label className="block text-xs text-muted-foreground">
                 Public share link
                 <input readOnly value={`${origin}${share.path}`} onFocus={(event) => event.target.select()} className="field-control mt-2 w-full text-xs" />
               </label>
               <div className="flex flex-wrap items-center gap-3">
                 <button type="button" disabled={locked} onClick={() => void copyLink()} className="button-secondary text-sm">{copied ? "Link copied" : "Copy link"}</button>
-                <a href={share.path} target="_blank" rel="noreferrer" className="text-sm text-accent underline underline-offset-4">Open shared lesson</a>
+                <a href={share.path} target="_blank" rel="noreferrer" className="text-sm text-primary underline underline-offset-4">Open shared lesson</a>
               </div>
-              {copied ? <p role="status" className="text-xs text-accent">The public link is copied.</p> : null}
-              {copyError ? <p role="alert" className="text-xs text-danger">{copyError}</p> : null}
+              {copied ? <p role="status" className="text-xs text-primary">The public link is copied.</p> : null}
+              {copyError ? <p role="alert" className="text-xs text-destructive">{copyError}</p> : null}
               {share.stale ? <p className="text-sm leading-relaxed text-warning">This lesson has changed since you shared it. The public link still shows the earlier snapshot.</p> : null}
-              <p className="text-xs leading-relaxed text-muted">Replacing or revoking the link stops access through the old link. Copies people already downloaded remain with them.</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">Replacing or revoking the link stops access through the old link. Copies people already downloaded remain with them.</p>
             </div>
-          ) : !loading && share ? <p className="mt-5 text-sm text-muted" role="status">No public link. Your lesson stays in this browser.</p> : null}
+          ) : !loading && share ? <p className="mt-5 text-sm text-muted-foreground" role="status">No public link. Your lesson stays in this browser.</p> : null}
           <div className="mt-5 flex flex-wrap gap-3">
             <button type="button" disabled={locked || !share} onClick={() => void changeShare("publish")} className="button-primary text-sm">{sharing ? "Updating the link…" : share?.active ? "Replace link with current lesson" : "Create share link"}</button>
             {share?.active ? <button type="button" disabled={locked} onClick={() => void changeShare("revoke")} className="button-secondary text-sm">Revoke link</button> : null}
           </div>
-          {shareError && !loading ? <div className="mt-4 text-sm" role="alert"><p className="text-danger">{shareError}</p><button type="button" disabled={disabled || sharing || loading} onClick={() => { setRequestLoading(true); setRefresh((value) => value + 1); }} className="mt-2 underline underline-offset-4">Reload sharing settings</button></div> : null}
+          {shareError && !loading ? <div className="mt-4 text-sm" role="alert"><p className="text-destructive">{shareError}</p><button type="button" disabled={disabled || sharing || loading} onClick={() => { setRequestLoading(true); setRefresh((value) => value + 1); }} className="mt-2 underline underline-offset-4">Reload sharing settings</button></div> : null}
         </section>
-        <section className="min-w-0 border-t border-line pt-6 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
-          <h2 className="font-serif text-2xl">Download this lesson</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted">Take the current explanation with you, including examples, diagram descriptions, and a quiz answer key. Downloads contain the teaching content; your conversation and learning records stay out of them.</p>
-          <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" checked={exportProvider} disabled={disabled || Boolean(downloading)} onChange={(event) => setExportProvider(event.target.checked)} className="mt-1 shrink-0 accent-accent" />Include the provider and model in downloads</label>
+        <section className="min-w-0 border-t border-border pt-6 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
+          <h2 className="font-heading text-2xl">Download this lesson</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Take the current explanation with you, including examples, diagram descriptions, and a quiz answer key. Downloads contain the teaching content; your conversation and learning records stay out of them.</p>
+          <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" checked={exportProvider} disabled={disabled || Boolean(downloading)} onChange={(event) => setExportProvider(event.target.checked)} className="mt-1 shrink-0 accent-primary" />Include the provider and model in downloads</label>
           <div className="mt-5 flex flex-wrap gap-3">
             {FORMATS.map(([format, label]) => <button key={format} type="button" disabled={disabled || Boolean(downloading)} onClick={() => void download(format)} className="button-secondary min-w-24 text-sm">{downloading === format ? "Preparing…" : label}</button>)}
           </div>
-          {downloading ? <p role="status" className="mt-4 text-sm text-muted">Preparing the {FORMATS.find(([format]) => format === downloading)?.[1]} download…</p> : null}
-          {downloaded ? <p role="status" className="mt-4 text-sm text-accent">{downloaded}</p> : null}
-          {downloadError ? <p role="alert" className="mt-4 text-sm text-danger">{downloadError} Choose a format to try again.</p> : null}
-          <p className="mt-5 text-xs leading-relaxed text-muted">PDFs use written diagram and interactive summaries. Characters the PDF font cannot display appear as Unicode codes; Markdown and JSON keep the original text.</p>
-          <p className="mt-5 text-xs leading-relaxed text-muted">Private lessons currently belong to this browser. Clearing its site data removes access; accounts and a saved library are still to come.</p>
+          {downloading ? <p role="status" className="mt-4 text-sm text-muted-foreground">Preparing the {FORMATS.find(([format]) => format === downloading)?.[1]} download…</p> : null}
+          {downloaded ? <p role="status" className="mt-4 text-sm text-primary">{downloaded}</p> : null}
+          {downloadError ? <p role="alert" className="mt-4 text-sm text-destructive">{downloadError} Choose a format to try again.</p> : null}
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">PDFs use written diagram and interactive summaries. Characters the PDF font cannot display appear as Unicode codes; Markdown and JSON keep the original text.</p>
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Private lessons currently belong to this browser. Clearing its site data removes access; accounts and a saved library are still to come.</p>
         </section>
       </div>
-      <dialog ref={dialog} aria-labelledby={previewTitle} onClose={() => setPreviewOpen(false)} className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl overflow-y-auto rounded-2xl border border-line bg-background p-0 text-foreground backdrop:bg-black/50">
-        <div className="flex items-start justify-between gap-5 border-b border-line bg-card p-5">
-          <div><h2 id={previewTitle} className="font-serif text-2xl">Preview before sharing</h2><p className="mt-2 text-sm leading-relaxed text-muted">Review every view for material you want to publish.</p></div>
+      <dialog ref={dialog} aria-labelledby={previewTitle} onClose={() => setPreviewOpen(false)} className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl overflow-y-auto rounded-2xl border border-border bg-background p-0 text-foreground backdrop:bg-black/50">
+        <div className="flex items-start justify-between gap-5 border-b border-border bg-card p-5">
+          <div><h2 id={previewTitle} className="font-heading text-2xl">Preview before sharing</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Review every view for material you want to publish.</p></div>
           <button type="button" onClick={() => dialog.current?.close()} className="button-secondary shrink-0 text-sm">Close preview</button>
         </div>
         {previewOpen ? <ReadOnlyLesson document={previewDocument} /> : null}

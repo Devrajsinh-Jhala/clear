@@ -125,9 +125,9 @@ export function SpeechPlayer({
           </>
         )}
       </div>
-      <p className="text-xs text-muted" role="status">{status}</p>
-      {error ? <p className="text-sm text-danger" role="alert">{error}</p> : null}
-      <details className="rounded-lg border border-line bg-card/80 p-3">
+      <p className="text-xs text-muted-foreground" role="status">{status}</p>
+      {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
+      <details className="rounded-lg border border-border bg-card/80 p-3">
         <summary className="cursor-pointer text-sm font-medium">Read the transcript</summary>
         <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{text || "There is no explanation to read yet."}</p>
       </details>

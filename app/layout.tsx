@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { headers } from "next/headers";
 
 import { SiteFooter } from "@/components/site-footer";
@@ -17,9 +17,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const display = Bricolage_Grotesque({
+  variable: "--font-display",
   subsets: ["latin"],
+});
+
+const instrument = Instrument_Serif({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  weight: "400",
   style: ["normal", "italic"],
 });
 
@@ -43,7 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${instrument.variable} h-full`}
     >
       <body className="flex min-h-full flex-col antialiased">
         <a className="skip-link" href="#content">

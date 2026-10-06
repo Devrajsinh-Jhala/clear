@@ -58,14 +58,14 @@ export function TeachBackView({
 
   return (
     <div className="space-y-6">
-      <p className="max-w-2xl text-muted">Explain the idea in your own words. CLEAR checks the mechanism, not your writing style.</p>
+      <p className="max-w-2xl text-muted-foreground">Explain the idea in your own words. CLEAR checks the mechanism, not your writing style.</p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        <label htmlFor="teach-back" className="font-serif text-2xl">
+        <label htmlFor="teach-back" className="font-heading text-2xl">
           Teach it back
         </label>
         <textarea
@@ -86,7 +86,7 @@ export function TeachBackView({
         </button>
       </form>
       {error ? (
-        <p className="text-sm text-danger" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
@@ -97,9 +97,9 @@ export function TeachBackView({
 
 function TeachBackResultView({ result, disabled }: { result: TeachBackResult; disabled: boolean }) {
   return (
-    <section className="rounded-xl border border-line bg-background/60 p-5" aria-live="polite">
-      <h2 className="font-serif text-3xl">{result.headline}</h2>
-      <p className="mt-2 text-sm text-muted">
+    <section className="rounded-xl border border-border bg-background/60 p-5" aria-live="polite">
+      <h2 className="font-heading text-3xl">{result.headline}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
         {result.source === "model"
           ? "Reviewed by the selected model."
           : "Checked against the lesson's concept names. A model did not review the wording."}

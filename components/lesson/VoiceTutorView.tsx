@@ -33,13 +33,13 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-serif text-3xl">Voice tutor</h2>
-        <p className="mt-3 max-w-2xl text-muted">Listen to this lesson, then speak or type a follow-up. Review the words before sending. Each turn updates the same lesson.</p>
+        <h2 className="font-heading text-3xl">Voice tutor</h2>
+        <p className="mt-3 max-w-2xl text-muted-foreground">Listen to this lesson, then speak or type a follow-up. Review the words before sending. Each turn updates the same lesson.</p>
         <p className="mt-3 text-sm"><ProviderLabel provider={provider} model={model} /></p>
-        <p className="mt-2 text-sm text-muted">Speech uses your browser. The explanation and follow-ups use the model shown above.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Speech uses your browser. The explanation and follow-ups use the model shown above.</p>
         <button type="button" className="mt-3 text-sm underline" onClick={onTeachBack}>Try oral teach-it-back</button>
       </div>
-      <section className="rounded-xl border border-line bg-background/60 p-4 sm:p-5" aria-label="Lesson narration">
+      <section className="rounded-xl border border-border bg-background/60 p-4 sm:p-5" aria-label="Lesson narration">
         <label className="text-sm" htmlFor="narration-section">Listen to</label>
         <select
           id="narration-section"
@@ -52,17 +52,17 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
         <div className="mt-4"><SpeechPlayer text={lessonTranscript(document, section)} label="Listen to lesson" disabled={pending} /></div>
       </section>
       <section aria-label="Voice conversation">
-        <h3 className="font-serif text-2xl">Conversation transcript</h3>
+        <h3 className="font-heading text-2xl">Conversation transcript</h3>
         {turns.length ? (
           <ol className="mt-4 space-y-4">
             {turns.map((message) => (
-              <li key={message.id} className="rounded-xl border border-line bg-background/50 p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted">{message.role === "user" ? "You" : "CLEAR"}</p>
+              <li key={message.id} className="rounded-xl border border-border bg-background/50 p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{message.role === "user" ? "You" : "CLEAR"}</p>
                 <p className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
               </li>
             ))}
           </ol>
-        ) : <p className="mt-3 text-muted">Your follow-ups and CLEAR’s replies will appear here.</p>}
+        ) : <p className="mt-3 text-muted-foreground">Your follow-ups and CLEAR’s replies will appear here.</p>}
         {latestReply ? <div className="mt-4"><SpeechPlayer text={latestReply.content} label="Listen to latest reply" disabled={pending} /></div> : null}
         <form className="mt-6" onSubmit={(event) => { event.preventDefault(); void send(); }}>
           <label htmlFor="voice-follow-up" className="font-medium">Ask about this lesson</label>
@@ -80,8 +80,8 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
           <button type="submit" disabled={pending || !draft.trim()} className="button-primary mt-4">
             {pending ? "Updating lesson…" : "Send follow-up"}
           </button>
-          {pending ? <p className="mt-3 text-sm text-muted" role="status">The selected model is updating your lesson.</p> : null}
-          {error ? <p className="mt-3 text-sm text-danger" role="alert">{error} Your words are still here. Send again to retry.</p> : null}
+          {pending ? <p className="mt-3 text-sm text-muted-foreground" role="status">The selected model is updating your lesson.</p> : null}
+          {error ? <p className="mt-3 text-sm text-destructive" role="alert">{error} Your words are still here. Send again to retry.</p> : null}
         </form>
       </section>
     </div>

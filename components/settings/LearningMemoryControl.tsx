@@ -47,9 +47,9 @@ export function LearningMemoryControl() {
   }
 
   return (
-    <section className="border border-line p-4">
-      <h2 className="font-serif text-2xl">Learning memory</h2>
-      <p className="mt-2 text-sm text-muted">
+    <section className="surface-panel p-5 sm:p-7">
+      <h2 className="font-heading text-2xl">Learning memory</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
         Off until you turn it on. CLEAR stores concept names and review notes for this browser on this server. It does not infer personal attributes.
       </p>
       <label className="mt-4 flex items-center gap-2">
@@ -61,10 +61,10 @@ export function LearningMemoryControl() {
         />
         Remember what I am learning
       </label>
-      <button type="button" className="mt-4 border border-line px-3 py-2 text-sm" disabled={pending} onClick={() => void erase()}>
+      <button type="button" className="button-secondary mt-4 text-sm" disabled={pending} onClick={() => void erase()}>
         Delete all learning records
       </button>
-      {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
+      {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
     </section>
   );
 }

@@ -18,9 +18,10 @@ const STAGES = [
   "Creating your explanation…",
 ];
 
-export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }) {
+export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultModel: ClearFreeModelId; initialQuestion?: string }) {
   const router = useRouter();
-  const [question, setQuestion] = useState("");
+  // Words typed before this component loads are already in the box. Start from them.
+  const [question, setQuestion] = useState(() => (typeof document === "undefined" ? "" : (document.getElementById("question") as HTMLTextAreaElement | null)?.value) || initialQuestion);
   const [level, setLevel] = useState<LearnerLevel>("student");
   const [depth, setDepth] = useState<Depth>("balanced");
   const [model, setModel] = useState<ClearFreeModelId>(defaultModel);
@@ -136,7 +137,8 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
 
   return (
     <form
-      className="surface-panel min-w-0 overflow-hidden shadow-[0_18px_60px_rgba(28,25,21,0.05)]"
+      className="surface-panel spectrum-ring min-w-0 shadow-2xl"
+      data-active={loading}
       onDragOver={(event) => {
         if (event.dataTransfer.types.includes("Files")) event.preventDefault();
       }}
@@ -150,9 +152,10 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
         void submit();
       }}
     >
-      <div className="p-5 sm:p-7">
+      <div className="relative overflow-hidden rounded-t-[inherit]">{loading ? <div className="loading-beam" aria-hidden="true" /> : <div className="h-[3px]" aria-hidden="true" />}</div>
+      <div className="relative p-5 sm:p-8">
         <p className="eyebrow mb-3">Start with a question</p>
-        <label htmlFor="question" className="block font-serif text-2xl leading-tight tracking-tight sm:text-[1.75rem]">
+        <label htmlFor="question" className="block font-heading text-3xl leading-[1.05] sm:text-4xl">
           What are you trying to understand?
         </label>
         <textarea
@@ -170,16 +173,16 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           disabled={loading}
           required
           placeholder="Why does virtual memory exist?"
-          className="mt-5 block min-h-32 w-full resize-y rounded-lg bg-transparent py-2 text-base leading-7 placeholder:text-muted/70"
+          className="mt-5 block min-h-36 w-full resize-y rounded-xl bg-transparent py-2 text-lg leading-8 outline-none placeholder:text-muted-foreground"
         />
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-4">
           <button
             type="button"
             disabled={loading}
             aria-expanded={filesOpen}
             aria-controls={attachmentsId}
             onClick={() => setFilesOpen((current) => !current)}
-            className="button-secondary gap-2 !px-3 !py-2 !text-xs"
+            className="button-secondary !min-h-9 gap-2 !rounded-full !px-3.5 !py-1.5 !text-xs"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m8 13 6.5-6.5a3 3 0 0 1 4.2 4.2L10 19.4a5 5 0 0 1-7.1-7.1L12 3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             {files.length ? `${files.length} attachment${files.length === 1 ? "" : "s"}` : "Add material"}
@@ -190,14 +193,14 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
             aria-expanded={speechOpen}
             aria-controls={speechId}
             onClick={() => setSpeechOpen((current) => !current)}
-            className="button-secondary gap-2 !px-3 !py-2 !text-xs"
+            className="button-secondary !min-h-9 gap-2 !rounded-full !px-3.5 !py-1.5 !text-xs"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-4 0h8" strokeLinecap="round" /></svg>
             {speechOpen ? "Close voice input" : "Use your voice"}
           </button>
-          <span className="ml-auto hidden text-[11px] text-muted sm:block">Images, PDFs, or code</span>
+          <span className="ml-auto hidden text-[11px] text-muted-foreground sm:block">Images, PDFs, or code</span>
         </div>
-        <div id={speechId} hidden={!speechOpen} className="mt-3 rounded-xl border border-line bg-background/50 p-3">
+        <div id={speechId} hidden={!speechOpen} className="mt-3 rounded-xl border border-border bg-background/50 p-3">
           {speechOpen ? (
             <SpeechInput
               disabled={loading}
@@ -206,16 +209,16 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
             />
           ) : null}
         </div>
-        <div id={attachmentsId} hidden={!filesOpen} className="mt-3 rounded-xl border border-dashed border-line bg-background/50 p-4">
+        <div id={attachmentsId} hidden={!filesOpen} className="mt-3 rounded-xl border border-dashed border-border bg-background/50 p-4">
             <label className="block text-sm font-medium">
               Drop an image or PDF here
-              <span className="mt-1 block text-xs font-normal text-muted">Or choose up to 3 files to explain with your question.</span>
+              <span className="mt-1 block text-xs font-normal text-muted-foreground">Or choose up to 3 files to explain with your question.</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
                 multiple
                 disabled={loading}
-                className="mt-3 block max-w-full text-xs text-muted file:mr-3 file:rounded-lg file:border file:border-line file:bg-card file:px-3 file:py-2 file:text-xs file:text-foreground"
+                className="mt-3 block max-w-full text-xs text-muted-foreground file:mr-3 file:rounded-lg file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-xs file:text-foreground"
                 onChange={(event) => {
                   addFiles(event.target.files);
                   event.target.value = "";
@@ -225,12 +228,12 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
             {files.length > 0 ? (
               <ul className="mt-4 space-y-2">
                 {files.map((file, index) => (
-                  <li key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-card px-3 py-2 text-xs">
-                    <span className="min-w-0 break-all">{file.name} <span className="text-muted">· {Math.ceil(file.size / 1024)} KB</span></span>
+                  <li key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-xs">
+                    <span className="min-w-0 break-all">{file.name} <span className="text-muted-foreground">· {Math.ceil(file.size / 1024)} KB</span></span>
                     <button
                       type="button"
                       disabled={loading}
-                      className="shrink-0 text-muted underline underline-offset-4 hover:text-foreground"
+                      className="shrink-0 text-muted-foreground underline underline-offset-4 hover:text-foreground"
                       onClick={() => setFiles((current) => current.filter((item) => item !== file))}
                     >
                       Remove
@@ -241,7 +244,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
             ) : null}
             {files.some((file) => file.type === "application/pdf") ? (
               <fieldset disabled={loading} className="mt-4 flex flex-wrap items-center gap-3 text-xs">
-                <legend className="mb-2 text-muted">PDF scope</legend>
+                <legend className="mb-2 text-muted-foreground">PDF scope</legend>
                 <label className="flex items-center gap-2">
                   <input type="radio" name="pdf-scope" checked={pdfScope === "whole"} onChange={() => setPdfScope("whole")} />
                   Whole document
@@ -265,18 +268,18 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
               </fieldset>
             ) : null}
         </div>
-        <details className="group mt-5 rounded-xl border border-line">
+        <details className="group mt-5 rounded-2xl border border-border bg-background/50">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-xs [&::-webkit-details-marker]:hidden">
             <span>
               <span className="font-medium">Explanation preferences</span>
-              <span className="mt-1 block text-muted">{levelLabel} · {depthLabel} · {providerLabel}{compare ? " · Compare" : ""}</span>
+              <span className="mt-1 block text-muted-foreground">{levelLabel} · {depthLabel} · {providerLabel}{compare ? " · Compare" : ""}</span>
             </span>
-            <svg className="shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg className="shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </summary>
-          <fieldset disabled={loading} className="space-y-5 border-t border-line p-4">
+          <fieldset disabled={loading} className="space-y-5 border-t border-border p-4">
             <legend className="sr-only">Explanation preferences</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-xs text-muted">
+              <label className="block text-xs text-muted-foreground">
                 Learner level
                 <select
                   aria-label="Learner level"
@@ -287,7 +290,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                   {LEVEL_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
               </label>
-              <label className="block text-xs text-muted">
+              <label className="block text-xs text-muted-foreground">
                 Explanation depth
                 <select
                   aria-label="Explanation depth"
@@ -299,7 +302,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                 </select>
               </label>
               {level === "custom" ? (
-                <label className="block text-xs text-muted sm:col-span-2">
+                <label className="block text-xs text-muted-foreground sm:col-span-2">
                   Describe the learner
                   <input
                     value={customLevel}
@@ -310,13 +313,13 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                 </label>
               ) : null}
             </div>
-            <div className="border-t border-line pt-4">
+            <div className="border-t border-border pt-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="text-xs font-medium">Your model</p>
-                <Link href="/settings" className="text-xs text-accent underline underline-offset-4">Manage providers</Link>
+                <Link href="/settings" className="text-xs text-primary underline underline-offset-4">Manage providers</Link>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs text-muted">
+                <label className="block text-xs text-muted-foreground">
                   Provider
                   <select
                     aria-label="Explanation provider"
@@ -336,7 +339,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                   </select>
                 </label>
                 {provider === "clear-free" ? (
-                  <label className="block text-xs text-muted">
+                  <label className="block text-xs text-muted-foreground">
                     Model
                     <select
                       aria-label="CLEAR Free model"
@@ -348,16 +351,16 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                     </select>
                   </label>
                 ) : provider !== "auto" ? (
-                  <div className="min-w-0 text-xs text-muted">
+                  <div className="min-w-0 text-xs text-muted-foreground">
                     <p>Connected model</p>
-                    <p className="mt-2 break-all rounded-xl border border-line bg-background px-3 py-2.5 text-foreground">
+                    <p className="mt-2 break-all rounded-xl border border-border bg-background px-3 py-2.5 text-foreground">
                       {available.find((item) => item.provider === provider)?.model ?? "Connect this provider in Settings"}
                     </p>
                   </div>
-                ) : <p className="self-end text-xs leading-5 text-muted">Chooses from your approved providers and task rules.</p>}
+                ) : <p className="self-end text-xs leading-5 text-muted-foreground">Chooses from your approved providers and task rules.</p>}
               </div>
             </div>
-            <div className="border-t border-line pt-4">
+            <div className="border-t border-border pt-4">
               <label className="flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
@@ -376,7 +379,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
               </label>
               {compare ? (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="block text-xs text-muted">
+                  <label className="block text-xs text-muted-foreground">
                     Second provider
                     <select
                       aria-label="Comparison provider"
@@ -388,7 +391,7 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
                     </select>
                   </label>
                   {compareProvider === "clear-free" ? (
-                    <label className="block text-xs text-muted">
+                    <label className="block text-xs text-muted-foreground">
                       Second model
                       <select
                         aria-label="Comparison CLEAR Free model"
@@ -406,21 +409,21 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           </fieldset>
         </details>
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={loading} className="button-primary w-full gap-2 sm:w-auto">
+          <button type="submit" disabled={loading} className="button-primary group/send !min-h-12 w-full gap-2 !rounded-full !px-6 text-base sm:w-auto">
             {loading ? "Building your lesson…" : "Help me understand"}
-            {!loading ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
+            {!loading ? <svg className="transition-transform group-hover/send:translate-x-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
           </button>
-          <button type="button" disabled={loading} onClick={() => void submit("mutex")} className="button-secondary w-full sm:w-auto">
+          <button type="button" disabled={loading} onClick={() => void submit("mutex")} className="button-secondary !min-h-12 w-full !rounded-full !px-6 sm:w-auto">
             See an example
           </button>
-          <span className="ml-auto hidden text-[11px] text-muted xl:block">⌘ / Ctrl + Enter</span>
+          <span className="ml-auto hidden text-[11px] text-muted-foreground xl:block">⌘ / Ctrl + Enter</span>
         </div>
-        <p className="mt-4 text-[11px] leading-5 text-muted" role="status">
+        <p className="mt-4 text-[11px] leading-5 text-muted-foreground" role="status">
           {loading ? STAGES[stage] : routingNotice}
         </p>
-        {!loading ? <p className="mt-1 text-[11px] leading-5 text-muted">The sample lesson stays on this server.</p> : null}
+        {!loading ? <p className="mt-1 text-[11px] leading-5 text-muted-foreground">The sample lesson stays on this server.</p> : null}
         {error ? (
-          <div className="mt-4 rounded-xl border border-danger/40 bg-background p-4 text-sm" role="alert">
+          <div className="mt-4 rounded-xl border border-destructive/40 bg-background p-4 text-sm" role="alert">
             <p>{error}</p>
             {retryable ? (
               <button type="button" disabled={loading} className="mt-2 underline underline-offset-4" onClick={() => void submit()}>
@@ -430,15 +433,15 @@ export function AskComposer({ defaultModel }: { defaultModel: ClearFreeModelId }
           </div>
         ) : null}
       </div>
-      <div className="border-t border-line bg-background/50 px-5 py-4 sm:px-7">
-        <p className="mb-3 text-xs text-muted">Need a starting point? Try asking…</p>
+      <div className="relative rounded-b-[inherit] border-t border-border bg-muted/40 px-5 py-5 sm:px-8">
+        <p className="mb-3 text-xs text-muted-foreground">Need a starting point? Try asking…</p>
         <ul className="flex flex-wrap gap-2">
           {EXAMPLE_QUESTIONS.map((example) => (
             <li key={example}>
               <button
                 type="button"
                 disabled={loading}
-                className="rounded-lg border border-line bg-card px-3 py-2 text-left text-xs leading-5 text-muted transition-colors hover:border-accent/40 hover:text-foreground disabled:opacity-60"
+                className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-xs leading-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground disabled:opacity-60"
                 onClick={() => {
                   setQuestion(example);
                   document.getElementById("question")?.focus();

@@ -19,7 +19,7 @@ export default defineConfig({
   expect: { timeout: 12_000 },
   outputDir: path.join(root, ".data/auth-ui-results"),
   reporter: [["list"], ["html", { outputFolder: path.join(root, ".data/auth-ui-report"), open: "never" }], ["./auth-ui/cleanup-reporter.ts"]],
-  use: { baseURL: "http://127.0.0.1:3102", trace: "retain-on-failure", screenshot: "only-on-failure", serviceWorkers: "block" },
+  use: { baseURL: "http://127.0.0.1:3102", trace: "retain-on-failure", screenshot: "only-on-failure", serviceWorkers: "block", contextOptions: { reducedMotion: "reduce" } },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     command: "node tests/e2e/auth-ui/server.mjs",

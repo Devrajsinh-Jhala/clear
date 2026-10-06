@@ -48,18 +48,18 @@ function StepFlow({
   const [index, setIndex] = useState(0);
   const step = steps[index];
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{title}</h2>
-      <p className="mt-2 text-sm text-muted">
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
         Step {index + 1} of {steps.length}
       </p>
       <h3 className="mt-6 text-xl">{step.title}</h3>
       <p className="mt-2 max-w-2xl">{step.detail}</p>
       <div className="mt-6 flex gap-3">
-        <button type="button" className="border border-line px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => setIndex((current) => current - 1)}>
+        <button type="button" className="rounded-xl border border-border px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => setIndex((current) => current - 1)}>
           Previous
         </button>
-        <button type="button" className="bg-accent px-3 py-2 text-accent-foreground disabled:opacity-40" disabled={index === steps.length - 1} onClick={() => setIndex((current) => current + 1)}>
+        <button type="button" className="bg-primary px-3 py-2 text-primary-foreground disabled:opacity-40" disabled={index === steps.length - 1} onClick={() => setIndex((current) => current + 1)}>
           Next
         </button>
       </div>
@@ -76,23 +76,23 @@ function BinarySearchWidget({
   const [index, setIndex] = useState(0);
   if (!steps) {
     return (
-      <section className="border border-line bg-card p-5">
-        <h2 className="font-serif text-2xl">{widget.title}</h2>
+      <section className="rounded-xl border border-border bg-card p-5">
+        <h2 className="font-heading text-2xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available until the values are sorted. Binary search does not apply to an unsorted list.</p>
       </section>
     );
   }
   const step = steps[index];
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{widget.title}</h2>
-      <p className="mt-2 text-sm text-muted">Looking for {widget.target}</p>
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Looking for {widget.target}</p>
       <ol className="mt-4 flex flex-wrap gap-2">
         {widget.array.map((value, valueIndex) => {
           const inside = valueIndex >= step.low && valueIndex <= step.high;
           const mid = valueIndex === step.mid;
           return (
-            <li key={`${value}-${valueIndex}`} className={`min-w-10 border px-2 py-2 text-center ${mid ? "border-accent bg-accent text-accent-foreground" : inside ? "border-line" : "border-line opacity-40"}`}>
+            <li key={`${value}-${valueIndex}`} className={`min-w-10 border px-2 py-2 text-center ${mid ? "border-primary bg-primary text-primary-foreground" : inside ? "border-border" : "border-border opacity-40"}`}>
               {value}
             </li>
           );
@@ -118,14 +118,14 @@ function StateMachineWidget({
   const [current, setCurrent] = useState(widget.states[0]);
   const options = widget.transitions.filter((transition) => transition.from === current);
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{widget.title}</h2>
-      <p className="mt-4 text-sm uppercase tracking-[0.16em] text-muted">Current state</p>
-      <p className="mt-2 font-serif text-3xl">{current}</p>
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <p className="mt-4 text-sm uppercase tracking-[0.16em] text-muted-foreground">Current state</p>
+      <p className="mt-2 font-heading text-3xl">{current}</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        {options.length === 0 ? <p className="text-muted">No transition leaves this state.</p> : null}
+        {options.length === 0 ? <p className="text-muted-foreground">No transition leaves this state.</p> : null}
         {options.map((transition) => (
-          <button key={`${transition.on}-${transition.to}`} type="button" className="border border-line px-3 py-2" onClick={() => setCurrent(transition.to)}>
+          <button key={`${transition.on}-${transition.to}`} type="button" className="rounded-xl border border-border px-3 py-2" onClick={() => setCurrent(transition.to)}>
             {transition.on}
           </button>
         ))}
@@ -147,19 +147,19 @@ function GraphWidget({
   const step = steps[index];
   if (!step) {
     return (
-      <section className="border border-line bg-card p-5">
-        <h2 className="font-serif text-2xl">{widget.title}</h2>
+      <section className="rounded-xl border border-border bg-card p-5">
+        <h2 className="font-heading text-2xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available for this graph yet.</p>
       </section>
     );
   }
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{widget.title}</h2>
-      <p className="mt-2 text-sm text-muted">Breadth-first from {widget.start}</p>
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Breadth-first from {widget.start}</p>
       <p className="mt-4">Visiting {step.current}</p>
-      <p className="mt-2 text-muted">Visited: {step.visited.join(", ")}</p>
-      <p className="text-muted">Still queued: {step.queue.join(", ") || "none"}</p>
+      <p className="mt-2 text-muted-foreground">Visited: {step.visited.join(", ")}</p>
+      <p className="text-muted-foreground">Still queued: {step.queue.join(", ") || "none"}</p>
       <Pager index={index} count={steps.length} onChange={setIndex} />
     </section>
   );
@@ -175,8 +175,8 @@ function ParameterWidget({
   );
   const result = evaluateSafeMath(widget.formula, values);
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{widget.title}</h2>
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{widget.title}</h2>
       <p className="mt-3 font-mono text-sm">{widget.formula}</p>
       <div className="mt-4 space-y-4">
         {widget.parameters.map((parameter) => (
@@ -212,19 +212,19 @@ function CodeTraceWidget({
   const step = widget.steps[index];
   const lines = widget.code.split("\n");
   return (
-    <section className="border border-line bg-card p-5">
-      <h2 className="font-serif text-2xl">{widget.title}</h2>
-      <p className="mt-2 text-sm text-muted">{widget.language} trace. CLEAR does not run this code.</p>
-      <pre className="mt-4 overflow-x-auto border border-line bg-background p-3 font-mono text-sm">
+    <section className="rounded-xl border border-border bg-card p-5">
+      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{widget.language} trace. CLEAR does not run this code.</p>
+      <pre className="rounded-xl mt-4 overflow-x-auto border border-border bg-background p-3 font-mono text-sm">
         {lines.map((line, lineIndex) => (
-          <div key={`${line}-${lineIndex}`} className={lineIndex + 1 === step.line ? "bg-accent/15" : undefined}>
+          <div key={`${line}-${lineIndex}`} className={lineIndex + 1 === step.line ? "bg-primary/15" : undefined}>
             {line || " "}
           </div>
         ))}
       </pre>
       <p className="mt-4">{step.explanation}</p>
       {step.locals.length > 0 ? (
-        <ul className="mt-3 text-sm text-muted">
+        <ul className="mt-3 text-sm text-muted-foreground">
           {step.locals.map((local) => (
             <li key={local.name}>
               {local.name} = {local.value}
@@ -240,13 +240,13 @@ function CodeTraceWidget({
 function Pager({ index, count, onChange }: { index: number; count: number; onChange: (index: number) => void }) {
   return (
     <div className="mt-6 flex items-center gap-3">
-      <button type="button" className="border border-line px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => onChange(index - 1)}>
+      <button type="button" className="rounded-xl border border-border px-3 py-2 disabled:opacity-40" disabled={index === 0} onClick={() => onChange(index - 1)}>
         Previous
       </button>
-      <button type="button" className="bg-accent px-3 py-2 text-accent-foreground disabled:opacity-40" disabled={index === count - 1} onClick={() => onChange(index + 1)}>
+      <button type="button" className="bg-primary px-3 py-2 text-primary-foreground disabled:opacity-40" disabled={index === count - 1} onClick={() => onChange(index + 1)}>
         Next
       </button>
-      <span className="text-sm text-muted">
+      <span className="text-sm text-muted-foreground">
         {index + 1} / {count}
       </span>
     </div>

@@ -79,23 +79,24 @@ export function ProviderKeys() {
   }
 
   return (
-    <section className="space-y-4">
-      <ul className="divide-y divide-line border-y border-line">
-        {connected.length === 0 ? <li className="py-3 text-sm text-muted">No saved keys on this browser yet.</li> : null}
+    <section className="surface-panel space-y-5 p-5 sm:p-7">
+      <h2 className="font-heading text-2xl">Your provider keys</h2>
+      <ul className="divide-y divide-border border-y border-border">
+        {connected.length === 0 ? <li className="py-3 text-sm text-muted-foreground">No saved keys on this browser yet.</li> : null}
         {connected.map((item) => (
           <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
             <span>
               <span className="block">Your API · {item.label}</span>
-              <span className="text-sm text-muted">
+              <span className="text-sm text-muted-foreground">
                 {item.maskedSuffix} · {item.model}
                 {item.baseHost ? ` · ${item.baseHost}` : ""}
               </span>
             </span>
             <span className="flex gap-3 text-sm">
-              <button type="button" disabled={pending} onClick={() => act(item.id, "test")} className="underline">
+              <button type="button" disabled={pending} onClick={() => act(item.id, "test")} className="button-secondary !min-h-8 !px-3 !py-1 text-xs">
                 Test
               </button>
-              <button type="button" disabled={pending} onClick={() => act(item.id, "remove")} className="underline">
+              <button type="button" disabled={pending} onClick={() => act(item.id, "remove")} className="button-secondary !min-h-8 !px-3 !py-1 text-xs">
                 Remove
               </button>
             </span>
@@ -103,13 +104,13 @@ export function ProviderKeys() {
         ))}
       </ul>
       <form
-        className="grid gap-3"
+        className="grid gap-4 sm:grid-cols-2"
         onSubmit={(event) => {
           event.preventDefault();
           void connect();
         }}
       >
-        <label className="text-sm text-muted">
+        <label className="block text-sm text-muted-foreground">
           Provider
           <select
             aria-label="Provider to connect"
@@ -120,7 +121,7 @@ export function ProviderKeys() {
               const match = BYOK_PROVIDERS.find((item) => item.id === next);
               if (match) setModel(match.modelPlaceholder);
             }}
-            className="ml-2 bg-transparent text-foreground"
+            className="field-control mt-2 block w-full"
           >
             {BYOK_PROVIDERS.map((item) => (
               <option key={item.id} value={item.id}>
@@ -129,7 +130,7 @@ export function ProviderKeys() {
             ))}
           </select>
         </label>
-        <label className="text-sm text-muted">
+        <label className="block text-sm text-muted-foreground">
           API key
           <input
             aria-label="Provider API key"
@@ -137,35 +138,35 @@ export function ProviderKeys() {
             autoComplete="off"
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
-            className="ml-2 w-full max-w-md border-b border-line bg-transparent text-foreground"
+            className="field-control mt-2 block w-full"
           />
         </label>
-        <label className="text-sm text-muted">
+        <label className="block text-sm text-muted-foreground">
           Model
           <input
             aria-label="Model id"
             value={model}
             onChange={(event) => setModel(event.target.value)}
-            className="ml-2 border-b border-line bg-transparent text-foreground"
+            className="field-control mt-2 block w-full"
           />
         </label>
         {selected.needsBaseUrl ? (
-          <label className="text-sm text-muted">
+          <label className="block text-sm text-muted-foreground">
             Base URL
             <input
               aria-label="Provider base URL"
               value={baseUrl}
               onChange={(event) => setBaseUrl(event.target.value)}
               placeholder="https://example.com/v1"
-              className="ml-2 w-full max-w-md border-b border-line bg-transparent text-foreground"
+              className="field-control mt-2 block w-full"
             />
           </label>
         ) : null}
-        <button type="submit" disabled={pending} className="w-fit underline">
+        <button type="submit" disabled={pending} className="button-primary w-fit sm:col-span-2">
           {pending ? "Checking…" : "Save and test"}
         </button>
       </form>
-      {message ? <p className="text-sm text-muted">{message}</p> : null}
+      {message ? <p role="status" className="text-sm text-muted-foreground">{message}</p> : null}
     </section>
   );
 }

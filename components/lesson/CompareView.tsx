@@ -65,18 +65,18 @@ export function CompareView({
 
   return (
     <section className="space-y-4">
-      <h2 className="font-serif text-2xl">Compare</h2>
-      <p className="text-sm text-muted">Same question, two models. These notes are your preference, not a score.</p>
+      <h2 className="font-heading text-2xl">Compare</h2>
+      <p className="text-sm text-muted-foreground">Same question, two models. These notes are your preference, not a score.</p>
       <div className="grid gap-6 md:grid-cols-2">
         {options.map((option) => (
-          <article key={option.id} className="space-y-3 border border-line p-4">
+          <article key={option.id} className="rounded-xl space-y-3 border border-border p-4">
             <ProviderLabel provider={option.provider} model={option.model} />
             {option.document ? (
               <>
                 <p>{option.document.essence}</p>
-                <p className="text-sm text-muted">{option.document.mentalModel.intuition}</p>
+                <p className="text-sm text-muted-foreground">{option.document.mentalModel.intuition}</p>
                 <p className="text-sm">{option.document.examples[0]?.title}</p>
-                <p className="text-sm text-muted">
+                <p className="text-sm text-muted-foreground">
                   {option.document.visualizations.length > 0 ? "Includes a diagram." : "No diagram in this version."}{" "}
                   {option.document.deepDive.length} deep-dive section{option.document.deepDive.length === 1 ? "" : "s"}.
                 </p>
@@ -93,17 +93,17 @@ export function CompareView({
                     </button>
                   ))}
                 </div>
-                <button type="button" disabled={pending} onClick={() => void choose(option.id, { use: true })} className="bg-accent px-3 py-2 text-accent-foreground">
+                <button type="button" disabled={pending} onClick={() => void choose(option.id, { use: true })} className="bg-primary px-3 py-2 text-primary-foreground">
                   Use this version
                 </button>
               </>
             ) : (
-              <p className="text-sm text-danger">{option.error ?? "This version did not arrive."}</p>
+              <p className="text-sm text-destructive">{option.error ?? "This version did not arrive."}</p>
             )}
           </article>
         ))}
       </div>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </section>
   );
 }

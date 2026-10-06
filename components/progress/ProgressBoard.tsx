@@ -49,18 +49,18 @@ export function ProgressBoard({
 
   return (
     <div className="space-y-8">
-      <p className="text-sm text-muted">These states are a heuristic from your teach-back reviews. They are not a scientific score.</p>
+      <p className="text-sm text-muted-foreground">These states are a heuristic from your teach-back reviews. They are not a scientific score.</p>
       {GROUPS.map(([state, label]) => {
         const group = items.filter((item) => item.state === state);
         if (group.length === 0) return null;
         return (
           <section key={state}>
-            <h2 className="font-serif text-2xl">{label}</h2>
+            <h2 className="font-heading text-2xl">{label}</h2>
             <ul className="mt-3 space-y-2">
               {group.map((item) => (
-                <li key={item.key} className="flex items-center justify-between gap-3 border border-line px-3 py-2">
+                <li key={item.key} className="rounded-xl flex items-center justify-between gap-3 border border-border px-3 py-2">
                   <span>{item.name}</span>
-                  <button type="button" className="text-sm text-muted underline" onClick={() => void forget(item.key)}>
+                  <button type="button" className="text-sm text-muted-foreground underline" onClick={() => void forget(item.key)}>
                     Delete
                   </button>
                 </li>
@@ -72,20 +72,20 @@ export function ProgressBoard({
       {items.length === 0 ? <p>Nothing is stored yet. Teach a lesson back after memory is on.</p> : null}
       {notes.filter((note) => note.status === "open").length > 0 ? (
         <section>
-          <h2 className="font-serif text-2xl">Misconceptions</h2>
+          <h2 className="font-heading text-2xl">Misconceptions</h2>
           <ul className="mt-3 space-y-3">
             {notes
               .filter((note) => note.status === "open")
               .map((note) => (
-                <li key={`${note.conceptKey}-${note.statement}`} className="border border-line p-3">
+                <li key={`${note.conceptKey}-${note.statement}`} className="rounded-xl border border-border p-3">
                   <p>{note.statement}</p>
-                  <p className="mt-2 text-muted">{note.correction}</p>
+                  <p className="mt-2 text-muted-foreground">{note.correction}</p>
                 </li>
               ))}
           </ul>
         </section>
       ) : null}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

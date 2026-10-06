@@ -30,7 +30,7 @@ function QuizCard({ item }: { item: QuizItem }) {
       : false;
 
   return (
-    <article className="border border-line bg-card p-5">
+    <article className="rounded-xl border border-border bg-card p-5">
       <h2 className="text-lg">{item.question}</h2>
       {item.options ? (
         <fieldset className="mt-4 space-y-2">
@@ -49,19 +49,19 @@ function QuizCard({ item }: { item: QuizItem }) {
           ))}
         </fieldset>
       ) : (
-        <label className="mt-4 block text-sm text-muted">
+        <label className="mt-4 block text-sm text-muted-foreground">
           Your answer
           <textarea
             value={written}
             onChange={(event) => setWritten(event.target.value)}
             rows={3}
-            className="mt-2 w-full border border-line bg-background p-2 text-foreground"
+            className="rounded-xl mt-2 w-full border border-border bg-background p-2 text-foreground"
           />
         </label>
       )}
       <button
         type="button"
-        className="mt-4 bg-accent px-3 py-2 text-accent-foreground"
+        className="mt-4 bg-primary px-3 py-2 text-primary-foreground"
         onClick={() => setRevealed(true)}
       >
         Check
@@ -70,7 +70,7 @@ function QuizCard({ item }: { item: QuizItem }) {
         <div className="mt-4" role="status">
           <p>{item.options || typeof item.correctAnswer === "string" ? (correct ? "Correct." : "Not yet.") : "Compare your sequence with the expected order."}</p>
           <p className="mt-2">Expected: {expected}</p>
-          <p className="mt-2 text-muted">{item.explanation}</p>
+          <p className="mt-2 text-muted-foreground">{item.explanation}</p>
         </div>
       ) : null}
     </article>

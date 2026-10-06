@@ -56,7 +56,7 @@ test("a guest explores one lesson, checks recall, teaches it back, and keeps a f
 });
 
 test("a failed request retains the question and offers an explicit retry", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ask");
   const question = "Explain a synthetic counter without losing my draft.";
   await page.getByRole("textbox", { name: "What are you trying to understand?", exact: true }).fill(question);
   await page.route("**/api/explanations", async (route) => {

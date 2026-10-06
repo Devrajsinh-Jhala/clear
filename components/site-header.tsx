@@ -1,43 +1,81 @@
 "use client";
 
+import { ArrowRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
+import { Wordmark } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const LINKS = [
+  ["/ask", "Ask"],
   ["/library", "Library"],
   ["/progress", "Progress"],
   ["/skill", "Skill"],
   ["/settings", "Settings"],
-];
+] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="border-b border-line bg-card/60">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4">
-        <Link href="/" className="flex items-center gap-2.5 font-serif text-2xl tracking-tight">
-          <svg aria-hidden="true" className="text-accent" width="25" height="25" viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="24" height="24" rx="7" stroke="currentColor" strokeWidth="1.4" /><path d="M8 9h12M8 14h9M8 19h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-          <span>CLEAR</span>
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+        <Link href="/" aria-label="CLEAR home" className="rounded-lg">
+          <Wordmark />
         </Link>
-        <nav aria-label="Primary" className="order-3 flex w-full items-center justify-between gap-1 text-sm sm:order-none sm:ml-auto sm:w-auto">
-          {LINKS.map(([href, label]) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={`rounded-lg px-2.5 py-2 transition-colors ${active ? "bg-accent/10 font-medium text-accent" : "text-muted hover:bg-background hover:text-foreground"}`}
-              >
-                {label}
-              </Link>
-            );
-          })}
+        <nav aria-label="Primary" className="ml-6 hidden items-center gap-1 text-sm md:flex">
+          {LINKS.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              aria-current={isActive(href) ? "page" : undefined}
+              className={`rounded-full px-3 py-1.5 transition-colors ${isActive(href) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+            >
+              {label}
+            </Link>
+          ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3 pl-3 sm:ml-2 sm:border-l sm:border-line"><Link href="/auth" className="text-sm text-muted hover:text-foreground">Account</Link><ThemeToggle /></div>
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          <Link href="/auth" className="hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-block">
+            Account
+          </Link>
+          {pathname === "/ask" ? null : (
+            <Link href="/ask" className="button-primary group hidden !min-h-9 gap-1.5 !rounded-full !px-4 !py-1.5 text-sm sm:inline-flex">
+              Ask anything
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+          )}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-card text-foreground md:hidden" aria-label="Open menu">
+              <Menu className="size-5" aria-hidden="true" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <SheetHeader>
+                <SheetTitle className="text-lg">Menu</SheetTitle>
+                <SheetDescription className="sr-only">Pages in CLEAR</SheetDescription>
+              </SheetHeader>
+              <nav aria-label="Menu" className="flex flex-col gap-1 px-4 pb-6">
+                {[...LINKS, ["/auth", "Account"] as const].map(([href, label]) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className={`rounded-xl px-3 py-3 text-base ${isActive(href) ? "bg-accent font-medium text-accent-foreground" : "text-foreground hover:bg-muted"}`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

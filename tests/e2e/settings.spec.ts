@@ -69,7 +69,7 @@ test("routing and learning preferences persist, unavailable providers stop, and 
 });
 
 test("two synthetic model results can be compared, rated, and selected before continuing the lesson", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ask");
   await page.getByRole("textbox", { name: "What are you trying to understand?", exact: true }).fill("Explain this synthetic comparison of a counter.");
   await page.locator("summary").filter({ hasText: "Explanation preferences" }).click();
   await page.getByRole("combobox", { name: "Explanation provider", exact: true }).selectOption("clear-free");

@@ -19,7 +19,7 @@ Add `GEMINI_API_KEY` to `.env.local`. CLEAR Free uses `gemini-3.5-flash-lite` an
 npm run dev
 ```
 
-Open http://localhost:3000. Ask a question, or choose **See an example** to open the mutex lesson without calling a model.
+Open http://localhost:3000 for the landing page, or http://localhost:3000/ask to start a lesson. Ask a question, or choose **See an example** to open the mutex lesson without calling a model.
 
 Set `CLEAR_PROVIDER=mock` if you want generated lessons without Gemini. The lesson is labeled as a local mock.
 
@@ -75,6 +75,8 @@ Browser regression tests use an isolated mock production build and temporary syn
 
 ## Where things live
 
+- `app/page.tsx` and `components/landing` — the landing page; `app/ask` — the ask workspace
+- `app/globals.css` — design tokens, view hues and motion; `components/ui` — shadcn/ui components (add more with `npx shadcn@latest add <name>`)
 - `src/lib/explanation/schema.ts` — the canonical explanation document
 - `src/lib/ai` — provider contract, Gemini adapter, local mock
 - `src/lib/explanation` — validation, repair, generation, follow-up

@@ -19,7 +19,9 @@ key, the local mock explanation provider, and empty Supabase/Sentry/model-key
 settings. Limits remain enabled with larger test allowances. The temporary
 lesson records are removed when the run ends.
 
-Coverage includes every sample lesson tab, diagram text, widget, quiz, teach-back, persistent
+Tests run with reduced motion so decorative animation never changes what a check sees.
+
+Coverage includes the landing page, its FAQ and the mobile menu, every sample lesson tab, diagram text, widget, quiz, teach-back, persistent
 follow-ups, legacy private copies, cross-browser-context ownership checks,
 comparison selection, opt-in fallback, stored preferences, routing-load error/retry, sharing previews,
 frozen snapshots, replacement/revocation, actual lesson downloads, and seven-file

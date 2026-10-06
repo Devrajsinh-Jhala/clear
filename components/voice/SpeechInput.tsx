@@ -112,7 +112,7 @@ export function SpeechInput({
 
   return (
     <div className="mt-3 space-y-2">
-      <p id={disclosureId} className="max-w-2xl text-xs leading-relaxed text-muted">
+      <p id={disclosureId} className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
         Speech input uses your browser&apos;s speech service, which may send audio to its provider. CLEAR stores only the text you choose to submit.
       </p>
       <button
@@ -125,9 +125,9 @@ export function SpeechInput({
       >
         {active ? "Stop microphone" : state === "error" ? "Try microphone again" : label}
       </button>
-      <p className="text-xs text-muted" role="status">{status}</p>
-      {interim ? <p className="text-sm text-muted" aria-live="polite">Heard so far: {interim}</p> : null}
-      {error ? <p className="text-sm text-danger" role="alert">{error}</p> : null}
+      <p className="text-xs text-muted-foreground" role="status">{status}</p>
+      {interim ? <p className="text-sm text-muted-foreground" aria-live="polite">Heard so far: {interim}</p> : null}
+      {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
     </div>
   );
 }

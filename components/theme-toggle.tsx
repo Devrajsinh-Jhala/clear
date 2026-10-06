@@ -12,11 +12,11 @@ export function ThemeToggle() {
   const hydrated = useSyncExternalStore(subscribe, clientReady, serverReady);
 
   return (
-    <label className="flex items-center gap-2 text-sm text-muted">
+    <label className="flex items-center">
       <span className="sr-only">Color theme</span>
       <select
         aria-label="Color theme"
-        className="bg-transparent text-foreground"
+        className="h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground transition-colors hover:border-primary/50"
         disabled={!hydrated || !theme}
         value={hydrated ? theme ?? "system" : "system"}
         onChange={(event) => setTheme(event.target.value)}

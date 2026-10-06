@@ -4,6 +4,8 @@ import { expectAccessible, expectNoPageOverflow, MUTEX_TITLE, openSample, openSh
 
 for (const theme of ["light", "dark"] as const) {
   test(`${theme} core screens and shared keyboard navigation meet WCAG checks at 390 pixels`, async ({ page }, testInfo) => {
+    // Thirteen full WCAG scans across the landing page, the app and a shared lesson.
+    test.setTimeout(180_000);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     const chooser = page.getByRole("combobox", { name: "Color theme", exact: true });
@@ -11,6 +13,18 @@ for (const theme of ["light", "dark"] as const) {
     await chooser.selectOption(theme);
     await expect.poll(() => page.evaluate(() => localStorage.getItem("theme"))).toBe(theme);
     await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
+    await expect(page.getByRole("heading", { level: 1, name: "Understand anything.", exact: true })).toBeVisible();
+    await expectNoPageOverflow(page);
+    await expectAccessible(page);
+    await page.getByRole("button", { name: "Is CLEAR free?", exact: true }).click();
+    await expect(page.getByText("CLEAR Free runs on Google Gemini with a daily allowance")).toBeVisible();
+    await page.getByRole("button", { name: "Open menu", exact: true }).click();
+    const menu = page.getByRole("dialog", { name: "Menu", exact: true });
+    await expect(menu.getByRole("link", { name: "Library", exact: true })).toBeVisible();
+    await expectAccessible(page);
+    await menu.getByRole("link", { name: "Ask", exact: true }).click();
+    await expect(page).toHaveURL(/\/ask$/);
+    await expect(page.getByRole("textbox", { name: "What are you trying to understand?", exact: true })).toBeVisible();
     await expectNoPageOverflow(page);
     await expectAccessible(page);
     await page.goto("/auth");

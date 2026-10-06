@@ -28,6 +28,8 @@ export default defineConfig({
     actionTimeout: 15_000,
     navigationTimeout: 25_000,
     serviceWorkers: "block",
+    // Animation is decoration. Reduced motion gives every check a settled page.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
@@ -56,7 +58,7 @@ export default defineConfig({
       CLEAR_FREE_GLOBAL_DAILY_LIMIT: "1000",
       CLEAR_FREE_IP_DAILY_LIMIT: "1000",
       GEMINI_API_KEY: "",
-      GEMINI_MODEL: "gemini-2.5-flash",
+      GEMINI_MODEL: "gemini-3.5-flash-lite",
       NEXT_PUBLIC_APP_URL: baseURL,
       NEXT_PUBLIC_SUPABASE_URL: "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "",

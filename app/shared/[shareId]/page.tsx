@@ -23,9 +23,9 @@ export default async function SharedPage({ params }: { params: Promise<{ shareId
       <section aria-label="Download shared explanation" className="mx-auto max-w-6xl px-4 pb-10">
         <div className="surface-panel flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
-            <h2 className="font-serif text-2xl">Keep a copy</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Downloads contain this shared snapshot. A downloaded file remains yours if this link is later revoked.</p>
-            <p className="mt-2 text-xs leading-relaxed text-muted">PDFs include written diagram and interactive summaries. Characters the PDF font cannot display appear as Unicode codes; Markdown and JSON keep the original text.</p>
+            <h2 className="font-heading text-2xl">Keep a copy</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Downloads contain this shared snapshot. A downloaded file remains yours if this link is later revoked.</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">PDFs include written diagram and interactive summaries. Characters the PDF font cannot display appear as Unicode codes; Markdown and JSON keep the original text.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {(["markdown", "json", "pdf"] as const).map((format) => (

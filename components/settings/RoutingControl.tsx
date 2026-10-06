@@ -35,11 +35,11 @@ export function RoutingControl() {
   useEffect(() => { void load(); }, [load]);
 
   if (!preferences) return (
-    <section className="space-y-3" aria-busy={loading}>
-      <h2 className="font-serif text-2xl">Model routing</h2>
-      {loading ? <p className="text-sm text-muted">Loading routing…</p> : <>
+    <section className="surface-panel space-y-3 p-5 sm:p-7" aria-busy={loading}>
+      <h2 className="font-heading text-2xl">Model routing</h2>
+      {loading ? <p className="text-sm text-muted-foreground">Loading routing…</p> : <>
         <p role="alert" className="text-sm text-foreground">{message}</p>
-        <button type="button" onClick={() => { setLoading(true); setMessage(""); void load(); }} className="underline">Try again</button>
+        <button type="button" onClick={() => { setLoading(true); setMessage(""); void load(); }} className="button-secondary text-sm">Try again</button>
       </>}
     </section>
   );
@@ -82,9 +82,9 @@ export function RoutingControl() {
   }
 
   return (
-    <section className="space-y-4">
-      <h2 className="font-serif text-2xl">Model routing</h2>
-      <p className="text-sm text-muted">
+    <section className="surface-panel space-y-4 p-5 sm:p-7">
+      <h2 className="font-heading text-2xl">Model routing</h2>
+      <p className="text-sm text-muted-foreground">
         Auto only chooses a provider you have already approved. If fallback is off, a failed provider stops the lesson.
       </p>
       <label className="flex items-center gap-2 text-sm">
@@ -103,7 +103,7 @@ export function RoutingControl() {
         />
         If the chosen provider fails, use CLEAR Free and say so
       </label>
-      <label className="block text-sm text-muted">
+      <label className="block text-sm text-muted-foreground">
         Default
         <select
           aria-label="Default provider"
@@ -116,7 +116,7 @@ export function RoutingControl() {
               defaultTarget: { provider, model: match?.model ?? preferences.defaultTarget.model },
             });
           }}
-          className="ml-2 bg-transparent text-foreground"
+          className="field-control mt-2 block w-full"
         >
           {available.map((item) => (
             <option key={item.provider} value={item.provider}>
@@ -125,7 +125,7 @@ export function RoutingControl() {
           ))}
         </select>
       </label>
-      <ul className="divide-y divide-line border-y border-line">
+      <ul className="divide-y divide-border border-y border-border">
         {ROUTING_TASKS.map((task) => (
           <li key={task.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
             <span>{task.label}</span>
@@ -133,7 +133,7 @@ export function RoutingControl() {
               aria-label={`${task.label} provider`}
               value={preferences.tasks[task.id]?.provider ?? ""}
               onChange={(event) => setTask(task.id, event.target.value)}
-              className="bg-transparent text-foreground"
+              className="field-control !min-h-0 max-w-[60%] !py-1.5 text-sm"
             >
               <option value="">Use default</option>
               {available.map((item) => (
@@ -145,7 +145,7 @@ export function RoutingControl() {
           </li>
         ))}
       </ul>
-      <button type="button" disabled={pending} onClick={() => void save()} className="underline">
+      <button type="button" disabled={pending} onClick={() => void save()} className="button-primary">
         {pending ? "Saving…" : "Save routing"}
       </button>
       {message ? <p role="status" className="text-sm text-foreground">{message}</p> : null}
