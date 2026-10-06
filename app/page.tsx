@@ -24,7 +24,7 @@ function AskLink() {
 export default function LandingPage() {
   return (
     <>
-      <section className="border-b border-border" aria-labelledby="hero-title">
+      <section className="overflow-hidden border-b border-border" aria-labelledby="hero-title">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-12 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14 lg:pb-24">
           <div>
             <p className="eyebrow">Free to use. No sign-in needed.</p>

@@ -88,7 +88,7 @@ function UnderstandPanel() {
       <p className="mt-3 text-lg font-semibold leading-snug tracking-tight sm:text-xl">
         Virtual memory gives every program its own private map of memory, so programs cannot overwrite each other and can use more memory than the machine has.
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Why it matters: without it, one faulty program could overwrite the memory of every other program.</p>
+      <p className="mt-3 hidden text-sm leading-relaxed text-muted-foreground sm:block">Why it matters: without it, one faulty program could overwrite the memory of every other program.</p>
       <Label><span className="mt-5 block">Concepts</span></Label>
       <div className="mt-2.5 flex flex-wrap gap-2">
         {["Address space", "Page table", "MMU", "Page fault"].map((concept) => (

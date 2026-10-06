@@ -30,7 +30,7 @@ export function LessonTabs<T extends string>({ tabs, active, onChange, idPrefix 
       role="tablist"
       aria-label="Explanation views"
       aria-orientation={vertical ? "vertical" : "horizontal"}
-      className="-mx-4 flex overflow-x-auto border-b border-border px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:border-b-0 lg:px-0"
+      className="-mx-4 flex overflow-x-auto border-b border-border px-4 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:border-b-0 lg:px-0 lg:[mask-image:none]"
     >
       {tabs.map(([id, label], index) => {
         const selected = active === id;

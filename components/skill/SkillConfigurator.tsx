@@ -170,7 +170,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
 function PreferenceToggle({ id, title, description, checked, onChange }: { id: string; title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return <label htmlFor={id} className="flex cursor-pointer items-start justify-between gap-4 py-4">
     <span><span className="block text-sm font-medium">{title}</span><span className="mt-1 block max-w-sm text-sm leading-relaxed text-muted-foreground">{description}</span></span>
-    <input id={id} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-primary" />
+    <input id={id} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="mt-1 shrink-0" />
   </label>;
 }
 
