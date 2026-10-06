@@ -34,7 +34,7 @@ export function ProgressBoard({
           <Brain className="size-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="font-heading text-2xl">Learning memory is off</h2>
+          <h2 className="font-heading text-xl">Learning memory is off</h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
             Turn it on in Settings if you want CLEAR to remember concepts from teach-it-back. Mastery here is a study note, not a certification.
           </p>
@@ -66,7 +66,7 @@ export function ProgressBoard({
         if (group.length === 0) return null;
         return (
           <section key={state}>
-            <h2 className="font-heading text-2xl">{label}</h2>
+            <h2 className="font-heading text-xl">{label}</h2>
             <ul className="mt-3 space-y-2">
               {group.map((item) => (
                 <li key={item.key} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-2.5">
@@ -84,7 +84,7 @@ export function ProgressBoard({
       {items.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-muted-foreground">Nothing is stored yet. Teach a lesson back after memory is on.</p> : null}
       {notes.filter((note) => note.status === "open").length > 0 ? (
         <section>
-          <h2 className="font-heading text-2xl">Misconceptions</h2>
+          <h2 className="font-heading text-xl">Misconceptions</h2>
           <ul className="mt-3 space-y-3">
             {notes
               .filter((note) => note.status === "open")

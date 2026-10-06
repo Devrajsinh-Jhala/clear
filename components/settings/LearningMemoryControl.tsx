@@ -48,7 +48,7 @@ export function LearningMemoryControl() {
 
   return (
     <section className="surface-panel p-5 sm:p-7">
-      <h2 className="font-heading text-2xl">Learning memory</h2>
+      <h2 className="font-heading text-xl">Learning memory</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Off until you turn it on. CLEAR stores concept names and review notes for this browser on this server. It does not infer personal attributes.
       </p>

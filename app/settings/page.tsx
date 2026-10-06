@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const freeReady = Boolean(process.env.GEMINI_API_KEY);
   return (
     <PageShell title="Settings" lede="Choose your models, learning preferences, and privacy controls.">
-      <section className="flex gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+      <section className="flex gap-4 rounded-xl border border-primary/20 bg-primary/5 p-5">
         <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
           <KeyRound className="size-5" aria-hidden="true" />
         </span>
@@ -26,7 +26,7 @@ export default function SettingsPage() {
       <RoutingControl />
       <LearningMemoryControl />
       <section className="surface-panel flex flex-wrap items-center justify-between gap-5 p-5 sm:p-7">
-        <div><h2 className="font-heading text-2xl">Take CLEAR with you</h2><p className="mt-2 max-w-md text-sm text-muted-foreground">Choose your teaching preferences and download them as a skill for your own agent.</p></div>
+        <div><h2 className="font-heading text-xl">Take CLEAR with you</h2><p className="mt-2 max-w-md text-sm text-muted-foreground">Choose your teaching preferences and download them as a skill for your own agent.</p></div>
         <Link href="/skill" className="button-secondary text-sm">Configure skill</Link>
       </section>
     </PageShell>

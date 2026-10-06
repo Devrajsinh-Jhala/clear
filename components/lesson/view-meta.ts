@@ -1,22 +1,25 @@
 import { AudioLines, Brain, FlaskConical, Lightbulb, ListChecks, MessagesSquare, ShieldCheck, SlidersHorizontal, Telescope, Workflow, type LucideIcon } from "lucide-react";
 
-/** Icon and spectrum hue for each lesson view. The hue classes live in globals.css. */
-export const VIEW_META: Record<string, { icon: LucideIcon; hue: string }> = {
-  understand: { icon: Lightbulb, hue: "hue-understand" },
-  "mental-model": { icon: Brain, hue: "hue-mental-model" },
-  visual: { icon: Workflow, hue: "hue-visual" },
-  interactive: { icon: SlidersHorizontal, hue: "hue-interactive" },
-  examples: { icon: FlaskConical, hue: "hue-examples" },
-  "deep-dive": { icon: Telescope, hue: "hue-deep-dive" },
-  verify: { icon: ShieldCheck, hue: "hue-verify" },
-  quiz: { icon: ListChecks, hue: "hue-quiz" },
-  "teach-back": { icon: MessagesSquare, hue: "hue-teach-back" },
-  voice: { icon: AudioLines, hue: "hue-voice" },
+/** Icon for each lesson view. */
+export const VIEW_META: Record<string, { icon: LucideIcon }> = {
+  understand: { icon: Lightbulb },
+  "mental-model": { icon: Brain },
+  visual: { icon: Workflow },
+  interactive: { icon: SlidersHorizontal },
+  examples: { icon: FlaskConical },
+  "deep-dive": { icon: Telescope },
+  verify: { icon: ShieldCheck },
+  quiz: { icon: ListChecks },
+  "teach-back": { icon: MessagesSquare },
+  voice: { icon: AudioLines },
 };
 
-/** Classes for one tab in the "Explanation views" tab list. */
+/**
+ * Classes for one tab in the "Explanation views" tab list: an underlined tab in
+ * a scrolling row on small screens, a highlighted row in the sidebar on large ones.
+ */
 export function viewTabClass(selected: boolean): string {
-  return `group/tab flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-all ${selected
-    ? "tone-bg tone-border font-medium text-foreground shadow-sm"
-    : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"}`;
+  return `flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm transition-colors lg:rounded-md lg:border-b-0 lg:px-2.5 lg:py-1.5 ${selected
+    ? "border-primary font-medium text-foreground lg:bg-muted"
+    : "border-transparent text-muted-foreground hover:text-foreground lg:hover:bg-muted/60"}`;
 }

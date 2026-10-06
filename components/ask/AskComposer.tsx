@@ -137,8 +137,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
 
   return (
     <form
-      className="surface-panel spectrum-ring min-w-0 shadow-2xl"
-      data-active={loading}
+      className="surface-panel focus-card min-w-0"
       onDragOver={(event) => {
         if (event.dataTransfer.types.includes("Files")) event.preventDefault();
       }}
@@ -152,10 +151,9 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
         void submit();
       }}
     >
-      <div className="relative overflow-hidden rounded-t-[inherit]">{loading ? <div className="loading-beam" aria-hidden="true" /> : <div className="h-[3px]" aria-hidden="true" />}</div>
-      <div className="relative p-5 sm:p-8">
-        <p className="eyebrow mb-3">Start with a question</p>
-        <label htmlFor="question" className="block font-heading text-3xl leading-[1.05] sm:text-4xl">
+      <div className="relative overflow-hidden rounded-t-[inherit]">{loading ? <div className="loading-beam" aria-hidden="true" /> : <div className="h-0.5" aria-hidden="true" />}</div>
+      <div className="relative p-5 sm:p-7">
+        <label htmlFor="question" className="block text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
           What are you trying to understand?
         </label>
         <textarea
@@ -173,7 +171,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
           disabled={loading}
           required
           placeholder="Why does virtual memory exist?"
-          className="mt-5 block min-h-36 w-full resize-y rounded-xl bg-transparent py-2 text-lg leading-8 outline-none placeholder:text-muted-foreground"
+          className="mt-4 block min-h-32 w-full resize-y rounded-md bg-transparent py-2 text-base leading-7 outline-none placeholder:text-muted-foreground sm:text-lg"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-4">
           <button
@@ -182,7 +180,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
             aria-expanded={filesOpen}
             aria-controls={attachmentsId}
             onClick={() => setFilesOpen((current) => !current)}
-            className="button-secondary !min-h-9 gap-2 !rounded-full !px-3.5 !py-1.5 !text-xs"
+            className="button-secondary !min-h-8 gap-2 !px-3 !py-1 !text-xs"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m8 13 6.5-6.5a3 3 0 0 1 4.2 4.2L10 19.4a5 5 0 0 1-7.1-7.1L12 3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             {files.length ? `${files.length} attachment${files.length === 1 ? "" : "s"}` : "Add material"}
@@ -193,7 +191,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
             aria-expanded={speechOpen}
             aria-controls={speechId}
             onClick={() => setSpeechOpen((current) => !current)}
-            className="button-secondary !min-h-9 gap-2 !rounded-full !px-3.5 !py-1.5 !text-xs"
+            className="button-secondary !min-h-8 gap-2 !px-3 !py-1 !text-xs"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-4 0h8" strokeLinecap="round" /></svg>
             {speechOpen ? "Close voice input" : "Use your voice"}
@@ -268,7 +266,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
               </fieldset>
             ) : null}
         </div>
-        <details className="group mt-5 rounded-2xl border border-border bg-background/50">
+        <details className="group mt-5 rounded-lg border border-border bg-background">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-xs [&::-webkit-details-marker]:hidden">
             <span>
               <span className="font-medium">Explanation preferences</span>
@@ -409,11 +407,11 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
           </fieldset>
         </details>
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={loading} className="button-primary group/send !min-h-12 w-full gap-2 !rounded-full !px-6 text-base sm:w-auto">
+          <button type="submit" disabled={loading} className="button-primary group/send !min-h-11 w-full gap-2 !px-5 sm:w-auto">
             {loading ? "Building your lesson…" : "Help me understand"}
-            {!loading ? <svg className="transition-transform group-hover/send:translate-x-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
+            {!loading ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
           </button>
-          <button type="button" disabled={loading} onClick={() => void submit("mutex")} className="button-secondary !min-h-12 w-full !rounded-full !px-6 sm:w-auto">
+          <button type="button" disabled={loading} onClick={() => void submit("mutex")} className="button-secondary !min-h-11 w-full !px-5 sm:w-auto">
             See an example
           </button>
           <span className="ml-auto hidden text-[11px] text-muted-foreground xl:block">⌘ / Ctrl + Enter</span>
@@ -423,7 +421,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
         </p>
         {!loading ? <p className="mt-1 text-[11px] leading-5 text-muted-foreground">The sample lesson stays on this server.</p> : null}
         {error ? (
-          <div className="mt-4 rounded-xl border border-destructive/40 bg-background p-4 text-sm" role="alert">
+          <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm" role="alert">
             <p>{error}</p>
             {retryable ? (
               <button type="button" disabled={loading} className="mt-2 underline underline-offset-4" onClick={() => void submit()}>
@@ -433,7 +431,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
           </div>
         ) : null}
       </div>
-      <div className="relative rounded-b-[inherit] border-t border-border bg-muted/40 px-5 py-5 sm:px-8">
+      <div className="relative rounded-b-[inherit] border-t border-border bg-muted/50 px-5 py-4 sm:px-7">
         <p className="mb-3 text-xs text-muted-foreground">Need a starting point? Try asking…</p>
         <ul className="flex flex-wrap gap-2">
           {EXAMPLE_QUESTIONS.map((example) => (
@@ -441,7 +439,7 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
               <button
                 type="button"
                 disabled={loading}
-                className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-xs leading-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-foreground disabled:opacity-60"
+                className="rounded-md border border-border bg-card px-3 py-1.5 text-left text-xs leading-5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
                 onClick={() => {
                   setQuestion(example);
                   document.getElementById("question")?.focus();

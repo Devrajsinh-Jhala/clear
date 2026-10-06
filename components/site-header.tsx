@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -23,18 +23,18 @@ export function SiteHeader() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
         <Link href="/" aria-label="CLEAR home" className="rounded-lg">
           <Wordmark />
         </Link>
-        <nav aria-label="Primary" className="ml-6 hidden items-center gap-1 text-sm md:flex">
+        <nav aria-label="Primary" className="ml-6 hidden items-center gap-0.5 text-sm md:flex">
           {LINKS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
               aria-current={isActive(href) ? "page" : undefined}
-              className={`rounded-full px-3 py-1.5 transition-colors ${isActive(href) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              className={`rounded-md px-2.5 py-1.5 transition-colors ${isActive(href) ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
               {label}
             </Link>
@@ -42,17 +42,16 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/auth" className="hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-block">
+          <Link href="/auth" className="hidden rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground md:inline-block">
             Account
           </Link>
           {pathname === "/ask" ? null : (
-            <Link href="/ask" className="button-primary group hidden !min-h-9 gap-1.5 !rounded-full !px-4 !py-1.5 text-sm sm:inline-flex">
-              Ask anything
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            <Link href="/ask" className="button-primary hidden !min-h-9 gap-1.5 !px-3.5 !py-1.5 text-sm sm:inline-flex">
+              Ask a question
             </Link>
           )}
           <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-card text-foreground md:hidden" aria-label="Open menu">
+            <SheetTrigger className="inline-flex size-9 items-center justify-center rounded-md border border-border bg-card text-foreground md:hidden" aria-label="Open menu">
               <Menu className="size-5" aria-hidden="true" />
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
@@ -67,7 +66,7 @@ export function SiteHeader() {
                     href={href}
                     onClick={() => setOpen(false)}
                     aria-current={isActive(href) ? "page" : undefined}
-                    className={`rounded-xl px-3 py-3 text-base ${isActive(href) ? "bg-accent font-medium text-accent-foreground" : "text-foreground hover:bg-muted"}`}
+                    className={`rounded-md px-3 py-2.5 text-base ${isActive(href) ? "bg-muted font-medium text-foreground" : "text-foreground hover:bg-muted"}`}
                   >
                     {label}
                   </Link>

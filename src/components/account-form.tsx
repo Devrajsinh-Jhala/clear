@@ -62,15 +62,15 @@ export function AccountForm({ configured, accountEmail, signedIn }: { configured
     } finally { locked.current = false; setPending(false); }
   }
 
-  if (!configured) return <section className="surface-panel p-6"><h2 className="font-heading text-2xl">Guest lessons are ready</h2><p className="mt-3 text-muted-foreground">Sign-in is not available yet. You can still ask a question and return to your private lesson in this browser.</p><Link href="/ask" className="button-primary mt-5">Start a lesson</Link></section>;
-  if (signedIn) return <section className="surface-panel p-6"><h2 className="font-heading text-2xl">You’re signed in</h2>{accountEmail ? <p className="mt-3 break-all text-muted-foreground">{accountEmail}</p> : null}<div className="mt-5 flex flex-wrap gap-3"><Link href="/library" className="button-primary">Open your library</Link><button type="button" className="button-secondary" disabled={pending || !hydrated} onClick={() => void act("logout")}>{pending ? "Signing out…" : "Sign out"}</button></div>{error ? <p role="alert" className="mt-4 text-sm text-destructive">{error}</p> : null}</section>;
+  if (!configured) return <section className="surface-panel p-6"><h2 className="font-heading text-xl">Guest lessons are ready</h2><p className="mt-3 text-muted-foreground">Sign-in is not available yet. You can still ask a question and return to your private lesson in this browser.</p><Link href="/ask" className="button-primary mt-5">Start a lesson</Link></section>;
+  if (signedIn) return <section className="surface-panel p-6"><h2 className="font-heading text-xl">You’re signed in</h2>{accountEmail ? <p className="mt-3 break-all text-muted-foreground">{accountEmail}</p> : null}<div className="mt-5 flex flex-wrap gap-3"><Link href="/library" className="button-primary">Open your library</Link><button type="button" className="button-secondary" disabled={pending || !hydrated} onClick={() => void act("logout")}>{pending ? "Signing out…" : "Sign out"}</button></div>{error ? <p role="alert" className="mt-4 text-sm text-destructive">{error}</p> : null}</section>;
 
   return <form action={`/api/auth/${mode}`} method="post" aria-busy={pending} className="surface-panel p-5 sm:p-7" onSubmit={(event) => { event.preventDefault(); void act(mode); }}>
     <div className="mb-6 flex flex-wrap gap-3" role="group" aria-label="Account access">
       <button type="button" aria-pressed={mode === "sign-in"} disabled={pending || !hydrated} onClick={() => changeMode("sign-in")} className={mode === "sign-in" ? "button-primary text-sm" : "button-secondary text-sm"}>Sign in</button>
       <button type="button" aria-pressed={mode === "sign-up"} disabled={pending || !hydrated} onClick={() => changeMode("sign-up")} className={mode === "sign-up" ? "button-primary text-sm" : "button-secondary text-sm"}>Create account</button>
     </div>
-    <h2 className="font-heading text-2xl">{mode === "sign-up" ? "Create your CLEAR account" : "Welcome back to CLEAR"}</h2>
+    <h2 className="font-heading text-xl">{mode === "sign-up" ? "Create your CLEAR account" : "Welcome back to CLEAR"}</h2>
     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Keep your lessons across devices with your email and password.</p>
     {message ? <p role="status" className="mt-4 text-sm text-foreground">{message}</p> : null}
     <label htmlFor="account-email" className="mt-5 block text-sm font-medium">Email address</label>

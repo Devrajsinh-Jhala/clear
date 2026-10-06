@@ -65,11 +65,11 @@ export function CompareView({
 
   return (
     <section className="space-y-4">
-      <h2 className="font-heading text-2xl">Compare</h2>
+      <h2 className="font-heading text-xl">Compare</h2>
       <p className="text-sm text-muted-foreground">Same question, two models. These notes are your preference, not a score.</p>
       <div className="grid gap-6 md:grid-cols-2">
         {options.map((option) => (
-          <article key={option.id} className="space-y-3 rounded-2xl border border-border bg-card p-5">
+          <article key={option.id} className="space-y-3 rounded-xl border border-border bg-card p-5">
             <ProviderLabel provider={option.provider} model={option.model} />
             {option.document ? (
               <>

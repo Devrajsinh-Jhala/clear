@@ -37,7 +37,7 @@ export function LegacyLesson({ conversationId, document }: { conversationId: str
         <div className="surface-panel flex flex-col items-start justify-between gap-5 p-5 sm:flex-row sm:p-6">
           <div className="max-w-2xl">
             <p className="eyebrow">An earlier lesson</p>
-            <h2 className="mt-2 font-heading text-2xl">Keep learning in a private copy</h2>
+            <h2 className="mt-2 font-heading text-xl">Keep learning in a private copy</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">This lesson was created before browser ownership was added. Anyone with its address can read this version. Make a private copy for this browser to continue asking questions.</p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">The copy contains the explanation only. Previous messages, uploads, provider connections, and learning records are not copied.</p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Future follow-ups start with CLEAR Free. You can choose a connected model for a later turn.</p>

@@ -49,7 +49,7 @@ export function VerifyView({ document }: { document: ExplanationDocument }) {
       ) : null}
       {verification.caveats.length > 0 ? (
         <section>
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Caveats</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">Caveats</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-muted-foreground marker:text-border">
             {verification.caveats.map((caveat) => (
               <li key={caveat}>{caveat}</li>

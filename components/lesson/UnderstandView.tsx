@@ -5,11 +5,11 @@ import type { ExplanationDocument } from "@/src/lib/explanation/schema";
 export function UnderstandView({ document }: { document: ExplanationDocument }) {
   return (
     <div className="space-y-8">
-      <p className="font-heading text-3xl leading-snug sm:text-4xl">{document.essence}</p>
+      <p className="text-balance font-heading text-2xl leading-snug sm:text-[1.75rem]">{document.essence}</p>
       <p className="max-w-3xl text-lg leading-relaxed">{document.whyItMatters}</p>
       {document.prerequisites.length > 0 ? (
         <section>
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Prerequisites</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">Prerequisites</h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {document.prerequisites.map((item) => (
               <li key={item.id} className="rounded-full border border-border bg-card px-3 py-1 text-sm">
@@ -21,7 +21,7 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
       ) : null}
       {document.process ? (
         <section>
-          <h2 className="font-heading text-2xl">{document.process.title}</h2>
+          <h2 className="font-heading text-xl">{document.process.title}</h2>
           <ol className="mt-4 space-y-3">
             {document.process.steps.map((step, index) => (
               <li key={step.id} className="grid grid-cols-[2rem_1fr] items-start gap-3">
@@ -33,7 +33,7 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
         </section>
       ) : null}
       <section>
-        <h2 className="font-heading text-2xl">Concepts</h2>
+        <h2 className="font-heading text-xl">Concepts</h2>
         <div className="mt-4 divide-y divide-border border-y border-border">
           {document.concepts.map((concept) => (
             <details key={concept.id} className="group">
@@ -51,7 +51,7 @@ export function UnderstandView({ document }: { document: ExplanationDocument }) 
         </div>
       </section>
       <section>
-        <h2 className="font-heading text-2xl">Terminology</h2>
+        <h2 className="font-heading text-xl">Terminology</h2>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           {document.terminology.map((term) => (
             <div key={term.term} className="rounded-xl border border-border bg-card p-4">

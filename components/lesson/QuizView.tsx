@@ -32,8 +32,8 @@ function QuizCard({ item, position, count }: { item: QuizItem; position: number;
   const ResultIcon = !graded ? CircleDot : correct ? CircleCheck : CircleX;
 
   return (
-    <article className="rounded-2xl border border-border bg-background/50 p-5 sm:p-6">
-      {count > 1 ? <p className="tone-text font-mono text-[11px] font-semibold uppercase tracking-[0.16em]">Question {position} of {count}</p> : null}
+    <article className="rounded-xl border border-border bg-background p-5 sm:p-6">
+      {count > 1 ? <p className="text-xs font-medium text-muted-foreground">Question {position} of {count}</p> : null}
       <h2 className={`text-lg font-medium leading-relaxed ${count > 1 ? "mt-2" : ""}`}>{item.question}</h2>
       {item.options ? (
         <fieldset className="mt-4 space-y-2">

@@ -36,7 +36,7 @@ export function RoutingControl() {
 
   if (!preferences) return (
     <section className="surface-panel space-y-3 p-5 sm:p-7" aria-busy={loading}>
-      <h2 className="font-heading text-2xl">Model routing</h2>
+      <h2 className="font-heading text-xl">Model routing</h2>
       {loading ? <p className="text-sm text-muted-foreground">Loading routing…</p> : <>
         <p role="alert" className="text-sm text-foreground">{message}</p>
         <button type="button" onClick={() => { setLoading(true); setMessage(""); void load(); }} className="button-secondary text-sm">Try again</button>
@@ -83,7 +83,7 @@ export function RoutingControl() {
 
   return (
     <section className="surface-panel space-y-4 p-5 sm:p-7">
-      <h2 className="font-heading text-2xl">Model routing</h2>
+      <h2 className="font-heading text-xl">Model routing</h2>
       <p className="text-sm text-muted-foreground">
         Auto only chooses a provider you have already approved. If fallback is off, a failed provider stops the lesson.
       </p>

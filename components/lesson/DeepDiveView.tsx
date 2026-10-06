@@ -8,7 +8,7 @@ export function DeepDiveView({ document }: { document: ExplanationDocument }) {
     <div className="space-y-6">
       {document.deepDive.map((section) => (
         <section key={section.id}>
-          <h2 className="font-heading text-2xl">{section.title}</h2>
+          <h2 className="font-heading text-xl">{section.title}</h2>
           <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed">{section.body}</p>
         </section>
       ))}

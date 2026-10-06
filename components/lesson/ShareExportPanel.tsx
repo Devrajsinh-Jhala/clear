@@ -135,7 +135,7 @@ export function ShareExportPanel({ conversationId, document, disabled }: {
       </summary>
       <div className="grid gap-7 border-t border-border p-5 sm:p-6 xl:grid-cols-2">
         <section className="min-w-0">
-          <h2 className="font-heading text-2xl">Share an explanation</h2>
+          <h2 className="font-heading text-xl">Share an explanation</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">A link publishes a frozen explanation. Follow-ups, teach-back feedback, learning records, and original uploads stay private. The explanation itself may include material from your question or files, so review the preview before sharing.</p>
           <label className="mt-4 flex items-start gap-2 text-sm">
             <input type="checkbox" checked={showProvider} disabled={locked} onChange={(event) => setShowProvider(event.target.checked)} className="mt-1 shrink-0 accent-primary" />
@@ -168,7 +168,7 @@ export function ShareExportPanel({ conversationId, document, disabled }: {
           {shareError && !loading ? <div className="mt-4 text-sm" role="alert"><p className="text-destructive">{shareError}</p><button type="button" disabled={disabled || sharing || loading} onClick={() => { setRequestLoading(true); setRefresh((value) => value + 1); }} className="mt-2 underline underline-offset-4">Reload sharing settings</button></div> : null}
         </section>
         <section className="min-w-0 border-t border-border pt-6 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
-          <h2 className="font-heading text-2xl">Download this lesson</h2>
+          <h2 className="font-heading text-xl">Download this lesson</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Take the current explanation with you, including examples, diagram descriptions, and a quiz answer key. Downloads contain the teaching content; your conversation and learning records stay out of them.</p>
           <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" checked={exportProvider} disabled={disabled || Boolean(downloading)} onChange={(event) => setExportProvider(event.target.checked)} className="mt-1 shrink-0 accent-primary" />Include the provider and model in downloads</label>
           <div className="mt-5 flex flex-wrap gap-3">
@@ -183,7 +183,7 @@ export function ShareExportPanel({ conversationId, document, disabled }: {
       </div>
       <dialog ref={dialog} aria-labelledby={previewTitle} onClose={() => setPreviewOpen(false)} className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl overflow-y-auto rounded-2xl border border-border bg-background p-0 text-foreground backdrop:bg-black/50">
         <div className="flex items-start justify-between gap-5 border-b border-border bg-card p-5">
-          <div><h2 id={previewTitle} className="font-heading text-2xl">Preview before sharing</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Review every view for material you want to publish.</p></div>
+          <div><h2 id={previewTitle} className="font-heading text-xl">Preview before sharing</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Review every view for material you want to publish.</p></div>
           <button type="button" onClick={() => dialog.current?.close()} className="button-secondary shrink-0 text-sm">Close preview</button>
         </div>
         {previewOpen ? <ReadOnlyLesson document={previewDocument} /> : null}

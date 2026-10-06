@@ -8,7 +8,7 @@ import { binarySearchSteps, breadthFirstSteps } from "@/src/lib/explanation/widg
 import { evaluateSafeMath } from "@/src/lib/explanation/safe-math";
 import type { InteractiveWidgetSpec } from "@/src/lib/explanation/schema";
 
-const WIDGET = "rounded-2xl border border-border bg-background/50 p-5 sm:p-6";
+const WIDGET = "rounded-xl border border-border bg-background p-5 sm:p-6";
 
 export function InteractiveView({ widgets }: { widgets: InteractiveWidgetSpec[] }) {
   if (widgets.length === 0) {
@@ -52,7 +52,7 @@ function StepFlow({
   const step = steps[index];
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{title}</h2>
+      <h2 className="font-heading text-xl">{title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Step {index + 1} of {steps.length}
       </p>
@@ -76,7 +76,7 @@ function BinarySearchWidget({
   if (!steps) {
     return (
       <section className={WIDGET}>
-        <h2 className="font-heading text-2xl">{widget.title}</h2>
+        <h2 className="font-heading text-xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available until the values are sorted. Binary search does not apply to an unsorted list.</p>
       </section>
     );
@@ -84,7 +84,7 @@ function BinarySearchWidget({
   const step = steps[index];
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <h2 className="font-heading text-xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">Looking for {widget.target}</p>
       <ol className="mt-4 flex flex-wrap gap-2">
         {widget.array.map((value, valueIndex) => {
@@ -118,9 +118,9 @@ function StateMachineWidget({
   const options = widget.transitions.filter((transition) => transition.from === current);
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{widget.title}</h2>
-      <p className="mt-4 text-sm uppercase tracking-[0.16em] text-muted-foreground">Current state</p>
-      <p className="mt-2 font-heading text-3xl">{current}</p>
+      <h2 className="font-heading text-xl">{widget.title}</h2>
+      <p className="mt-4 text-xs font-medium text-muted-foreground">Current state</p>
+      <p className="mt-2 font-heading text-2xl">{current}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {options.length === 0 ? <p className="text-muted-foreground">No transition leaves this state.</p> : null}
         {options.map((transition) => (
@@ -147,14 +147,14 @@ function GraphWidget({
   if (!step) {
     return (
       <section className={WIDGET}>
-        <h2 className="font-heading text-2xl">{widget.title}</h2>
+        <h2 className="font-heading text-xl">{widget.title}</h2>
         <p className="mt-3">Interactive version not available for this graph yet.</p>
       </section>
     );
   }
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <h2 className="font-heading text-xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">Breadth-first from {widget.start}</p>
       <p className="mt-4">Visiting {step.current}</p>
       <p className="mt-2 text-muted-foreground">Visited: {step.visited.join(", ")}</p>
@@ -175,7 +175,7 @@ function ParameterWidget({
   const result = evaluateSafeMath(widget.formula, values);
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <h2 className="font-heading text-xl">{widget.title}</h2>
       <p className="mt-3 font-mono text-sm">{widget.formula}</p>
       <div className="mt-4 space-y-4">
         {widget.parameters.map((parameter) => (
@@ -212,7 +212,7 @@ function CodeTraceWidget({
   const lines = widget.code.split("\n");
   return (
     <section className={WIDGET}>
-      <h2 className="font-heading text-2xl">{widget.title}</h2>
+      <h2 className="font-heading text-xl">{widget.title}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{widget.language} trace. CLEAR does not run this code.</p>
       <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-card p-3 font-mono text-sm">
         {lines.map((line, lineIndex) => (

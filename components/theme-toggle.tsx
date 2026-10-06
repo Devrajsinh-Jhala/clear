@@ -28,7 +28,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div role="radiogroup" aria-label="Color theme" className="inline-flex h-9 items-center gap-0.5 rounded-full border border-border bg-card p-0.5">
+    <div role="radiogroup" aria-label="Color theme" className="inline-flex h-9 items-center gap-0.5 rounded-md border border-border bg-card p-0.5 sm:h-8">
       {OPTIONS.map(({ value, label, Icon }, index) => {
         const checked = current === value;
         return (
@@ -51,9 +51,9 @@ export function ThemeToggle() {
               event.preventDefault();
               choose(index + step);
             }}
-            className={`inline-flex size-7 items-center justify-center rounded-full transition-colors focus-visible:outline-offset-1 ${checked ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`inline-flex size-7 items-center justify-center rounded transition-colors sm:size-6 focus-visible:outline-offset-1 ${checked ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <Icon className="size-4" aria-hidden="true" />
+            <Icon className="size-3.5" aria-hidden="true" />
           </button>
         );
       })}

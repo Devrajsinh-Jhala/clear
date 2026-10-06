@@ -81,7 +81,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="eyebrow">Make it yours</p>
-              <h2 className="mt-2 font-heading text-3xl">How do you like to learn?</h2>
+              <h2 className="mt-2 font-heading text-2xl">How do you like to learn?</h2>
             </div>
             <button type="button" disabled={pending} className="shrink-0 text-sm text-muted-foreground underline underline-offset-4 disabled:opacity-50" onClick={() => {
               setPreferences({ ...DEFAULT_SKILL_PREFERENCES }); setCopied(false); setCopyError(""); setDownloaded(false); setError("");
@@ -129,7 +129,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
           </div>
         </form>
         <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
-          <h2 className="font-heading text-2xl">A teaching style, without your history.</h2>
+          <h2 className="font-heading text-xl">A teaching style, without your history.</h2>
           <p className="mt-3 text-sm leading-relaxed text-foreground">The download includes the CLEAR protocol, three public examples, and the preferences you choose here. Your conversations, documents, learning memory, and provider keys stay out of it.</p>
         </section>
       </div>
@@ -137,7 +137,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
         <section className="surface-panel overflow-hidden" aria-label="Skill package preview">
           <div className="border-b border-border p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><p className="eyebrow">Live preview</p><h2 className="mt-2 font-heading text-3xl">What your agent will read</h2></div>
+              <div><p className="eyebrow">Live preview</p><h2 className="mt-2 font-heading text-2xl">What your agent will read</h2></div>
               <span className="badge">7 files</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{LEVELS.find(([value]) => value === preferences.level)?.[1]} · {DEPTHS.find(([value]) => value === preferences.depth)?.[1]} · {preferences.verbosity === "concise" ? "Concise writing" : "Detailed writing"}</p>
@@ -154,7 +154,7 @@ export function SkillConfigurator({ resources }: { resources: SkillFile[] }) {
           <pre aria-label={`${currentFile.path} contents`} tabIndex={0} className="max-h-[34rem] overflow-auto whitespace-pre-wrap break-words bg-background/50 p-5 font-mono text-xs leading-6 sm:p-6">{currentFile.content}</pre>
         </section>
         <section className="px-1">
-          <h2 className="font-heading text-2xl">Take it into your next conversation.</h2>
+          <h2 className="font-heading text-xl">Take it into your next conversation.</h2>
           <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
             {["Unzip the download. Keep the clear-explainer folder together.", "Add that folder to the skills location supported by your agent.", "Ask your agent to use clear-explainer to help you understand a topic."].map((step, index) => (
               <li key={step} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border font-mono text-xs text-primary">{index + 1}</span><p className="pt-0.5 leading-relaxed">{step}</p></li>

@@ -64,7 +64,7 @@ export function TeachBackView({
           void submit();
         }}
       >
-        <label htmlFor="teach-back" className="block font-heading text-2xl">
+        <label htmlFor="teach-back" className="block font-heading text-xl">
           Teach it back
         </label>
         <p id="teach-back-hint" className="mt-2 max-w-2xl text-muted-foreground">Explain the idea in your own words. CLEAR checks the mechanism, not your writing style.</p>
@@ -98,8 +98,8 @@ export function TeachBackView({
 
 function TeachBackResultView({ result, disabled }: { result: TeachBackResult; disabled: boolean }) {
   return (
-    <section className="rounded-2xl border border-border bg-background/50 p-5 sm:p-6" aria-live="polite">
-      <h2 className="font-heading text-3xl">{result.headline}</h2>
+    <section className="rounded-xl border border-border bg-background p-5 sm:p-6" aria-live="polite">
+      <h2 className="font-heading text-2xl">{result.headline}</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         {result.source === "model"
           ? "Reviewed by the selected model."

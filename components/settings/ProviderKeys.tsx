@@ -80,7 +80,7 @@ export function ProviderKeys() {
 
   return (
     <section className="surface-panel space-y-5 p-5 sm:p-7">
-      <h2 className="font-heading text-2xl">Your provider keys</h2>
+      <h2 className="font-heading text-xl">Your provider keys</h2>
       <ul className="divide-y divide-border border-y border-border">
         {connected.length === 0 ? <li className="py-3 text-sm text-muted-foreground">No saved keys on this browser yet.</li> : null}
         {connected.map((item) => (

@@ -34,13 +34,13 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-heading text-3xl">Voice tutor</h2>
+        <h2 className="font-heading text-2xl">Voice tutor</h2>
         <p className="mt-3 max-w-2xl text-muted-foreground">Listen to this lesson, then speak or type a follow-up. Review the words before sending. Each turn updates the same lesson.</p>
         <p className="mt-3 text-sm"><ProviderLabel provider={provider} model={model} /></p>
         <p className="mt-2 text-sm text-muted-foreground">Speech uses your browser. The explanation and follow-ups use the model shown above.</p>
         <button type="button" className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline" onClick={onTeachBack}>Try oral teach-it-back<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></button>
       </div>
-      <section className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5" aria-label="Lesson narration">
+      <section className="rounded-xl border border-border bg-background p-4 sm:p-5" aria-label="Lesson narration">
         <label className="mr-3 text-sm" htmlFor="narration-section">Listen to</label>
         <select
           id="narration-section"
@@ -53,12 +53,12 @@ export function VoiceTutorView({ document, messages, provider, model, pending, e
         <div className="mt-4"><SpeechPlayer text={lessonTranscript(document, section)} label="Listen to lesson" disabled={pending} /></div>
       </section>
       <section aria-label="Voice conversation">
-        <h3 className="font-heading text-2xl">Conversation transcript</h3>
+        <h3 className="font-heading text-xl">Conversation transcript</h3>
         {turns.length ? (
           <ol className="mt-4 space-y-4">
             {turns.map((message) => (
               <li key={message.id} className="rounded-xl border border-border bg-background/50 p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{message.role === "user" ? "You" : "CLEAR"}</p>
+                <p className="text-xs font-medium text-muted-foreground">{message.role === "user" ? "You" : "CLEAR"}</p>
                 <p className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
               </li>
             ))}
