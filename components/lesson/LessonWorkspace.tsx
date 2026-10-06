@@ -50,6 +50,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
   const [model, setModel] = useState(conversation.activeModel);
   const [title, setTitle] = useState(conversation.title);
   const [draft, setDraft] = useState("");
+  const followUpInput = useRef<HTMLInputElement>(null);
   const [voiceDraft, setVoiceDraft] = useState("");
   const [pending, setPending] = useState(false);
   const sending = useRef(false);
@@ -60,6 +61,13 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
   const [lessonMeta, setLessonMeta] = useState(meta);
   const [nextProvider, setNextProvider] = useState("same");
   const [targets, setTargets] = useState<ApprovedTarget[]>([]);
+
+  useEffect(() => {
+    // Words typed before the page finished loading are already in the box. Hydrate with the
+    // server's empty draft (so Send's disabled state matches the HTML), then pick them up here.
+    const typed = followUpInput.current?.value;
+    if (typed) setDraft((current) => current || typed);
+  }, []);
 
   useEffect(() => {
     void fetch("/api/routing")
@@ -227,6 +235,7 @@ export function LessonWorkspace({ conversation, meta }: { conversation: Conversa
               Ask a follow-up
             </label>
             <input
+              ref={followUpInput}
               id="follow-up"
               value={draft}
               maxLength={2000}
