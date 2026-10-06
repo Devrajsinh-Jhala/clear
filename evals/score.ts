@@ -11,6 +11,16 @@ export const THRESHOLDS: Record<EvalDimension, number> = {
   correctness: 1, conceptCoverage: 1, levelAppropriateness: 1, internalConsistency: 1,
   analogyCorrectness: 1, diagramConsistency: 1, quizAnswerValidity: 1, schemaValidity: 1,
 };
+// Launch gate, set 2026-10-06. The strict bar above is kept to track prompt work, but
+// its coverage checks are lexical and miss correct paraphrases. A launch run must be
+// perfect on what the rubric checks exactly (schema, references, prohibited claims,
+// fabricated verification, unsafe widgets or diagrams, wrong answer keys) and good on
+// average for the rest.
+export const LAUNCH_GATE = {
+  hardDimensions: ["schemaValidity", "internalConsistency"] as const satisfies readonly EvalDimension[],
+  minimumCaseScore: 0.7,
+  minimumMeanScore: 0.85,
+};
 export const RUBRIC_LIMITS = [
   "Deterministic mechanisms use scoped regex checks, not a semantic proof of factual correctness.",
   "Analogy and diagram checks verify references, stated limits, and safe structure; a human must assess fidelity.",
@@ -90,7 +100,10 @@ export function scoreExplanation(item: EvalCase, raw: unknown): CaseResult {
   const quizFailures: string[] = [];
   const quizProbe = document.quiz.find((quiz) => normalizeQuestion(quiz.question) === normalizeQuestion(item.golden.quiz.question));
   if (!quizProbe) quizFailures.push("Missing the requested known-answer quiz probe.");
-  else if (Array.isArray(quizProbe.correctAnswer) || !matches(item.golden.quiz.answerPattern, quizProbe.correctAnswer)) quizFailures.push("The known-answer quiz probe has a factually incorrect answer.");
+  else if (Array.isArray(quizProbe.correctAnswer) || !matches(item.golden.quiz.answerPattern, quizProbe.correctAnswer)) {
+    quizFailures.push("The known-answer quiz probe has a factually incorrect answer.");
+    criticalFailures.push("The known-answer quiz probe has a factually incorrect answer.");
+  }
   document.quiz.forEach((quiz, index) => {
     if (!quiz.conceptIds.length || quiz.explanation.length < 10) quizFailures.push(`quiz.${index}: An answer needs a concept reference and explanatory rationale.`);
     if (quiz.options && new Set(quiz.options).size !== quiz.options.length) quizFailures.push(`quiz.${index}: Duplicate choices.`);
@@ -98,6 +111,20 @@ export function scoreExplanation(item: EvalCase, raw: unknown): CaseResult {
   if (falseClaims.length) quizFailures.push("An assertion contradicts the case's prohibited-claim rubric.");
   dimensions.quizAnswerValidity = result(document.quiz.length + 1, quizFailures, "Known factual quiz probe plus references, answer/options consistency, and rationales for other questions.");
   return finish(item, dimensions, criticalFailures);
+}
+
+/** One case meets the launch gate: no critical failure, exact checks perfect, score above the floor. */
+export function meetsLaunchCase(result: CaseResult): boolean {
+  return result.criticalFailures.length === 0
+    && LAUNCH_GATE.hardDimensions.every((dimension) => result.dimensions[dimension].score === 1)
+    && result.score >= LAUNCH_GATE.minimumCaseScore;
+}
+
+/** The whole corpus meets the launch gate: every case passes and the mean score is high enough. */
+export function launchGate(results: CaseResult[], expectedCases: number): { passed: boolean; meanScore: number; failingCases: string[] } {
+  const meanScore = results.length ? results.reduce((sum, item) => sum + item.score, 0) / results.length : 0;
+  const failingCases = results.filter((item) => !meetsLaunchCase(item)).map((item) => item.id);
+  return { passed: results.length === expectedCases && failingCases.length === 0 && meanScore >= LAUNCH_GATE.minimumMeanScore, meanScore, failingCases };
 }
 
 function result(checks: number, failures: string[], scope: string): DimensionResult {

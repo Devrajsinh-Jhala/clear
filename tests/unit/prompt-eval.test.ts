@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { EVAL_CORPUS } from "@/evals/corpus.v1";
 import { goldenDocument, modelFields } from "@/evals/golden";
 import { liveOptions, redactEvaluationResult, selectedCases } from "@/evals/live";
-import { scoreExplanation } from "@/evals/score";
+import { LAUNCH_GATE, launchGate, meetsLaunchCase, scoreExplanation } from "@/evals/score";
 import { DIMENSIONS } from "@/evals/types";
 import { ClearError } from "@/src/lib/api/errors";
 import { generateExplanation } from "@/src/lib/explanation/generate";
@@ -81,6 +81,40 @@ describe("versioned golden eval corpus", () => {
     const document = goldenDocument(item);
     document.quiz[0].correctAnswer = "9";
     expect(scoreExplanation(item, document).dimensions.quizAnswerValidity.failures).toContain("The known-answer quiz probe has a factually incorrect answer.");
+  });
+
+  it("treats a wrong known-answer key as a critical failure", () => {
+    const item = EVAL_CORPUS.find((candidate) => candidate.id === "derivative-local-rate")!;
+    const document = goldenDocument(item);
+    document.quiz[0].correctAnswer = "9";
+    const result = scoreExplanation(item, document);
+    expect(result.criticalFailures).toContain("The known-answer quiz probe has a factually incorrect answer.");
+    expect(meetsLaunchCase(result)).toBe(false);
+  });
+
+  it("launch gate tolerates a reworded concept but not unsafe or invalid output", () => {
+    const item = EVAL_CORPUS[2];
+    const golden = scoreExplanation(item, goldenDocument(item));
+    expect(meetsLaunchCase(golden)).toBe(true);
+    // The lesson teaches the cache lifetime but never uses the corpus's words for it.
+    const reworded = goldenDocument(item);
+    const lifetime = "How long a cache may keep reusing an answer before asking again.";
+    reworded.concepts = reworded.concepts.map((concept) => concept.id === "ttl" ? { ...concept, name: "Record lifetime", definition: lifetime, plainExplanation: lifetime } : concept);
+    reworded.terminology = reworded.terminology.map((term) => term.term === "TTL" ? { term: "Record lifetime", definition: lifetime } : term);
+    const paraphrase = scoreExplanation(item, reworded);
+    expect(paraphrase.passed).toBe(false);
+    expect(paraphrase.criticalFailures).toEqual([]);
+    expect(paraphrase.score).toBeGreaterThanOrEqual(LAUNCH_GATE.minimumCaseScore);
+    expect(meetsLaunchCase(paraphrase)).toBe(true);
+    expect(meetsLaunchCase(scoreExplanation(item, { topic: "Only a title" }))).toBe(false);
+  });
+
+  it("launch gate needs every case and a high enough mean", () => {
+    const passing = EVAL_CORPUS.map((item) => scoreExplanation(item, goldenDocument(item)));
+    expect(launchGate(passing, EVAL_CORPUS.length)).toMatchObject({ passed: true, meanScore: 1, failingCases: [] });
+    expect(launchGate(passing.slice(1), EVAL_CORPUS.length).passed).toBe(false);
+    const weak = passing.map((result) => ({ ...result, score: LAUNCH_GATE.minimumCaseScore }));
+    expect(launchGate(weak, EVAL_CORPUS.length)).toMatchObject({ passed: false, failingCases: [] });
   });
 
   it("rejects forward dependencies, unrelated analogy maps, and empty analogy limits", () => {
