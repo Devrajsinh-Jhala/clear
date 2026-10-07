@@ -47,8 +47,11 @@ export function resolveGenerationProvider(): AIProvider {
   return clearFreeProvider();
 }
 
-// CLEAR Free stays on Gemini. When the chosen model is overloaded or rate limited it asks the
-// other CLEAR Free models in turn and reports which one answered. Each attempt
+// No new attempt starts this long after the first one, so a visitor never waits on the whole list.
+const CLEAR_FREE_SWITCH_MS = 70_000;
+
+// CLEAR Free stays on Gemini. When the chosen model is overloaded, rate limited or too slow it
+// asks the other CLEAR Free models in list order and reports which one answered. Each attempt
 // is admitted and counted like any other dispatch. BYOK never switches model.
 function clearFreeProvider(): AIProvider {
   const guarded = guardedProvider(geminiProvider);
@@ -56,16 +59,19 @@ function clearFreeProvider(): AIProvider {
     ...guarded,
     async generate(input, credential) {
       const models = [input.model, ...CLEAR_FREE_MODELS.map((item) => item.id).filter((id) => id !== input.model)];
-      let busy: unknown;
+      const started = Date.now();
+      let failure: unknown;
       for (const model of models) {
+        if (failure && Date.now() - started > CLEAR_FREE_SWITCH_MS) break;
         try {
           return { ...(await guarded.generate({ ...input, model }, credential)), model };
         } catch (error) {
-          if (!isGeminiBusy(error)) throw error;
-          busy = error;
+          const tooSlow = error instanceof ClearError && error.code === "provider_timeout";
+          if (!isGeminiBusy(error) && !tooSlow) throw error;
+          failure = error;
         }
       }
-      throw busy;
+      throw failure;
     },
   };
 }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ClearError } from "@/src/lib/api/errors";
 import { redactSecrets } from "@/src/lib/ai/redact";
+import { CLEAR_FREE_MODELS } from "@/src/lib/ai/models";
 import { getProvider, resolveGenerationProvider } from "@/src/lib/ai/router";
 import { MUTEX_FIXTURE } from "@/src/lib/explanation/fixtures/mutex";
 import { continueExplanation } from "@/src/lib/explanation/follow-up";
@@ -9,7 +10,7 @@ import { FOLLOW_UP_SYSTEM_PROMPT } from "@/src/lib/prompts/follow-up.v1";
 
 vi.mock("server-only", () => ({}));
 
-afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe("CLEAR Free when a Gemini model is busy", () => {
   const input = { model: "gemini-3.6-flash", messages: [{ role: "user" as const, content: "Synthetic question" }] };
@@ -31,8 +32,40 @@ describe("CLEAR Free when a Gemini model is busy", () => {
     const http = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("limited", { status: 429 })).mockResolvedValueOnce(answer());
     vi.stubGlobal("fetch", http);
     const result = await resolveGenerationProvider().generate({ ...input, model: "gemini-3.5-flash-lite" });
-    expect(http.mock.calls.map(modelOf)).toEqual(["gemini-3.5-flash-lite", "gemini-3.6-flash"]);
-    expect(result.model).toBe("gemini-3.6-flash");
+    expect(http.mock.calls.map(modelOf)).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
+    expect(result.model).toBe("gemini-3.1-flash-lite");
+  });
+
+  it("works through the list in order until a model answers", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "SYNTHETIC_KEY");
+    const http = vi.fn<typeof fetch>().mockResolvedValueOnce(busy()).mockResolvedValueOnce(new Response("limited", { status: 429 })).mockResolvedValueOnce(busy()).mockResolvedValueOnce(answer());
+    vi.stubGlobal("fetch", http);
+    const result = await resolveGenerationProvider().generate({ ...input, model: "gemini-3.5-flash-lite" });
+    expect(http.mock.calls.map(modelOf)).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-3.7-flash"]);
+    expect(result.model).toBe("gemini-3.7-flash");
+  });
+
+  it("asks the next model when the chosen one takes too long", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "SYNTHETIC_KEY");
+    const slow = Object.assign(new Error("timed out"), { name: "TimeoutError" });
+    const http = vi.fn<typeof fetch>().mockRejectedValueOnce(slow).mockResolvedValueOnce(answer());
+    vi.stubGlobal("fetch", http);
+    const result = await resolveGenerationProvider().generate({ ...input, model: "gemini-3.5-flash-lite" });
+    expect(http.mock.calls.map(modelOf)).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
+    expect(result.model).toBe("gemini-3.1-flash-lite");
+  });
+
+  it("stops asking once the visitor has waited long enough", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "SYNTHETIC_KEY");
+    vi.useFakeTimers();
+    const slow = Object.assign(new Error("timed out"), { name: "TimeoutError" });
+    const http = vi.fn<typeof fetch>().mockImplementation(async () => {
+      vi.advanceTimersByTime(60_000);
+      throw slow;
+    });
+    vi.stubGlobal("fetch", http);
+    await expect(resolveGenerationProvider().generate(input)).rejects.toMatchObject({ code: "provider_timeout" });
+    expect(http).toHaveBeenCalledTimes(2);
   });
 
   it("stops with the busy message once every CLEAR Free model is busy", async () => {
@@ -40,7 +73,7 @@ describe("CLEAR Free when a Gemini model is busy", () => {
     const http = vi.fn<typeof fetch>().mockImplementation(async () => busy());
     vi.stubGlobal("fetch", http);
     await expect(resolveGenerationProvider().generate(input)).rejects.toMatchObject({ status: 503, retryable: true });
-    expect(http).toHaveBeenCalledTimes(2);
+    expect(http).toHaveBeenCalledTimes(CLEAR_FREE_MODELS.length);
   });
 
   it("does not switch model for other failures or for a learner's own key", async () => {

@@ -32,7 +32,7 @@ npm install
 copy .env.example .env.local
 ```
 
-Add `GEMINI_API_KEY` to `.env.local`. CLEAR Free uses `gemini-3.5-flash-lite` and switches to `gemini-3.6-flash` when Gemini reports the first one busy. Then:
+Add `GEMINI_API_KEY` to `.env.local`. CLEAR Free uses `gemini-3.5-flash-lite`. When that model is busy, rate limited or too slow, CLEAR asks `gemini-3.1-flash-lite`, then `gemini-3.8-flash`, `gemini-3.7-flash` and `gemini-3.6-flash`, and labels the lesson with the model that answered. Then:
 
 ```bash
 npm run dev
