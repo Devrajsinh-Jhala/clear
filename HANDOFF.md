@@ -180,3 +180,8 @@ All taken on 2026-10-06 against the mock dev server (desktop 1440×900, phone 39
 | Menu, phone, dark | ![](docs/handoff/screenshots/20-menu-phone-dark.png) |
 | Ask, phone, dark | ![](docs/handoff/screenshots/21-ask-phone-dark.png) |
 | Open Graph / Twitter card | ![](docs/handoff/screenshots/22-share-card-og.png) |
+| Animated landing hero, light (production, 2026-10-07) | ![](docs/handoff/screenshots/23-landing-hero-light.png) |
+| Animated landing hero, dark | ![](docs/handoff/screenshots/23-landing-hero-dark.png) |
+| Landing: ten views beside one document | ![](docs/handoff/screenshots/24-landing-views-explorer.png) |
+| Landing: learner level and one-question check | ![](docs/handoff/screenshots/25-landing-level-and-quiz.png) |
+| Animated landing, phone, dark | ![](docs/handoff/screenshots/26-landing-phone-dark.png) |
