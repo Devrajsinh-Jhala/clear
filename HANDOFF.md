@@ -132,7 +132,7 @@ The report lands in `.data/evals/latest-live.json` with the `launchGate` result.
 
 ## Gotchas learned this session
 
-- **Run `npm run test:live -- guest` after a deploy** (see `tests/live/README.md`). It found two production-only bugs on its first run. Reads must never call `ensureLearnerId()`: two concurrent first requests that each mint an identity race, and the browser can keep the one that does not own its lesson. Copy a `FileList` before clearing its input; Chrome and Safari empty the same object.
+- **Run `npm run test:live -- guest` after a deploy** (see `tests/live/README.md`). It found two production-only bugs on its first run. Reads must never call `ensureLearnerId()`: two concurrent first requests that each mint an identity race, and the browser can keep the one that does not own its lesson. Copy a `FileList` before clearing its input; Chrome and Safari empty the same object. A lesson's `updatedAt` from Supabase is the raw Postgres text (offset and microseconds) because it is the revision token; never validate it with a `Z`-only date check.
 
 0. **Flash-Lite returns broken JSON in about one response in four**, even with a JSON response type. `src/lib/explanation/validate.ts` hands unparseable text to the repair pass; do not parse it to `{}` first. Lessons that needed a repair take roughly twice as long.
 

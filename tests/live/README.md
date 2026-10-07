@@ -25,4 +25,8 @@ CLEAR_LIVE_PASSWORD_B=...
 
 The run checks a refused wrong password, sign-in, a saved lesson, favourite, rename, search, archive and restore, the same account on a second device, that the second account cannot open or change the first account's lesson, a share link read by the second account, sign-out, and deletion. It uses the built-in sample lesson, so it makes no model calls, and it deletes the lesson it created.
 
+Each real question in the guest checks counts against the 20 CLEAR Free lessons a network may use in a day (it resets at 00:00 UTC), so do not run the full guest set more than once or twice a day from the same network.
+
+The site allows six sign-in requests per network in ten minutes and this run uses four, so wait ten minutes after creating the accounts and between runs.
+
 Passwords are typed only into the site's own sign-in form. Traces are off, and a failed step never prints the password. Without the four values the account checks are skipped.

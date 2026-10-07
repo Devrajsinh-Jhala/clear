@@ -8,7 +8,9 @@ export const shareSnapshotSchema = z.object({
   document: explanationDocumentSchema,
   showProvider: z.boolean(),
   sharedAt: z.string().datetime(),
-  sourceUpdatedAt: z.string().datetime(),
+  // The lesson's revision as its store reports it. Postgres writes an offset and
+  // microseconds ("…12.345678+00:00"), and that exact text is the lesson's revision token.
+  sourceUpdatedAt: z.string().datetime({ offset: true }),
 }).strict();
 
 export type ShareSnapshot = z.infer<typeof shareSnapshotSchema>;

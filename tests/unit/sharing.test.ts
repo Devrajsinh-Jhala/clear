@@ -99,6 +99,21 @@ describe("private guest lessons and share snapshots", () => {
     expect(created.ownerLearnerId).toBeTruthy();
   });
 
+  it("shares a lesson whose revision time comes from Postgres, with an offset and microseconds", async () => {
+    state.learnerId = owner;
+    const stored = { ...record(), updatedAt: "2026-10-04T10:00:00.123456+00:00" };
+    const files = state.conversations!;
+    state.conversations = { ...files, get: async (id: string) => (id === lessonId ? structuredClone(stored) : null) } as ConversationStore;
+    const created = await POST(request("POST", { showProvider: false }), context);
+    expect(created.status).toBe(200);
+    const { share } = await created.json();
+    expect(share).toMatchObject({ active: true, stale: false });
+    await expect(readPublicShare(share.path.split("/").at(-1))).resolves.toMatchObject({ document: { topic: stored.title } });
+    await expect(getShareStatus(lessonId)).resolves.toMatchObject({ active: true, stale: false });
+    stored.updatedAt = "2026-10-04T10:05:00.654321+00:00";
+    await expect(getShareStatus(lessonId)).resolves.toMatchObject({ active: true, stale: true });
+  });
+
   it("wrong browser, omitted identity, and invalid paths cannot read or mutate private lessons", async () => {
     for (const learnerId of [other, undefined]) {
       state.learnerId = learnerId;

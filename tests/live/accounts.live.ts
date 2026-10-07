@@ -39,6 +39,7 @@ test("two accounts keep separate libraries across devices, and sharing crosses b
   expect(first.email, "Use two different accounts.").not.toBe(second.email);
   const title = `Live check ${new Date().toISOString().slice(0, 19).replace("T", " ")}`;
   const sessions: BrowserContext[] = [];
+  let secondDevice: Page | undefined;
   let id = "";
 
   try {
@@ -80,6 +81,7 @@ test("two accounts keep separate libraries across devices, and sharing crosses b
     await test.step("the same account sees the lesson on another device", async () => {
       const device = await newSession(browser);
       sessions.push(device.context);
+      secondDevice = device.page;
       await signIn(device.page, first);
       await expect(card(device.page, id).getByRole("link", { name: title, exact: true })).toBeVisible();
       await device.page.goto(`/learn/${id}`);
@@ -124,19 +126,20 @@ test("two accounts keep separate libraries across devices, and sharing crosses b
       await expect(page.getByRole("heading", { name: "That page is not here.", exact: true })).toBeVisible();
     });
 
-    await test.step("deleting the lesson removes it and its share link", async () => {
-      await signIn(page, first);
-      await card(page, id).getByRole("button", { name: "Delete", exact: true }).click();
-      await card(page, id).getByRole("button", { name: "Delete this lesson", exact: true }).click();
-      await expect(page.getByRole("status").filter({ hasText: /deleted/i })).toBeVisible();
-      await expect(card(page, id)).toHaveCount(0);
+    await test.step("the other device is still signed in, and deleting there removes the lesson and its share link", async () => {
+      const device = secondDevice!;
+      await device.goto("/library");
+      await card(device, id).getByRole("button", { name: "Delete", exact: true }).click();
+      await card(device, id).getByRole("button", { name: "Delete this lesson", exact: true }).click();
+      await expect(device.getByRole("status").filter({ hasText: /deleted/i })).toBeVisible();
+      await expect(card(device, id)).toHaveCount(0);
       id = "";
       await page.goto(link);
       await expect(page.getByRole("heading", { name: "This link is unavailable", exact: true })).toBeVisible();
     });
   } finally {
     // Leave no test lesson behind if a step failed part-way.
-    if (id) await page.request.delete(`/api/auth/library/${id}`, { headers: { Origin: LIVE_URL } }).catch(() => undefined);
+    if (id) await (secondDevice ?? page).request.delete(`/api/auth/library/${id}`, { headers: { Origin: LIVE_URL } }).catch(() => undefined);
     await Promise.all(sessions.map((context) => context.close()));
   }
 });
