@@ -159,6 +159,13 @@ function VisualPanel({ still }: { still: boolean }) {
           {lines.map((path, index) => <path key={path} d={path} pathLength="1" className="draw" style={{ "--i": 3 + index * 3 } as CSSProperties} />)}
           <path d="M410 115v25" strokeDasharray="4 4" className="rise" style={order(12)} />
         </g>
+        {/* Drawn before the boxes so the dot runs along the wires and passes behind each box, not over its label. */}
+        {still ? null : (
+          <circle r="4.5" fill="var(--primary)" opacity="0">
+            <set attributeName="opacity" to="1" begin="1.5s" />
+            <animateMotion dur="2.4s" begin="1.5s" repeatCount="indefinite" path="M130 92H350" />
+          </circle>
+        )}
         {boxes.map(([x, y, label], index) => (
           <g key={label} className="pop" style={{ "--i": index * 3, transformBox: "fill-box", transformOrigin: "center" } as CSSProperties}>
             <rect x={x} y={y} width="120" height="45" rx="8" fill={label === "MMU" ? "var(--accent)" : "var(--card)"} stroke={label === "MMU" ? "var(--primary)" : "var(--border)"} strokeWidth="1.25" />
@@ -168,13 +175,8 @@ function VisualPanel({ still }: { still: boolean }) {
         <g className="rise" style={order(10)}>
           <text x="155" y="84" textAnchor="middle" fill="var(--muted-foreground)" fontSize="10" fontFamily="var(--font-geist-mono)">virtual</text>
           <text x="325" y="84" textAnchor="middle" fill="var(--muted-foreground)" fontSize="10" fontFamily="var(--font-geist-mono)">physical</text>
-          <text x="418" y="132" fill="var(--muted-foreground)" fontSize="10" fontFamily="var(--font-geist-mono)">page fault</text>
+          <text x="402" y="131" textAnchor="end" fill="var(--muted-foreground)" fontSize="10" fontFamily="var(--font-geist-mono)">page fault</text>
         </g>
-        {still ? null : (
-          <circle r="4.5" fill="var(--primary)">
-            <animateMotion dur="2.4s" begin="1.5s" repeatCount="indefinite" path="M130 92H350" />
-          </circle>
-        )}
       </svg>
     </div>
   );

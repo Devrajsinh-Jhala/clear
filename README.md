@@ -1,10 +1,29 @@
+<div align="center">
+
 # CLEAR
 
-Product status and the full specification are in `PRODUCT_SPEC.md`. Commit to `main` directly.
+**AI knows the answer. CLEAR helps you understand it.**
 
-AI knows the answer. CLEAR helps you understand it.
+[**Try it: clear-explainer.vercel.app**](https://clear-explainer.vercel.app) · [Watch the 58-second launch video (with sound)](docs/launch/clear-launch.mp4)
+
+[![CI](https://github.com/Devrajsinh-Jhala/clear/actions/workflows/ci.yml/badge.svg)](https://github.com/Devrajsinh-Jhala/clear/actions/workflows/ci.yml)
+
+<a href="docs/launch/clear-launch.mp4"><img src="docs/launch/clear-launch.gif" width="760" alt="CLEAR in 20 seconds: a question is typed, a lesson appears, then a diagram, a quiz answered correctly and a teach-back check. Select it to watch the full video."></a>
+
+</div>
 
 CLEAR turns a question into one explanation document, then renders that document as an understandable lesson: a short account, a mental model, examples, and a follow-up that updates the same lesson.
+
+## What it does
+
+- **One question, ten views.** Understand, Mental Model, Visual, Interactive, Examples, Deep Dive, Verify, Quiz, Teach it back and Voice Tutor all read the same explanation, so they never disagree.
+- **It checks that the idea clicked.** A quiz explains each answer. Teach it back reviews your own explanation and repairs the gaps.
+- **Follow-ups update the lesson.** A new question changes the same lesson instead of starting another chat.
+- **Free, with no sign-in.** CLEAR Free runs on Google Gemini with a daily allowance. You can also bring your own API key.
+- **Yours to keep.** Share a frozen, read-only link, or download the lesson as Markdown, JSON or PDF.
+- **A portable skill.** Export the teaching method as a skill for your own AI agent.
+
+Product status and the full specification are in `PRODUCT_SPEC.md`. Commit to `main` directly.
 
 ## Run locally
 
