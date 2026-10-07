@@ -1,6 +1,6 @@
 # Deploy CLEAR to Vercel and Supabase
 
-The new Vercel project is `devrajsinhjhalas-projects/clear`, connected to `Devrajsinh-Jhala/clear`. No deployment has been published. Git deployments are disabled in `vercel.json` until the production checks below pass.
+The new Vercel project is `devrajsinhjhalas-projects/clear`, connected to `Devrajsinh-Jhala/clear`. Production is live at https://clear-explainer.vercel.app (first deployed 2026-10-07 with `npx vercel deploy --prod`). Git deployments are enabled in `vercel.json`: a push to `main` deploys to production and other branches get previews. The dashboard's Redeploy button rebuilds the source of the deployment it is clicked on; it does not fetch `main`. `NEXT_PUBLIC_APP_URL` is read at build time, so changing the domain needs a new build as well as the new value.
 
 ## Database and private storage
 

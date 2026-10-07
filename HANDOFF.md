@@ -9,7 +9,7 @@ Read this first if you are picking the project up in a new session. `PRODUCT_SPE
 | Branch | `main` (the repo rule in `AGENTS.md`: commit to `main` and push; the session branch `claude/exciting-fermi-ghq5io` mirrors it) |
 | Last code commit | `1f799f3` (follow-up typing fix). Later commits are docs only. |
 | CI | GitHub Actions run 10 on `1f799f3` is **green end to end**: lint, unit tests, offline evals, production build, all 40 Playwright scenarios (Chromium, Firefox, WebKit, mobile Chromium) and the password-form suite. Before this session CI had been red at the unit-test step for several pushes. |
-| Deployed | **Nothing.** The Vercel project exists but `vercel.json` has `git.deploymentEnabled: false`. Deploying needs the owner's Vercel and Supabase dashboards (see "What is left"). |
+| Deployed | **Production is live** at https://clear-explainer.vercel.app since 2026-10-07. Git deployments are on: a push to `main` deploys to production. Health check ready; a real lesson and a follow-up were generated there through the API. Signed-in flows on production are not yet verified. |
 | Local checks | 355 unit tests in 37 files, lint, `tsc --noEmit`, `next build`, and the 20 Chromium + mobile-Chromium browser scenarios pass in the cloud container. |
 
 ## What this session did (newest first)
@@ -58,7 +58,7 @@ Direction: spec section 29 — calm, technical, typography-first, subtle borders
 | --- | --- | --- |
 | Set Vercel production (and preview) variables | Owner | `NEXT_PUBLIC_APP_URL` (final https origin), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, the existing `APP_ENCRYPTION_KEY`, `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.5-flash-lite`, `CLEAR_TRUSTED_IP_HEADER=x-vercel-forwarded-for`. Leave `CLEAR_PROVIDER` and Sentry blank. Full list: `DEPLOYMENT.md`. |
 | Supabase Site URL | Owner | Authentication → URL Configuration → the same https origin. |
-| Turn on deployments | Agent, after the owner confirms the variables | Set `git.deploymentEnabled` in `vercel.json` (consider preview-only first, e.g. disabling `main`), commit, push. |
+| Turn on deployments | Done 2026-10-07 | `git.deploymentEnabled` is true. Every push to `main` now reaches users, so check CI and the site after each push. |
 | Two-account smoke test | Owner or agent | Sign-up, sign-in, sign-out, library, share, export, one image and one PDF question on the deployed site. |
 | Live eval on the launch model | Done 2026-10-07 | Passed the launch gate; see above. Command below for reruns. |
 | Raise the Gemini quota | Owner | The live key returns HTTP 429 after about a dozen lesson requests in a minute. Enable billing or request a higher limit before sharing the site widely. |

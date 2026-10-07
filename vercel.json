@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "git": { "deploymentEnabled": false },
+  "git": { "deploymentEnabled": true },
   "functions": {
     "app/api/explanations/route.ts": { "maxDuration": 300 },
     "app/api/explanations/[id]/follow-up/route.ts": { "maxDuration": 300 },
