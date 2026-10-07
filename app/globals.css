@@ -393,6 +393,185 @@
   }
 }
 
+/*
+ * Landing page motion. The lesson screens stay still; only the landing page moves.
+ * Every animation ends in, or falls back to, the finished state, so the page is
+ * complete without scripts, without scroll timelines, and under reduced motion.
+ */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes line-up {
+  from { transform: translateY(110%); }
+  to { transform: none; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fill-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes caret {
+  50% { opacity: 0; }
+}
+@keyframes marker-sweep {
+  from { background-size: 0% 36%; }
+  to { background-size: 100% 36%; }
+}
+@keyframes soft-rise {
+  from { opacity: 0.3; transform: translateY(1.5rem); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes travel-x {
+  from { left: 0%; }
+  to { left: 100%; }
+}
+@keyframes fan-out {
+  from { opacity: 0; transform: none; }
+  to { opacity: 1; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--turn, 0deg)); }
+}
+@keyframes click-ring {
+  from { opacity: 0.7; transform: scale(0.4); }
+  to { opacity: 0; transform: scale(2.2); }
+}
+@keyframes burst {
+  from { opacity: 1; transform: translate(0, 0) scale(1); }
+  to { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+@layer components {
+  /* Staged entrance. Set --i on each item to stagger. */
+  .rise {
+    animation: rise-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 80ms + var(--wait, 0ms));
+  }
+  .pop {
+    animation: pop-in 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+    animation-delay: calc(var(--i, 0) * 80ms + var(--wait, 0ms));
+  }
+  /* A headline line that slides up from behind its own baseline. */
+  .mask-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.12em;
+    margin-bottom: -0.12em;
+  }
+  .mask-line > span {
+    display: block;
+    animation: line-up 0.8s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 110ms);
+  }
+  /* SVG strokes with pathLength="1" that draw themselves. */
+  .draw {
+    stroke-dasharray: 1;
+    animation: draw 0.7s ease-out both;
+    animation-delay: calc(var(--i, 0) * 120ms + var(--wait, 0ms));
+  }
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.15em;
+    margin-left: 1px;
+    vertical-align: -0.2em;
+    background: var(--primary);
+    animation: caret 1s steps(1) infinite;
+  }
+
+  /* A highlighter stroke behind a key phrase, the way a learner marks a page. */
+  .marker {
+    background: linear-gradient(color-mix(in oklch, var(--primary) 22%, transparent) 0 0) no-repeat left 90% / 100% 36%;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .marker-load {
+    animation: marker-sweep 0.7s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+    animation-delay: var(--wait, 0.9s);
+  }
+
+  /* Dots that turn primary under the pointer. --mx and --my are set by PointerGlow. */
+  .dot-spot {
+    background-image: radial-gradient(var(--primary) 1.1px, transparent 1.4px);
+    background-size: 18px 18px;
+    -webkit-mask-image: radial-gradient(11rem circle at calc(var(--mx, -40rem) + var(--inset, 0px)) calc(var(--my, -40rem) + var(--inset, 0px)), #000, transparent 72%);
+    mask-image: radial-gradient(11rem circle at calc(var(--mx, -40rem) + var(--inset, 0px)) calc(var(--my, -40rem) + var(--inset, 0px)), #000, transparent 72%);
+  }
+  /* Hairlines between cells that light up near the pointer. Cells cover everything else. */
+  .glow-lines {
+    position: relative;
+    background: var(--border);
+  }
+  .glow-lines::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(14rem circle at var(--mx, -40rem) var(--my, -40rem), var(--primary), transparent 70%);
+    pointer-events: none;
+  }
+  .glow-lines > * {
+    position: relative;
+  }
+
+  /* Sheets that fan out behind the product preview: one document, several views. */
+  .sheet {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: color-mix(in oklch, var(--card) 65%, transparent);
+    animation: fan-out 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--wait, 0.7s);
+  }
+
+  .lift {
+    transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 200ms, border-color 200ms;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklch, var(--primary) 35%, var(--border));
+    box-shadow: 0 14px 30px -18px hsl(var(--shadow-color) / 35%);
+  }
+
+  /* A dot that follows the reader along the three steps. Hidden unless scroll timelines exist. */
+  .step-runner {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Scroll-linked polish. Without support the content simply sits in place. */
+    .reveal {
+      animation: soft-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+    .marker-scroll {
+      animation: marker-sweep linear both;
+      animation-timeline: view();
+      animation-range: entry 80% cover 42%;
+    }
+    .draw-scroll {
+      stroke-dasharray: 1;
+      animation: draw linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 50%;
+    }
+    .step-runner {
+      display: block;
+      animation: travel-x linear both;
+      animation-timeline: view();
+      animation-range: entry 60% cover 62%;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

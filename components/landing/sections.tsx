@@ -1,14 +1,20 @@
-import { ArrowRight, Check, FileText, Folder } from "lucide-react";
+import { ArrowRight, Check, FileText, Folder, Layers, MessageSquareText, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { VIEW_META } from "@/components/lesson/view-meta";
+import { DocumentViews } from "@/components/landing/document-views";
+import { LevelDemo } from "@/components/landing/level-demo";
 import { SUPPORT_URL } from "@/components/support/chai-button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-function SectionHeading({ id, label, title, children }: { id: string; label: string; title: string; children?: ReactNode }) {
+/** A key phrase with a highlighter stroke that sweeps in as the heading scrolls into view. */
+function Mark({ children }: { children: ReactNode }) {
+  return <span className="marker marker-scroll">{children}</span>;
+}
+
+function SectionHeading({ id, label, title, children }: { id: string; label: string; title: ReactNode; children?: ReactNode }) {
   return (
-    <div className="max-w-2xl">
+    <div className="reveal max-w-2xl">
       <p className="eyebrow">{label}</p>
       <h2 id={id} className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{title}</h2>
       {children ? <p className="mt-4 text-pretty text-lg leading-relaxed text-muted-foreground">{children}</p> : null}
@@ -17,62 +23,61 @@ function SectionHeading({ id, label, title, children }: { id: string; label: str
 }
 
 const STEPS = [
-  ["Ask your way", "Type a question, speak it, or attach an image or a PDF. Choose your level and how deep to go."],
-  ["CLEAR builds one explanation", "A single checked document: concepts, relationships, a mental model, examples and a quiz. Every view is drawn from it."],
-  ["Learn until it clicks", "Switch views, ask follow-ups that update the same lesson, then quiz yourself or teach it back."],
+  [MessageSquareText, "Ask your way", "Type a question, speak it, or attach an image or a PDF. Choose your level and how deep to go."],
+  [Layers, "CLEAR builds one explanation", "A single checked document: concepts, relationships, a mental model, examples and a quiz. Every view is drawn from it."],
+  [Sparkles, "Learn until it clicks", "Switch views, ask follow-ups that update the same lesson, then quiz yourself or teach it back."],
 ] as const;
 
 export function StepsSection() {
   return (
     <section className="border-b border-border" aria-labelledby="steps-title">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
-        <SectionHeading id="steps-title" label="How it works" title="From a question to real understanding." />
-        <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
-          {STEPS.map(([title, text], index) => (
-            <li key={title} className="border-t border-border pt-6">
-              <span className="font-mono text-sm text-muted-foreground">0{index + 1}</span>
-              <h3 className="mt-3 text-lg font-semibold tracking-tight">{title}</h3>
-              <p className="mt-2 leading-relaxed text-muted-foreground">{text}</p>
-            </li>
-          ))}
-        </ol>
+        <SectionHeading id="steps-title" label="How it works" title={<>From a question to <Mark>real understanding.</Mark></>} />
+        <div className="relative mt-12">
+          {/* The steps share one top rule. On wide screens a dot runs along it as the reader scrolls past. */}
+          <div className="absolute inset-x-0 top-0 hidden h-px md:block" aria-hidden="true">
+            <span className="step-runner absolute -top-1 -ml-1 size-2 rounded-full bg-primary shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary)_18%,transparent)]" />
+          </div>
+          <ol className="grid gap-10 md:grid-cols-3 md:gap-8">
+            {STEPS.map(([Icon, title, text], index) => (
+              <li key={title} className="reveal border-t border-border pt-6">
+                <div className="flex items-center justify-between">
+                  <span className="flex size-10 items-center justify-center rounded-lg border border-border bg-card text-primary"><Icon className="size-5" aria-hidden="true" /></span>
+                  <span className="font-mono text-sm text-muted-foreground">0{index + 1}</span>
+                </div>
+                <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>
+                <p className="mt-2 leading-relaxed text-muted-foreground">{text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
 }
 
-const VIEWS: Array<{ id: string; title: string; text: string }> = [
-  { id: "understand", title: "Understand", text: "The idea in one precise sentence, then the mechanism and the terms in plain language." },
-  { id: "mental-model", title: "Mental model", text: "An intuition and a labeled analogy that says where the analogy stops being true." },
-  { id: "visual", title: "Visual", text: "Diagrams drawn from the same explanation, each with a text version." },
-  { id: "interactive", title: "Interactive", text: "Step through a trace or move a parameter. Model-written code never runs." },
-  { id: "examples", title: "Examples", text: "Worked examples that walk through the idea one step at a time." },
-  { id: "deep-dive", title: "Deep dive", text: "Assumptions, edge cases and the detail a specialist expects." },
-  { id: "verify", title: "Verify", text: "What was checked, what was not, and how confident the lesson is." },
-  { id: "quiz", title: "Quiz", text: "Questions that test the mechanism, not your memory of the wording." },
-  { id: "teach-back", title: "Teach it back", text: "Explain it in your own words. CLEAR finds what is missing or wrong." },
-  { id: "voice", title: "Voice tutor", text: "Listen to the lesson, or ask your follow-up out loud." },
-];
-
 export function ViewsSection() {
   return (
     <section className="border-b border-border bg-muted/40" aria-labelledby="views-title">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
-        <SectionHeading id="views-title" label="Ten views of one explanation" title="One question, explained ten ways.">
-          Every view is drawn from the same checked explanation, so the diagram, the analogy and the quiz never disagree with each other.
+        <SectionHeading id="views-title" label="Ten views of one explanation" title={<>One document, <Mark>explained ten ways.</Mark></>}>
+          CLEAR writes one checked explanation document, and every view reads from it, so the diagram, the analogy and the quiz never disagree. Choose a view to see what it reads.
         </SectionHeading>
-        <ul className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-5">
-          {VIEWS.map((view) => {
-            const Icon = VIEW_META[view.id].icon;
-            return (
-              <li key={view.id} className="bg-card p-4 sm:p-5">
-                <Icon className="size-5 text-primary" aria-hidden="true" />
-                <h3 className="mt-4 font-medium">{view.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{view.text}</p>
-              </li>
-            );
-          })}
-        </ul>
+        <DocumentViews />
+      </div>
+    </section>
+  );
+}
+
+export function LevelSection() {
+  return (
+    <section className="border-b border-border" aria-labelledby="level-title">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
+        <SectionHeading id="level-title" label="Your level" title={<>The same idea, <Mark>at your level.</Mark></>}>
+          Pick a level and the words change. The truth does not. Then answer one question, the way every lesson ends.
+        </SectionHeading>
+        <LevelDemo />
+        <p className="mt-4 text-sm text-muted-foreground">These four samples are written by hand. Your lesson is generated for your own question.</p>
       </div>
     </section>
   );
@@ -91,13 +96,13 @@ const PROVIDERS = ["Google Gemini", "OpenAI", "Anthropic", "xAI", "Any OpenAI-co
 
 export function ProvidersSection() {
   return (
-    <section className="border-b border-border" aria-labelledby="providers-title">
+    <section className="border-b border-border bg-muted/40" aria-labelledby="providers-title">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <SectionHeading id="providers-title" label="Model independent and private" title="Any model. Your keys. Your data.">
           The model is an implementation detail. The way CLEAR teaches stays the same, and your lessons stay yours.
         </SectionHeading>
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
-          <article className="surface-panel p-6 sm:p-8">
+          <article className="surface-panel lift reveal p-6 sm:p-8">
             <h3 className="text-lg font-semibold tracking-tight">CLEAR Free, or bring your own key</h3>
             <ul className="mt-4 flex flex-wrap gap-2">
               {PROVIDERS.map((provider) => <li key={provider} className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-sm">{provider}</li>)}
@@ -108,7 +113,7 @@ export function ProvidersSection() {
               <Bullet>Run the same question on two models and keep the clearer explanation.</Bullet>
             </ul>
           </article>
-          <article className="surface-panel p-6 sm:p-8">
+          <article className="surface-panel lift reveal p-6 sm:p-8">
             <h3 className="text-lg font-semibold tracking-tight">Private by default</h3>
             <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
               <Bullet>API keys are encrypted at rest and are never sent back to your browser.</Bullet>
@@ -117,8 +122,8 @@ export function ProvidersSection() {
               <Bullet>Learning memory is off until you turn it on, and you can delete it.</Bullet>
               <Bullet>Sharing publishes a frozen snapshot that you preview first. You can replace or revoke the link.</Bullet>
             </ul>
-            <Link href="/privacy" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-              Read the privacy notes <ArrowRight className="size-4" aria-hidden="true" />
+            <Link href="/privacy" className="group mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+              Read the privacy notes <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
           </article>
         </div>
@@ -141,18 +146,18 @@ const SKILL_FILES = [
 
 export function SkillSection() {
   return (
-    <section className="border-b border-border bg-muted/40" aria-labelledby="skill-title">
+    <section className="border-b border-border" aria-labelledby="skill-title">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:py-24 lg:grid-cols-2">
         <div>
           <SectionHeading id="skill-title" label="Portable skill" title="Take the way CLEAR explains with you.">
             Export CLEAR&rsquo;s teaching method as an Agent Skill. Choose the learner level, depth, analogies and quizzes, preview every file, and download a ZIP for a compatible AI agent.
           </SectionHeading>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">Seven files of instructions and examples. No conversations, uploads, learning records or keys.</p>
-          <Link href="/skill" className="button-secondary mt-8 gap-2">
-            Build your skill <ArrowRight className="size-4" aria-hidden="true" />
+          <Link href="/skill" className="button-secondary group mt-8 gap-2">
+            Build your skill <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         </div>
-        <div className="surface-panel overflow-hidden font-mono text-sm" aria-hidden="true">
+        <div className="surface-panel reveal overflow-hidden font-mono text-sm" aria-hidden="true">
           <p className="border-b border-border px-4 py-3 text-xs text-muted-foreground">clear-explainer.zip</p>
           <ul className="space-y-1.5 p-5">
             <li className="flex items-center gap-2.5"><Folder className="size-4 text-primary" />clear-explainer/</li>
@@ -182,7 +187,7 @@ const FAQ: Array<[string, ReactNode]> = [
 
 export function FaqSection() {
   return (
-    <section className="border-b border-border" aria-labelledby="faq-title">
+    <section className="border-b border-border bg-muted/40" aria-labelledby="faq-title">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
         <SectionHeading id="faq-title" label="Questions" title="Before you ask." />
         <Accordion type="single" collapsible className="border-t border-border">
@@ -198,15 +203,44 @@ export function FaqSection() {
   );
 }
 
+const RAYS = [
+  ["M176 96 L300 34", "Summary", 38],
+  ["M178 103 L306 72", "Mental model", 76],
+  ["M180 110 L310 110", "Diagram", 114],
+  ["M178 117 L306 148", "Examples", 152],
+  ["M176 124 L300 186", "Quiz", 190],
+] as const;
+
+/** The CLEAR mark at work: one question goes in, several views come out. The rays draw as it scrolls into view. */
+function PrismArt() {
+  return (
+    <svg viewBox="0 0 420 220" className="h-auto w-full text-foreground" fill="none" aria-hidden="true">
+      <path d="M8 110 H128" pathLength="1" className="draw-scroll" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      <text x="8" y="98" fill="var(--muted-foreground)" fontSize="11" fontFamily="var(--font-geist-mono)">your question</text>
+      {RAYS.map(([path, label, y], index) => (
+        <g key={label}>
+          <path d={path} pathLength="1" className="draw-scroll" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" opacity={1 - Math.abs(index - 2) * 0.22} />
+          <text x="316" y={y} fill="var(--muted-foreground)" fontSize="11" fontFamily="var(--font-geist-mono)">{label}</text>
+        </g>
+      ))}
+      <path d="M148 52 a6 6 0 0 1 10.4 0 l40 69.3 a6 6 0 0 1 -5.2 9 h-80 a6 6 0 0 1 -5.2 -9 Z" fill="var(--card)" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M132 118 l22 -40" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.3" />
+    </svg>
+  );
+}
+
 export function ClosingSection({ children }: { children: ReactNode }) {
   return (
     <section aria-labelledby="closing-title">
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-4 py-20 sm:py-24 md:flex-row md:items-center">
-        <div className="max-w-xl">
-          <h2 id="closing-title" className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">What are you trying to understand?</h2>
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:py-24 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <div className="reveal max-w-xl">
+          <h2 id="closing-title" className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">What are you trying to understand?</h2>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">Bring the question you have been putting off. A lesson takes about half a minute.</p>
+          <div className="mt-8 flex flex-wrap items-start gap-3">{children}</div>
         </div>
-        <div className="flex flex-wrap items-start gap-3">{children}</div>
+        <div className="hidden w-full max-w-[26rem] justify-self-end lg:block">
+          <PrismArt />
+        </div>
       </div>
     </section>
   );
