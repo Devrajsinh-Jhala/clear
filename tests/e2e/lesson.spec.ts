@@ -72,3 +72,18 @@ test("a failed request retains the question and offers an explicit retry", async
   await expect(page.getByRole("heading", { name: question, exact: true })).toBeVisible();
   await expectNoPageOverflow(page);
 });
+
+test("a chosen file stays attached and is sent with the question", async ({ page }) => {
+  await page.goto("/ask");
+  await page.getByRole("button", { name: "Add material", exact: true }).click();
+  // A real PNG header: uploads are checked by content, not by name.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+  await page.locator('input[type="file"]').setInputFiles({ name: "synthetic-diagram.png", mimeType: "image/png", buffer: png });
+  await expect(page.getByRole("button", { name: "1 attachment", exact: true })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "synthetic-diagram.png" })).toBeVisible();
+  await page.getByRole("textbox", { name: "What are you trying to understand?", exact: true }).fill("Explain this synthetic diagram.");
+  await page.getByRole("button", { name: "Help me understand", exact: true }).click();
+  // The local mock cannot read images, so its refusal proves the server received the file.
+  await expect(page.getByRole("alert").filter({ hasText: "Local mock cannot read images." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "1 attachment", exact: true })).toBeVisible();
+});

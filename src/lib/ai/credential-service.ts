@@ -24,8 +24,11 @@ export type PublicCredential = {
   baseHost?: string;
 };
 
+// Reading never creates a browser identity. Two requests that each created one on a first
+// visit could leave the browser holding a different id from the one that owns its lesson.
 export async function listPublicCredentials(): Promise<PublicCredential[]> {
-  const learnerId = await ensureLearnerId();
+  const learnerId = await currentLearnerId();
+  if (!learnerId) return [];
   const stored = await listStoredCredentials(learnerId);
   return stored.map(toPublic);
 }
@@ -58,8 +61,8 @@ export async function connectProvider(input: {
 
 export async function removeProvider(providerId: string): Promise<void> {
   const provider = requireProvider(providerId);
-  const learnerId = await ensureLearnerId();
-  await deleteStoredCredential(learnerId, provider);
+  const learnerId = await currentLearnerId();
+  if (learnerId) await deleteStoredCredential(learnerId, provider);
 }
 
 export async function testSavedProvider(providerId: string): Promise<void> {

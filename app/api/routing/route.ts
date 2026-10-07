@@ -3,7 +3,7 @@ import { withApiGuard } from "@/src/lib/api/guard";
 import { z } from "zod";
 
 import { assertSameOrigin, errorResponse } from "@/src/lib/api/http";
-import { ensureLearnerId } from "@/src/lib/learning/session";
+import { currentLearnerId, ensureLearnerId } from "@/src/lib/learning/session";
 import { listApprovedTargets } from "@/src/lib/routing/available";
 import { defaultRoutingPreferences, ROUTING_TASKS } from "@/src/lib/routing/choose";
 import { readRoutingPreferences, writeRoutingPreferences } from "@/src/lib/routing/store";
@@ -31,7 +31,8 @@ const preferencesSchema = z.object({
 export async function GET(request: Request) {
   return withApiGuard(request, "mutation", async () => {
     try {
-      const learnerId = await ensureLearnerId();
+      // A read shows the defaults to a new visitor; only saving creates a browser identity.
+      const learnerId = await currentLearnerId();
       const [preferences, available] = await Promise.all([
         readRoutingPreferences(learnerId),
         listApprovedTargets(),

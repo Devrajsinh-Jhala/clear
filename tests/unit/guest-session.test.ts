@@ -9,6 +9,10 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+vi.mock("@/src/lib/auth/session", () => ({ currentAccount: async () => null }));
+
+import { GET as readRouting } from "@/app/api/routing/route";
+import { listPublicCredentials } from "@/src/lib/ai/credential-service";
 import { currentLearnerId, ensureLearnerId } from "@/src/lib/learning/session";
 
 describe("guest browser identity", () => {
@@ -23,6 +27,15 @@ describe("guest browser identity", () => {
     await expect(currentLearnerId()).resolves.toBe(identity);
     await expect(ensureLearnerId()).resolves.toBe(identity);
     expect(jar.set).toHaveBeenCalledTimes(1);
+  });
+
+  it("loading settings on a first visit creates no identity that could race the first lesson", async () => {
+    vi.stubEnv("CLEAR_PROVIDER", "mock");
+    const response = await readRouting(new Request("http://localhost:3000/api/routing"));
+    expect(response.status).toBe(200);
+    expect((await response.json()).preferences.defaultTarget.provider).toBe("clear-free");
+    await expect(listPublicCredentials()).resolves.toEqual([]);
+    expect(jar.set).not.toHaveBeenCalled();
   });
 
   it("reading a missing or invalid cookie does not claim a guest identity", async () => {

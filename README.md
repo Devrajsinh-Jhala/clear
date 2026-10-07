@@ -69,6 +69,7 @@ npm run build
 npx playwright install --with-deps chromium firefox webkit
 npm run test:e2e
 npm run check:deployment -- --remote
+npm run test:live -- guest   # against the deployed site; see tests/live/README.md
 ```
 
 Browser regression tests use an isolated mock production build and temporary synthetic storage. CI builds with no provider or Supabase secrets and runs Chromium, Firefox, WebKit and mobile Chromium. Offline evals check the reference corpus and rubric; they do not establish live model quality. Billable live evals require explicit process flags and credentials; see the deployment guide. Deployed password sign-in and storage checks, microphone devices and an agreed live eval threshold remain launch gates; `PRODUCT_SPEC.md` lists them in order. Custom mail and monitoring are deferred.

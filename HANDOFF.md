@@ -132,6 +132,8 @@ The report lands in `.data/evals/latest-live.json` with the `launchGate` result.
 
 ## Gotchas learned this session
 
+- **Run `npm run test:live -- guest` after a deploy** (see `tests/live/README.md`). It found two production-only bugs on its first run. Reads must never call `ensureLearnerId()`: two concurrent first requests that each mint an identity race, and the browser can keep the one that does not own its lesson. Copy a `FileList` before clearing its input; Chrome and Safari empty the same object.
+
 0. **Flash-Lite returns broken JSON in about one response in four**, even with a JSON response type. `src/lib/explanation/validate.ts` hands unparseable text to the repair pass; do not parse it to `{}` first. Lessons that needed a repair take roughly twice as long.
 
 1. **Do not initialise React state from the DOM during the first render if any rendered attribute depends on it.** The follow-up box read its typed text in `useState(() => …)`, so the client rendered `Send` enabled while the server HTML had it disabled; React does not repair attribute mismatches after hydration, so the button stayed disabled. The fix hydrates with the server's empty draft and picks up early text in a mount effect (`LessonWorkspace.tsx`). `AskComposer.tsx` still initialises from the DOM, which is safe only because nothing but the textarea's own value depends on the question.

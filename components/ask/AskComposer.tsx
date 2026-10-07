@@ -69,8 +69,10 @@ export function AskComposer({ defaultModel, initialQuestion = "" }: { defaultMod
 
   function addFiles(list: FileList | null) {
     if (!list || loading) return;
+    // Copy now. The caller clears the input next, and Chrome and Safari empty this same list.
+    const added = Array.from(list);
     setFilesOpen(true);
-    setFiles((current) => [...current, ...Array.from(list)].slice(0, 3));
+    setFiles((current) => [...current, ...added].slice(0, 3));
   }
 
   async function submit(exampleId?: "mutex") {
