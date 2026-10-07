@@ -26,6 +26,15 @@ describe("CLEAR Free when a Gemini model is busy", () => {
     expect(result.model).toBe("gemini-3.5-flash-lite");
   });
 
+  it("also switches model when Gemini rate limits the chosen one", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "SYNTHETIC_KEY");
+    const http = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("limited", { status: 429 })).mockResolvedValueOnce(answer());
+    vi.stubGlobal("fetch", http);
+    const result = await resolveGenerationProvider().generate({ ...input, model: "gemini-3.5-flash-lite" });
+    expect(http.mock.calls.map(modelOf)).toEqual(["gemini-3.5-flash-lite", "gemini-3.6-flash"]);
+    expect(result.model).toBe("gemini-3.6-flash");
+  });
+
   it("stops with the busy message once every CLEAR Free model is busy", async () => {
     vi.stubEnv("GEMINI_API_KEY", "SYNTHETIC_KEY");
     const http = vi.fn<typeof fetch>().mockImplementation(async () => busy());

@@ -1,4 +1,4 @@
-import type { Depth, LearnerLevel } from "@/src/lib/explanation/schema";
+import { relationshipTypeSchema, visualizationTypeSchema, type Depth, type LearnerLevel } from "@/src/lib/explanation/schema";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -78,7 +78,7 @@ export function prepareModelDocument(
     essence: stringOr(source.essence, ""),
     whyItMatters: stringOr(source.whyItMatters, ""),
     concepts,
-    relationships: Array.isArray(source.relationships) ? source.relationships : [],
+    relationships: normalizeRelationships(source.relationships),
     process: source.process,
     mentalModel: isRecord(source.mentalModel) ? source.mentalModel : { intuition: "" },
     terminology: Array.isArray(source.terminology) ? source.terminology : [],
@@ -173,7 +173,25 @@ function normalizeVisualizations(value: unknown): Record<string, unknown>[] {
   return value.filter(isRecord).map((visualization) => ({
     ...visualization,
     id: uniqueSlug(stringOr(visualization.id, stringOr(visualization.title, "visual")), used),
+    type: knownLabel(visualization.type, visualizationTypeSchema.options) ?? visualization.type,
   }));
+}
+
+// Models sometimes name a relationship outside the fixed list ("prevents", "enables").
+// The sentence in `explanation` carries the meaning, so an unknown label becomes the
+// neutral "related-to" instead of failing the whole lesson.
+function normalizeRelationships(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((relationship) => isRecord(relationship)
+    ? { ...relationship, type: knownLabel(relationship.type, relationshipTypeSchema.options) ?? "related-to" }
+    : relationship);
+}
+
+/** Matches a label to an allowed value, ignoring case, spaces and underscores. */
+function knownLabel<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
+  if (typeof value !== "string") return undefined;
+  const slug = slugify(value);
+  return allowed.find((option) => option === slug);
 }
 
 function normalizeQuiz(value: unknown): Record<string, unknown>[] {

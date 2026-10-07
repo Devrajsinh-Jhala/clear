@@ -164,9 +164,10 @@ function readFinishReason(payload: unknown): string | undefined {
     : undefined;
 }
 
-/** Gemini refused the call because the model is overloaded, not because of the request. */
+/** Gemini refused the call because this model is overloaded or rate limited, not because of the request. */
 export function isGeminiBusy(error: unknown): boolean {
-  return error instanceof ClearError && error.code === "provider_error" && error.status === 503;
+  if (!(error instanceof ClearError)) return false;
+  return error.code === "provider_quota" || (error.code === "provider_error" && error.status === 503);
 }
 
 function geminiHttpError(status: number, bodyText: string): ClearError {

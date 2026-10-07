@@ -27,6 +27,34 @@ describe("explanation schema", () => {
 });
 
 describe("model output acceptance", () => {
+  it("keeps a lesson whose relationship label is outside the fixed list", async () => {
+    const raw = buildSampleModelOutput("How does DNS work?") as unknown as { concepts: Array<{ id: string }>; relationships: Array<Record<string, unknown>> };
+    const [from, to] = [raw.concepts[0].id, raw.concepts.at(-1)!.id];
+    raw.relationships = [
+      { from, to, type: "prevents", explanation: "Synthetic relationship one." },
+      { from, to, type: "Depends On", explanation: "Synthetic relationship two." },
+    ];
+    const document = await acceptModelOutput({ raw, question: "How does DNS work?", audience: sampleAudience(), stamp: sampleStamp() });
+    expect(document.relationships.map((relationship) => relationship.type)).toEqual(["related-to", "depends-on"]);
+    expect(document.relationships[0].explanation).toBe("Synthetic relationship one.");
+  });
+
+  it("hands text that is almost JSON to the repair pass instead of discarding it", async () => {
+    const valid = JSON.stringify(buildSampleModelOutput("How does DNS work?"));
+    const broken = valid.replace('"topic":', '"topic"');
+    const seen: unknown[] = [];
+    const document = await acceptModelOutput({
+      raw: broken,
+      question: "How does DNS work?",
+      audience: sampleAudience(),
+      stamp: sampleStamp(),
+      repair: async (issues, invalid) => { seen.push(issues, invalid); return valid; },
+    });
+    expect(seen[0]).toEqual(["The draft is not valid JSON. Correct the syntax and keep its content."]);
+    expect(seen[1]).toBe(broken);
+    expect(document.topic).toContain("DNS");
+  });
+
   it("builds a valid document from model JSON", async () => {
     const document = await acceptModelOutput({
       raw: buildSampleModelOutput("How does DNS work?"),

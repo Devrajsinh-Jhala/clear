@@ -47,7 +47,7 @@ export function resolveGenerationProvider(): AIProvider {
   return clearFreeProvider();
 }
 
-// CLEAR Free stays on Gemini. When the chosen model is overloaded it asks the
+// CLEAR Free stays on Gemini. When the chosen model is overloaded or rate limited it asks the
 // other CLEAR Free models in turn and reports which one answered. Each attempt
 // is admitted and counted like any other dispatch. BYOK never switches model.
 function clearFreeProvider(): AIProvider {

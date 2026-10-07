@@ -54,6 +54,11 @@ function evaluate(
   raw: unknown,
   input: { question: string; audience: AudienceInput; stamp: DocumentStamp },
 ): { document?: ExplanationDocument; issues: string[]; normalized: unknown } {
+  // A model can return text that is almost JSON. Keep that text for the repair pass:
+  // parsing it to an empty object would leave the repair nothing to work from.
+  if (typeof raw === "string" && !isParseable(raw)) {
+    return { issues: ["The draft is not valid JSON. Correct the syntax and keep its content."], normalized: raw.slice(0, MAX_REPAIR_TEXT) };
+  }
   const normalized = prepareModelDocument(coerceRaw(raw), input);
   const parsed = explanationDocumentSchema.safeParse(normalized);
   if (!parsed.success) {
@@ -70,6 +75,17 @@ function evaluate(
     };
   }
   return { document: parsed.data, issues: [], normalized };
+}
+
+const MAX_REPAIR_TEXT = 60_000;
+
+function isParseable(text: string): boolean {
+  try {
+    parseJsonText(text);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function coerceRaw(raw: unknown): unknown {

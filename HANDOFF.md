@@ -46,7 +46,7 @@ Direction: spec section 29 — calm, technical, typography-first, subtle borders
 - Every case: no critical failure (prohibited claim, fabricated verification, unsafe widget or Mermaid, and now also **a wrong known-answer quiz key**), and perfect `schemaValidity` and `internalConsistency`, and a case score of at least **0.70**.
 - Whole corpus: every case passes and the mean score is at least **0.85**.
 - Why: the old bar required 1.0 on every dimension, but coverage checks are lexical and fail correct lessons that word things differently. Exact checks stay strict; lexical ones are averaged. The strict all-1.0 count is still reported.
-- Status: the last recorded full run (`gemini-3.5-flash-lite`, prompt v4, rubric v2: 12/12 valid and consistent, mean 0.865, lowest 0.72) clears the numbers, but it did not record critical failures per case, so **one fresh full live run must pass before launch**.
+- Status: **passed on 2026-10-07** (`gemini-3.5-flash-lite`, prompt v4, repair v3, rubric v2: 12/12, mean 0.891, lowest 0.79, no critical failures). The report is in `.data/evals/latest-live.json` on the owner's machine. Rerun it after any prompt, schema or model change.
 
 ### Support link (owner-requested exception to the "support comes last" rule)
 
@@ -60,7 +60,8 @@ Direction: spec section 29 — calm, technical, typography-first, subtle borders
 | Supabase Site URL | Owner | Authentication → URL Configuration → the same https origin. |
 | Turn on deployments | Agent, after the owner confirms the variables | Set `git.deploymentEnabled` in `vercel.json` (consider preview-only first, e.g. disabling `main`), commit, push. |
 | Two-account smoke test | Owner or agent | Sign-up, sign-in, sign-out, library, share, export, one image and one PDF question on the deployed site. |
-| Live eval on the launch model | Agent with a key | Needs `GEMINI_API_KEY` in the environment (cloud environment settings → environment variables; never paste keys into chat). Command below. |
+| Live eval on the launch model | Done 2026-10-07 | Passed the launch gate; see above. Command below for reruns. |
+| Raise the Gemini quota | Owner | The live key returns HTTP 429 after about a dozen lesson requests in a minute. Enable billing or request a higher limit before sharing the site widely. |
 | Real microphone test | Owner | Phone and laptop. |
 | BYOK providers | Owner | Test each with a real key, or say in the launch notes which are untested. |
 | Demo video | Agent, after deploy or with a key | Offered: script and record a 60–90 s 1080p walkthrough (ask → lesson views → quiz → teach-back → share) with Playwright `recordVideo` on real lessons. |
@@ -130,6 +131,8 @@ CLEAR_EVAL_API_KEY="$GEMINI_API_KEY" npm run test:eval:live
 The report lands in `.data/evals/latest-live.json` with the `launchGate` result.
 
 ## Gotchas learned this session
+
+0. **Flash-Lite returns broken JSON in about one response in four**, even with a JSON response type. `src/lib/explanation/validate.ts` hands unparseable text to the repair pass; do not parse it to `{}` first. Lessons that needed a repair take roughly twice as long.
 
 1. **Do not initialise React state from the DOM during the first render if any rendered attribute depends on it.** The follow-up box read its typed text in `useState(() => …)`, so the client rendered `Send` enabled while the server HTML had it disabled; React does not repair attribute mismatches after hydration, so the button stayed disabled. The fix hydrates with the server's empty draft and picks up early text in a mount effect (`LessonWorkspace.tsx`). `AskComposer.tsx` still initialises from the DOM, which is safe only because nothing but the textarea's own value depends on the question.
 2. **Unit tests must not inherit deployment settings.** `tests/setup.ts` deletes them; tests use `vi.stubEnv` for what they need.
