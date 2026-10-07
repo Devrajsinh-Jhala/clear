@@ -58,7 +58,7 @@ The full product specification starts at "Product Specification & Codex Build Br
 
 ## Next product slice
 
-What is left before public launch, in order: (1) set the Vercel production variables from `.env.example`, with `NEXT_PUBLIC_APP_URL` as the final HTTPS origin and the same `APP_ENCRYPTION_KEY`, and set the Supabase site URL to that origin; (2) publish a protected preview and check sign-up, sign-in, sign-out, the library, sharing and export with two accounts, plus one image and one PDF question; (3) done 2026-10-07: the full live eval met the launch gate; (4) test the microphone on a real phone and laptop; (5) test each BYOK provider with a real key, or say in the launch notes which ones are untested; (6) done 2026-10-07: production is deployed and `git.deploymentEnabled` is true. Deferred by the owner: custom SMTP (so no email verification or password reset; the account form and privacy page say so) and Sentry. Not built: quiz results do not write learning memory, provider-native realtime audio, streaming lesson output. Do not start payments.
+What is left before public launch, in order: (1) set the Vercel production variables from `.env.example`, with `NEXT_PUBLIC_APP_URL` as the final HTTPS origin and the same `APP_ENCRYPTION_KEY`, and set the Supabase site URL to that origin; (2) done 2026-10-07 on production with the live suite: sign-in, sign-out, the library, sharing and export with two accounts, plus one image and one PDF question; (3) done 2026-10-07: the full live eval met the launch gate; (4) test the microphone on a real phone and laptop; (5) test each BYOK provider with a real key, or say in the launch notes which ones are untested; (6) done 2026-10-07: production is deployed and `git.deploymentEnabled` is true. Deferred by the owner: custom SMTP (so no email verification or password reset; the account form and privacy page say so) and Sentry. Not built: quiz results do not write learning memory, provider-native realtime audio, streaming lesson output. Do not start payments.
 
 Follow-up typing fix (2026-10-06): with unit tests isolated, CI reached the browser matrix and 39 of 40 scenarios passed; WebKit failed because text typed into the follow-up box before the page hydrated left Send disabled. The workspace now hydrates with the server's empty draft and picks up early text after mount (initialising state from the DOM made Send's `disabled` attribute mismatch the server HTML, which React does not repair). A Chromium check with scripts delayed 2.5 seconds keeps the early text and enables Send. Mermaid colours now use the indigo and grey tokens. GitHub Actions run 10 on `1f799f3` is green end to end: lint, unit tests, offline evals, the production build, all 40 browser scenarios on Chromium, Firefox, WebKit and mobile Chromium, and the password-form suite.
 
@@ -67,6 +67,8 @@ CI fix (2026-10-06): GitHub Actions had failed at the unit-test step on every pu
 Latest professional-design checks (2026-10-06): 355 unit tests across 37 files, lint, TypeScript and the production build pass. An isolated mock build passed all 20 Playwright scenarios on Chromium and 390-pixel mobile Chromium, including the light and dark WCAG scans of the new landing page, sidebar lesson layout and shared lesson; the sign-in form suite passed 7 of 7. Firefox and WebKit were not available in this container. Desktop and 390-pixel screenshots of the landing page, `/ask`, a sample lesson, settings, skill, progress, library and about were reviewed in both themes with no page overflow, and the Open Graph card was regenerated in the new palette.
 
 Latest UI polish checks (2026-10-06): 352 unit tests across 37 files, lint, TypeScript and the production build pass. An isolated mock build passed all 20 Playwright scenarios on Chromium and the 390-pixel mobile Chromium project, including the light and dark WCAG scans with the new theme radio group, checkboxes, radios and support button; the configured sign-in form suite passed 7 of 7. This container had only Chromium, so Firefox and WebKit were not run for this change; run the full matrix in CI. Light and dark screenshots of every lesson tab (desktop and 390 pixels), the landing page, settings, about and the footer were reviewed with no page overflow. The official Buy Me a Chai button image was not used: this environment could not reach that host, and hotlinking it would need a CSP change and a third-party request on every page.
+
+Launch status (2026-10-07): on production, every guest check and the two-account check of the live suite pass. The owner ran the account half with two real accounts: a wrong password is refused, a signed-in lesson appears in the library, favourite, rename, search, archive and restore work, the same account sees the lesson on a second device, the second account cannot open, follow up, export or delete it but can read its shared copy, sign-out returns the browser to a guest, and deleting the lesson also disables its share link. Rate limiting is enforced there: one visitor's 31st skill export in ten minutes got HTTP 429 with `Retry-After` while another visitor was unaffected. Still open in section 48: the owner's judgement of the Understand view, a real-microphone voice check, the five BYOK providers with real keys, and error monitoring (Sentry is deferred). Before sharing the link widely, raise the Gemini quota: the key allows about a dozen lesson requests a minute.
 
 Live end-to-end suite (2026-10-07): `npm run test:live` runs Playwright against the deployed site (`tests/live`, never in CI). The guest half covers public pages and security headers, a phone pass, a real question through all ten views with quiz, teach-back and follow-up, downloads, a share link opened by a stranger and revoked, the skill ZIP, saved settings, and an image and a PDF question. The account half needs two accounts in `.env.live.local` and is run by the owner; it covers a refused wrong password, sign-in, library actions, a second device, isolation between the two accounts, sharing across them, sign-out and deletion. Its first runs on production found three defects that the mock-provider tests could not see, all fixed: (1) on a first visit the settings read and the first lesson request each created a browser identity, and when the settings response arrived last the browser kept an identity that did not own its new lesson (reads no longer create an identity); (2) the composer cleared the file input before copying the chosen files, and Chrome and Safari empty that list, so an attachment was silently dropped and the model never saw it. A browser test in the CI suite now covers the attachment. (3) Sharing had never worked against the real database: a lesson read from Supabase carries its revision time as Postgres writes it (`…12.345678+00:00`), the share snapshot only accepted the `…Z` form, and every share attempt was refused as "Choose valid sharing options". The local file store always wrote the `Z` form, which hid it. The snapshot now accepts an offset, with a unit test that uses a Postgres-style time.
 
@@ -2470,7 +2472,7 @@ Checked implementation items have local regression coverage. Real account/provid
 
 ## Product
 - [x] Guest can ask a text question.
-- [ ] Signed-in user can persist history.
+- [x] Signed-in user can persist history.
 - [ ] Understand view is excellent.
 - [x] Mental Model works.
 - [x] Visual works.
@@ -2480,8 +2482,8 @@ Checked implementation items have local regression coverage. Real account/provid
 - [x] Quiz works.
 - [x] Teach-It-Back works.
 - [x] Follow-ups preserve context.
-- [ ] Image input works.
-- [ ] PDF input works.
+- [x] Image input works.
+- [x] PDF input works.
 - [x] Learning memory works and can be disabled/deleted.
 - [ ] Voice tutor path works.
 - [x] Share link works.
@@ -2489,7 +2491,7 @@ Checked implementation items have local regression coverage. Real account/provid
 - [x] Agent Skill export works.
 
 ## Providers
-- [ ] CLEAR Free works.
+- [x] CLEAR Free works.
 - [ ] Google BYOK works.
 - [ ] OpenAI BYOK works.
 - [ ] Anthropic BYOK works.
@@ -2511,7 +2513,7 @@ Checked implementation items have local regression coverage. Real account/provid
 - [x] Dark/light modes complete.
 - [x] Keyboard navigation works.
 - [x] Critical accessibility issues resolved.
-- [ ] Rate limits active.
+- [x] Rate limits active.
 - [ ] Error monitoring active.
 - [x] Privacy/terms pages available.
 

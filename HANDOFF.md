@@ -59,7 +59,7 @@ Direction: spec section 29 — calm, technical, typography-first, subtle borders
 | Set Vercel production (and preview) variables | Owner | `NEXT_PUBLIC_APP_URL` (final https origin), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, the existing `APP_ENCRYPTION_KEY`, `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.5-flash-lite`, `CLEAR_TRUSTED_IP_HEADER=x-vercel-forwarded-for`. Leave `CLEAR_PROVIDER` and Sentry blank. Full list: `DEPLOYMENT.md`. |
 | Supabase Site URL | Owner | Authentication → URL Configuration → the same https origin. |
 | Turn on deployments | Done 2026-10-07 | `git.deploymentEnabled` is true. Every push to `main` now reaches users, so check CI and the site after each push. |
-| Two-account smoke test | Owner or agent | Sign-up, sign-in, sign-out, library, share, export, one image and one PDF question on the deployed site. |
+| Two-account smoke test | Done 2026-10-07 | `npm run test:live` passes on production: all guest checks (run by the agent) and the two-account check (run by the owner). Rate limiting was also confirmed there. |
 | Live eval on the launch model | Done 2026-10-07 | Passed the launch gate; see above. Command below for reruns. |
 | Raise the Gemini quota | Owner | The live key returns HTTP 429 after about a dozen lesson requests in a minute. Enable billing or request a higher limit before sharing the site widely. |
 | Real microphone test | Owner | Phone and laptop. |
